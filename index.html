@@ -20,12 +20,11 @@
 }
 html,body{background:var(--bg);color:var(--text);font-family:var(--sys);font-size:14px;line-height:1.5;min-height:100%;-webkit-font-smoothing:antialiased}
 
-/* ── Header ──────────────────────────────────────── */
 header{
   background:rgba(245,245,247,.85);backdrop-filter:blur(14px);
   border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:50;
-  padding:0 32px;height:54px;
+  padding:0 32px;height:48px;
   display:flex;align-items:center;gap:16px;
 }
 .logo{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em}
@@ -34,67 +33,74 @@ header{
 .tagline{font-size:12px;color:var(--text3);display:none}
 @media(min-width:640px){.tagline{display:block}}
 
-/* ── Main layout ─────────────────────────────────── */
-.main{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
+.main{max-width:720px;margin:0 auto;padding:20px 16px 60px}
 
-/* Section card */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
 
-/* ── Input section ───────────────────────────────── */
-.inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
-@media(max-width:680px){.inputs-grid{grid-template-columns:1fr}}
+/* ── Input section ──────────────────────────────── */
+.input-section{padding:20px 20px 16px}
+.input-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.row-label{font-size:11px;font-weight:600;color:var(--text2);width:32px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-f{background:var(--front);box-shadow:0 0 0 2px var(--front-bg),0 0 0 3px var(--front-ring)}
+.dot-s{background:var(--side);box-shadow:0 0 0 2px var(--side-bg),0 0 0 3px var(--side-ring)}
 
-.input-panel{padding:24px}
-.input-panel+.input-panel{border-left:1px solid var(--border)}
-@media(max-width:680px){.input-panel+.input-panel{border-left:none;border-top:1px solid var(--border)}}
-
-.panel-head{display:flex;align-items:center;gap:8px;margin-bottom:16px}
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot-f{background:var(--front);box-shadow:0 0 0 3px var(--front-bg),0 0 0 4px var(--front-ring)}
-.dot-s{background:var(--side); box-shadow:0 0 0 3px var(--side-bg), 0 0 0 4px var(--side-ring)}
-.panel-title{font-size:13px;font-weight:600;color:var(--text)}
-.panel-sub{font-size:11px;color:var(--text3)}
-
-.name-row{display:flex;gap:8px;margin-bottom:8px}
 input[type=text]{
   flex:1;min-width:0;
   background:var(--panel);border:1px solid var(--border);border-radius:var(--r8);
-  color:var(--text);font-family:var(--sys);font-size:18px;font-weight:500;
-  padding:8px 12px;outline:none;transition:border-color .15s,box-shadow .15s;
+  color:var(--text);font-family:var(--sys);font-size:16px;font-weight:500;
+  padding:7px 10px;outline:none;transition:border-color .15s,box-shadow .15s;
 }
 input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
-input[type=text]::placeholder{color:var(--text3);font-size:14px;font-weight:400}
+input[type=text]::placeholder{color:var(--text3);font-size:13px;font-weight:400}
 
 select{
   background:var(--panel);border:1px solid var(--border);border-radius:var(--r8);
-  color:var(--text2);font-family:var(--sys);font-size:12px;
-  padding:7px 10px;outline:none;cursor:pointer;
-  transition:border-color .15s;
-  min-width:0;width:100%;
+  color:var(--text2);font-family:var(--sys);font-size:11px;
+  padding:7px 8px;outline:none;cursor:pointer;
+  transition:border-color .15s;min-width:0;max-width:120px;
 }
 select:focus{border-color:var(--accent)}
 select option,select optgroup{background:white;color:var(--text)}
 
-.pad-preview{min-height:20px;font-size:14px;letter-spacing:.06em;color:var(--text3);margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.pad-preview .pc{color:var(--text);font-weight:600}
-.pad-preview .pp{color:var(--text3);opacity:.45}
-
-/* Canvas */
-.canvas-wrap{
-  background:#080812;border:1px solid #1a1a2e;border-radius:var(--r8);
-  overflow:hidden;touch-action:none;position:relative;
-  max-width:100%;
+.sub-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-left:40px}
+.upload-label{
+  cursor:pointer;display:inline-flex;align-items:center;gap:4px;
+  padding:5px 10px;background:var(--panel);border:1px solid var(--border2);
+  border-radius:var(--r8);color:var(--text3);font-size:11px;transition:all .15s;
 }
-.canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.upload-label:hover{border-color:var(--text2);color:var(--text)}
+#fontFile{display:none}
+#uploadedFontName{font-size:11px;color:var(--accent);font-weight:500}
 
-.draw-tools{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
-.brush-row{display:flex;align-items:center;gap:6px;margin-left:auto}
-.brush-label{font-size:11px;color:var(--text3)}
+/* ── Padding picker ─────────────────────────────── */
+.pad-row{display:flex;align-items:center;gap:5px;margin-bottom:12px;padding-left:40px;flex-wrap:wrap}
+.pad-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.pad-opt{
+  width:28px;height:28px;border-radius:50%;
+  border:1px solid var(--border);background:var(--panel);
+  cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;padding:0;
+}
+.pad-opt:hover{border-color:var(--accent);background:var(--accent-bg)}
+.pad-opt.active{background:var(--accent-bg);border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+.pad-custom{
+  width:34px;height:28px;border-radius:14px;text-align:center;
+  font-size:12px;padding:0 4px;border:1px solid var(--border);
+  background:var(--panel);outline:none;
+}
+.pad-custom:focus{border-color:var(--accent)}
 
-/* ── Buttons ─────────────────────────────────────── */
+.gen-row{display:flex;align-items:center;gap:12px;padding-left:40px}
+.pad-preview{font-size:13px;letter-spacing:.04em;color:var(--text3);display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.pad-preview .pc{color:var(--text);font-weight:600}
+.pad-preview .pp{color:var(--text3);opacity:.4}
+
+/* ── Buttons ────────────────────────────────────── */
 .btn{
   display:inline-flex;align-items:center;gap:5px;
-  padding:7px 14px;background:var(--panel);
+  padding:6px 12px;background:var(--panel);
   border:1px solid var(--border2);border-radius:var(--r8);
   color:var(--text2);font-family:var(--sys);font-size:12px;font-weight:500;
   cursor:pointer;white-space:nowrap;
@@ -104,62 +110,71 @@ select option,select optgroup{background:white;color:var(--text)}
 .btn.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
 .btn-primary{
   background:var(--accent);border-color:var(--accent);color:white;font-weight:600;
-  padding:9px 20px;font-size:13px;
+  padding:8px 18px;font-size:13px;border-radius:var(--r8);
 }
 .btn-primary:hover{background:#4a5ae0;border-color:#4a5ae0;color:white}
-.btn-stl{background:var(--text);border-color:var(--text);color:white;font-weight:600;padding:9px 20px;font-size:13px}
-.btn-stl:hover{background:#333;border-color:#333;color:white}
 
-input[type=range]{
-  -webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;
-}
+input[type=range]{-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
   background:var(--text);border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.2)
 }
 
-/* ── Controls row ────────────────────────────────── */
-.controls-row{
-  padding:14px 24px;border-top:1px solid var(--border);
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  background:var(--panel);
-}
-.ctrl-group{display:flex;align-items:center;gap:8px}
-.ctrl-label{font-size:11px;color:var(--text3);white-space:nowrap}
-#resVal{font-size:12px;font-weight:600;color:var(--text2);min-width:28px}
-#resSlider{width:72px}
-
-/* ── Stamp row ───────────────────────────────────── */
-.stamp-row{
-  padding:14px 24px;border-top:1px solid var(--border);
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-}
-.upload-label{
-  cursor:pointer;display:inline-flex;align-items:center;gap:5px;
-  padding:6px 12px;background:var(--panel);border:1px solid var(--border2);
-  border-radius:var(--r8);color:var(--text3);font-size:12px;
-  transition:all .15s;
-}
-.upload-label:hover{border-color:var(--text2);color:var(--text)}
-#fontFile{display:none}
-#uploadedFontName{font-size:11px;color:var(--accent);font-weight:500}
-
-/* ── 3D card ─────────────────────────────────────── */
+/* ── 3D card ────────────────────────────────────── */
 .view3d-head{
-  padding:12px 20px;border-bottom:1px solid var(--border);
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--panel)
+}
+.view3d-title{font-size:11px;font-weight:600;color:var(--text2)}
+.cam-btns{display:flex;gap:4px}
+.cam-btns .btn{padding:4px 8px;font-size:10px}
+#vc{font-size:10px;color:var(--text3);margin-left:auto;white-space:nowrap}
+#v3wrap{width:100%;height:60vw;min-height:300px;max-height:520px;background:#f0f0f4;overflow:hidden;touch-action:none}
+#v3wrap canvas{display:block}
+
+/* ── Export bar ─────────────────────────────────── */
+.export-bar{
+  padding:10px 16px;border-top:1px solid var(--border);
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--panel)
 }
-.view3d-title{font-size:12px;font-weight:600;color:var(--text2)}
-.cam-btns{display:flex;gap:5px}
-.cam-btns .btn{padding:5px 10px;font-size:11px}
-#vc{font-size:11px;color:var(--text3);margin-left:auto;white-space:nowrap}
-#v3wrap{width:100%;height:65vw;min-height:360px;max-height:600px;background:#f0f0f4;overflow:hidden;touch-action:none}
-#v3wrap canvas{display:block}
-#bmsg{padding:8px 20px;font-size:11px;color:var(--text3);min-height:30px;border-top:1px solid var(--border);text-align:right}
+.export-bar select{width:auto;font-size:11px;padding:5px 8px}
+.export-note{font-size:10px;color:var(--text3);margin-left:auto;font-style:italic}
+#bmsg{padding:6px 16px;font-size:11px;color:var(--text3);min-height:24px;border-top:1px solid var(--border);text-align:right}
 
-/* ── Tips ────────────────────────────────────────── */
-.tips{padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:4px 20px}
-.tip{padding:4px 0;font-size:12px;color:var(--text3);line-height:1.6}
+/* ── Raster editor (collapsible) ────────────────── */
+.raster-summary{
+  padding:12px 16px;font-size:12px;font-weight:500;color:var(--text2);
+  cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid transparent;
+}
+.raster-summary::-webkit-details-marker{display:none}
+.raster-summary::before{content:'';display:block;width:0;height:0;border:4px solid transparent;border-left:6px solid var(--text3);transition:transform .15s}
+details[open] .raster-summary::before{transform:rotate(90deg)}
+details[open] .raster-summary{border-bottom-color:var(--border)}
+.raster-content{padding:16px}
+.raster-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:580px){.raster-grid{grid-template-columns:1fr}}
+.raster-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:12px;font-weight:500;color:var(--text2)}
+.canvas-wrap{
+  background:#080812;border:1px solid #1a1a2e;border-radius:var(--r8);
+  overflow:hidden;touch-action:none;position:relative;max-width:100%;
+}
+.canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.draw-tools{display:flex;align-items:center;gap:5px;margin-top:8px;flex-wrap:wrap}
+.brush-row{display:flex;align-items:center;gap:5px;margin-left:auto}
+.brush-label{font-size:10px;color:var(--text3)}
+.raster-controls{
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.ctrl-group{display:flex;align-items:center;gap:6px}
+.ctrl-label{font-size:10px;color:var(--text3);white-space:nowrap}
+#resVal{font-size:11px;font-weight:600;color:var(--text2);min-width:24px}
+#resSlider{width:64px}
+
+/* ── Tips ───────────────────────────────────────── */
+.tips{padding:14px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px 16px}
+.tip{padding:3px 0;font-size:11px;color:var(--text3);line-height:1.5}
 .tip b{color:var(--text2);font-weight:500}
 </style>
 </head>
@@ -168,144 +183,150 @@ input[type=range]::-webkit-slider-thumb{
 <header>
   <div class="logo">Shadow <em>Sculptor</em></div>
   <div class="logo-sep"></div>
-  <div class="tagline">N paired glyphs → N modules → one 3D object, two identities</div>
+  <div class="tagline">Dual-text 3D illusion generator</div>
 </header>
 
 <div class="main">
 
-  <!-- Input + draw card -->
+  <!-- Input card -->
   <div class="card">
-    <div class="inputs-grid">
-
-      <!-- Front panel -->
-      <div class="input-panel">
-        <div class="panel-head">
-          <span class="dot dot-f"></span>
-          <span class="panel-title">Front</span>
-          <span class="panel-sub">— seen head-on</span>
-        </div>
-        <div class="name-row">
-          <input type="text" id="name1" placeholder="ಪವ" maxlength="16">
-        </div>
-        <select id="fnt1" style="margin-bottom:10px">
-          <option value="sans-serif">System Sans</option>
-          <option value="serif">System Serif</option>
+    <div class="input-section">
+      <div class="input-row">
+        <span class="dot dot-f"></span>
+        <label class="row-label">Front</label>
+        <input type="text" id="name1" placeholder="BUSY" maxlength="16">
+        <select id="fnt1">
+          <option value="sans-serif">Sans</option>
+          <option value="serif">Serif</option>
           <optgroup label="Indic">
-            <option value="'Noto Sans Kannada',sans-serif">Noto Kannada</option>
-            <option value="'Noto Serif Kannada',serif">Noto Kannada Serif</option>
-            <option value="'Noto Sans Devanagari',sans-serif">Noto Devanagari</option>
-            <option value="'Noto Nastaliq Urdu',serif">Noto Urdu</option>
-            <option value="'Noto Sans Tamil',sans-serif">Noto Tamil</option>
-            <option value="'Noto Sans Telugu',sans-serif">Noto Telugu</option>
-            <option value="'Noto Sans Malayalam',sans-serif">Noto Malayalam</option>
-            <option value="'Noto Sans Bengali',sans-serif">Noto Bengali</option>
-            <option value="'Noto Sans Gujarati',sans-serif">Noto Gujarati</option>
+            <option value="'Noto Sans Kannada',sans-serif">Kannada</option>
+            <option value="'Noto Serif Kannada',serif">Kannada Serif</option>
+            <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
+            <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
+            <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
+            <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
+            <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
+            <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
+            <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
           </optgroup>
-          <option value="__up__" id="f1up" disabled>— Custom —</option>
+          <option value="__up__" id="f1up" disabled>Custom</option>
         </select>
-        <div class="pad-preview" id="pad1"></div>
-        <div class="canvas-wrap" id="w1"><canvas id="c1"></canvas></div>
-        <div class="draw-tools">
-          <button class="btn" id="er1">Erase</button>
-          <button class="btn" id="cl1">Clear</button>
-          <button class="btn" id="fi1">Fill</button>
-          <div class="brush-row"><span class="brush-label">Brush</span><input type="range" id="br1" min="1" max="8" value="2"></div>
-        </div>
       </div>
-
-      <!-- Side panel -->
-      <div class="input-panel">
-        <div class="panel-head">
-          <span class="dot dot-s"></span>
-          <span class="panel-title">Side</span>
-          <span class="panel-sub">— seen 90° around</span>
-        </div>
-        <div class="name-row">
-          <input type="text" id="name2" placeholder="ಶುಭ" maxlength="16">
-        </div>
-        <select id="fnt2" style="margin-bottom:10px">
-          <option value="sans-serif">System Sans</option>
-          <option value="serif">System Serif</option>
+      <div class="input-row">
+        <span class="dot dot-s"></span>
+        <label class="row-label">Side</label>
+        <input type="text" id="name2" placeholder="FREE" maxlength="16">
+        <select id="fnt2">
+          <option value="sans-serif">Sans</option>
+          <option value="serif">Serif</option>
           <optgroup label="Indic">
-            <option value="'Noto Sans Kannada',sans-serif">Noto Kannada</option>
-            <option value="'Noto Serif Kannada',serif">Noto Kannada Serif</option>
-            <option value="'Noto Sans Devanagari',sans-serif">Noto Devanagari</option>
-            <option value="'Noto Nastaliq Urdu',serif">Noto Urdu</option>
-            <option value="'Noto Sans Tamil',sans-serif">Noto Tamil</option>
-            <option value="'Noto Sans Telugu',sans-serif">Noto Telugu</option>
-            <option value="'Noto Sans Malayalam',sans-serif">Noto Malayalam</option>
-            <option value="'Noto Sans Bengali',sans-serif">Noto Bengali</option>
-            <option value="'Noto Sans Gujarati',sans-serif">Noto Gujarati</option>
+            <option value="'Noto Sans Kannada',sans-serif">Kannada</option>
+            <option value="'Noto Serif Kannada',serif">Kannada Serif</option>
+            <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
+            <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
+            <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
+            <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
+            <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
+            <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
+            <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
           </optgroup>
-          <option value="__up__" id="f2up" disabled>— Custom —</option>
-        </select>
-        <div class="pad-preview" id="pad2"></div>
-        <div class="canvas-wrap" id="w2"><canvas id="c2"></canvas></div>
-        <div class="draw-tools">
-          <button class="btn" id="er2">Erase</button>
-          <button class="btn" id="cl2">Clear</button>
-          <button class="btn" id="fi2">Fill</button>
-          <div class="brush-row"><span class="brush-label">Brush</span><input type="range" id="br2" min="1" max="8" value="2"></div>
-        </div>
-      </div>
-
-    </div><!-- inputs-grid -->
-
-    <!-- Controls row -->
-    <div class="controls-row">
-      <div class="ctrl-group">
-        <span class="ctrl-label">Preview resolution</span>
-        <input type="range" id="resSlider" min="32" max="128" step="16" value="64">
-        <span id="resVal">64</span><span class="ctrl-label">px</span>
-      </div>
-      <div style="width:1px;height:18px;background:var(--border);flex-shrink:0"></div>
-      <div class="ctrl-group">
-        <span class="ctrl-label">Export quality</span>
-        <select id="exportQ" style="width:auto">
-          <option value="1">1× draft</option>
-          <option value="2" selected>2× good</option>
-          <option value="4">4× fine</option>
-          <option value="8">8× print</option>
+          <option value="__up__" id="f2up" disabled>Custom</option>
         </select>
       </div>
-      <button class="btn btn-stl" id="exportBtn" style="margin-left:auto">↓ Export STL</button>
+      <div class="sub-row">
+        <label class="upload-label">+ Font<input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2"></label>
+        <span id="uploadedFontName"></span>
+      </div>
+      <div class="pad-row">
+        <span class="pad-label">Pad</span>
+        <button class="pad-opt active" data-pad="♥">♥</button>
+        <button class="pad-opt" data-pad="★">★</button>
+        <button class="pad-opt" data-pad="●">●</button>
+        <button class="pad-opt" data-pad="◆">◆</button>
+        <button class="pad-opt" data-pad="💙">💙</button>
+        <button class="pad-opt" data-pad="☾">☾</button>
+        <input type="text" class="pad-custom" id="padCustom" placeholder="..." maxlength="2">
+      </div>
+      <div class="gen-row">
+        <button class="btn btn-primary" id="generateBtn">Generate</button>
+        <div class="pad-preview" id="padPreview"></div>
+      </div>
     </div>
+  </div>
 
-    <!-- Stamp row -->
-    <div class="stamp-row">
-      <button class="btn btn-primary" id="stampBoth">▶ Stamp Both</button>
-      <label class="upload-label">⬆ Upload font <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2"></label>
-      <span id="uploadedFontName"></span>
-      <span style="font-size:11px;color:var(--text3);margin-left:auto;display:none" id="stampHint">Type a name and press Stamp</span>
-    </div>
-
-  </div><!-- card -->
-
-  <!-- 3D card -->
+  <!-- 3D Preview card -->
   <div class="card">
     <div class="view3d-head">
-      <span class="view3d-title">3D — <span id="modCount">—</span> modules</span>
+      <span class="view3d-title"><span id="modCount">-</span> modules</span>
       <div class="cam-btns">
         <button class="btn" id="sf">Front</button>
         <button class="btn" id="ss">Side</button>
         <button class="btn" id="si">Iso</button>
         <button class="btn active" id="ar">Spin</button>
       </div>
-      <span id="vc">—</span>
+      <span id="vc">-</span>
     </div>
     <div id="v3wrap"></div>
+    <div class="export-bar">
+      <select id="exportQ">
+        <option value="1">1x draft</option>
+        <option value="2" selected>2x good</option>
+        <option value="4">4x fine</option>
+        <option value="8">8x print</option>
+      </select>
+      <button class="btn btn-primary" id="exportBtn" style="padding:6px 14px;font-size:12px">Export STL</button>
+      <span class="export-note">Exported mesh is smoother than preview</span>
+    </div>
     <div id="bmsg"></div>
+  </div>
+
+  <!-- Raster editor (collapsible) -->
+  <div class="card">
+    <details id="rasterDetails">
+      <summary class="raster-summary">Pixel Editor &mdash; join islands &amp; manual edits</summary>
+      <div class="raster-content">
+        <div class="raster-grid">
+          <div>
+            <div class="raster-head"><span class="dot dot-f"></span> Front</div>
+            <div class="canvas-wrap" id="w1"><canvas id="c1"></canvas></div>
+            <div class="draw-tools">
+              <button class="btn" id="er1">Erase</button>
+              <button class="btn" id="cl1">Clear</button>
+              <button class="btn" id="fi1">Fill</button>
+              <div class="brush-row"><span class="brush-label">Brush</span><input type="range" id="br1" min="1" max="8" value="2"></div>
+            </div>
+          </div>
+          <div>
+            <div class="raster-head"><span class="dot dot-s"></span> Side</div>
+            <div class="canvas-wrap" id="w2"><canvas id="c2"></canvas></div>
+            <div class="draw-tools">
+              <button class="btn" id="er2">Erase</button>
+              <button class="btn" id="cl2">Clear</button>
+              <button class="btn" id="fi2">Fill</button>
+              <div class="brush-row"><span class="brush-label">Brush</span><input type="range" id="br2" min="1" max="8" value="2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="raster-controls">
+          <div class="ctrl-group">
+            <span class="ctrl-label">Resolution</span>
+            <input type="range" id="resSlider" min="32" max="256" step="16" value="64">
+            <span id="resVal">64</span><span class="ctrl-label">px</span>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn btn-primary" id="applyEdits" style="padding:5px 12px;font-size:11px">Apply Edits</button>
+        </div>
+      </div>
+    </details>
   </div>
 
   <!-- Tips -->
   <div class="card">
     <div class="tips">
-      <div class="tip"><b>Paired modules:</b> glyph 1 of front × glyph 1 of side = module 1. N glyphs → N modules, not N².</div>
-      <div class="tip"><b>Padding:</b> shorter word padded with 💙. Right-pad if front is shorter, left-pad if side is shorter.</div>
-      <div class="tip"><b>Front / Side snaps</b> show exactly what each projection silhouette looks like from a distance.</div>
-      <div class="tip"><b>Custom font:</b> drop any TTF/OTF/WOFF — it appears in both font selects automatically.</div>
-      <div class="tip"><b>Export STL</b> uses Gaussian edge smoothing. 8× for print-quality. Opens in Cura / PrusaSlicer.</div>
-      <div class="tip"><b>Draw freely</b> on the canvas after stamping — any paint you add is included in the 3D object.</div>
+      <div class="tip"><b>Paired:</b> glyph 1 front x glyph 1 side = module 1. N glyphs = N modules.</div>
+      <div class="tip"><b>Font:</b> upload any TTF/OTF/WOFF, appears in both selectors.</div>
+      <div class="tip"><b>Editor:</b> manually edit silhouettes to join floating islands.</div>
+      <div class="tip"><b>Export:</b> higher quality = smoother curves. Open in Cura / PrusaSlicer.</div>
     </div>
   </div>
 
@@ -315,549 +336,754 @@ input[type=range]::-webkit-slider-thumb{
 <script>
 "use strict";
 
-// ── Camera / state (hoisted) ──────────────────────────────────────────────
-let theta  = Math.PI / 4;
-let phi    = 1.25;
-let camDist = 600;
-let orthoFrustum = 80;
-let autoRot = true;
-let oscTime = 0;
-// Sweep from -PI/4 (front face) through ISO to +3PI/4 (side face), bounce
-const OSC_BASE = Math.PI / 4;
-const OSC_AMP  = Math.PI / 2 * 1.05; // slightly past each face
-const OSC_SPD  = 0.005;
-
-// ── Grid ──────────────────────────────────────────────────────────────────
-const NBIT = 5;
-let CELL   = 64;
-let nCols  = 1;
-let chars1 = ['ಪ'], chars2 = ['ಶು'];
-let font1  = 'sans-serif', font2 = 'sans-serif';
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let CELL = 64;
+let nCols = 1;
+let chars1 = ['B'], chars2 = ['F'];
+let font1 = 'sans-serif', font2 = 'sans-serif';
 let uploadedFontFamily = null;
-let sil1, sil2, mask1, mask2;
+let padChar = '\u2665'; // ♥
+let sil1, sil2;
 
 function NX() { return nCols * CELL; }
 function allocArrays() {
-  const nx = NX();
-  sil1=new Uint8Array(nx*CELL); sil2=new Uint8Array(nx*CELL);
-  mask1=new Uint32Array(nx*NBIT); mask2=new Uint32Array(nx*NBIT);
+  const n = NX() * CELL;
+  sil1 = new Uint8Array(n);
+  sil2 = new Uint8Array(n);
 }
 allocArrays();
 
-function rebuildMasks() {
-  mask1.fill(0); mask2.fill(0);
-  const nx=NX(),nc=CELL;
-  for(let c=0;c<nx;c++) for(let z=0;z<nc;z++){
-    const w=z>>5,b=z&31;
-    if(sil1[c*nc+z]) mask1[c*NBIT+w]|=(1<<b);
-    if(sil2[c*nc+z]) mask2[c*NBIT+w]|=(1<<b);
-  }
+// ═══════════════════════════════════════════════════════════════════════════
+// GRAPHEME HANDLING
+// ═══════════════════════════════════════════════════════════════════════════
+function splitGraphemes(s) {
+  try { return [...new Intl.Segmenter().segment(s)].map(x => x.segment); }
+  catch(e) { return [...s]; }
 }
 
-function splitGraphemes(s) {
-  try{return[...new Intl.Segmenter().segment(s)].map(x=>x.segment)}catch(e){return[...s]}
+function padded(g1, g2) {
+  const len = Math.max(g1.length, g2.length, 1);
+  const p1 = [...g1], p2 = [...g2];
+  while (p1.length < len) p1.push(padChar);
+  while (p2.length < len) p2.unshift(padChar);
+  return { p1, p2, len };
 }
-function padded(g1,g2) {
-  const len=Math.max(g1.length,g2.length,1);
-  const p1=[...g1],p2=[...g2];
-  while(p1.length<len) p1.push('💙');
-  while(p2.length<len) p2.unshift('💙');
-  return{p1,p2,len};
-}
-function applyNames(raw1,raw2,f1,f2) {
-  const g1=splitGraphemes(raw1.trim()).slice(0,8);
-  const g2=splitGraphemes(raw2.trim()).slice(0,8);
-  const{p1,p2,len}=padded(g1,g2);
-  font1=f1;font2=f2;nCols=len;chars1=p1;chars2=p2;
-  function padHtml(pad,rg){
-    return pad.map((c,i)=>`<span class="${i<rg.length?'pc':'pp'}">${c}</span>`).join('&thinsp;');
-  }
-  document.getElementById('pad1').innerHTML=padHtml(chars1,g1);
-  document.getElementById('pad2').innerHTML=padHtml(chars2,g2);
-  document.getElementById('modCount').textContent=nCols;
+
+function applyNames(raw1, raw2, f1, f2) {
+  const g1 = splitGraphemes(raw1.trim()).slice(0, 8);
+  const g2 = splitGraphemes(raw2.trim()).slice(0, 8);
+  const { p1, p2, len } = padded(g1, g2);
+  font1 = f1; font2 = f2; nCols = len; chars1 = p1; chars2 = p2;
+  const padHtml = (pad, rg) =>
+    pad.map((c, i) => `<span class="${i < rg.length ? 'pc' : 'pp'}">${c}</span>`).join('');
+  document.getElementById('padPreview').innerHTML =
+    padHtml(chars1, g1) + ' &middot; ' + padHtml(chars2, g2);
+  document.getElementById('modCount').textContent = nCols;
   allocArrays();
   updateCanvasSize();
   rebuildScene();
 }
+
 function updateCanvasSize() {
-  ['w1','w2'].forEach(id=>{
-    const el=document.getElementById(id);
-    const maxH=Math.min(400,Math.floor((el.parentElement.clientWidth-32)/nCols));
-    const h=Math.max(80,maxH);
-    el.style.height=h+'px';
-    el.style.width=(h*nCols)+'px';
+  ['w1','w2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || !el.parentElement) return;
+    const maxH = Math.min(300, Math.floor((el.parentElement.clientWidth - 16) / nCols));
+    const h = Math.max(60, maxH);
+    el.style.height = h + 'px';
+    el.style.width = (h * nCols) + 'px';
   });
 }
-window.addEventListener('resize',()=>{updateCanvasSize();resizeRenderer()});
 
-// ── Stamp ─────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// RASTER RENDERING (text → binary silhouette)
+// ═══════════════════════════════════════════════════════════════════════════
 const BASELINE_FRAC = 0.76;
-async function stampName(chars,fontStr,targetSil) {
-  const fam=(fontStr==='__up__'&&uploadedFontFamily)?uploadedFontFamily:fontStr;
-  try{await document.fonts.load(`bold 80px ${fam}`,chars.join(''))}catch(e){}
-  const BUF=CELL*8;
-  const baseline=Math.round(BUF*BASELINE_FRAC);
+
+async function stampName(chars, fontStr, targetSil, cellSize) {
+  cellSize = cellSize || CELL;
+  const fam = (fontStr === '__up__' && uploadedFontFamily) ? uploadedFontFamily : fontStr;
+  try { await document.fonts.load(`bold 80px ${fam}`, chars.join('')); } catch(e) {}
+  const BUF = Math.max(cellSize * 8, 512);
+  const baseline = Math.round(BUF * BASELINE_FRAC);
   targetSil.fill(0);
-  for(let col=0;col<nCols;col++){
-    const ch=chars[col]||'💙';
-    const cv=document.createElement('canvas');
-    cv.width=cv.height=BUF;
-    const ctx=cv.getContext('2d');
-    ctx.fillStyle='#000';ctx.fillRect(0,0,BUF,BUF);
-    let fs=Math.round(BUF*.70);
-    ctx.font=`bold ${fs}px ${fam}`;
-    const wm=ctx.measureText(ch).width;
-    if(wm>BUF*.84) fs=Math.round(fs*BUF*.84/wm);
-    ctx.font=`bold ${fs}px ${fam}`;
-    ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';
-    ctx.fillText(ch,BUF/2,baseline);
-    const px=ctx.getImageData(0,0,BUF,BUF).data;
-    const step=BUF/CELL;
-    for(let lx=0;lx<CELL;lx++) for(let z=0;z<CELL;z++){
-      const bx0=Math.round(lx*step),bx1=Math.round((lx+1)*step);
-      const by0=Math.round((CELL-1-z)*step),by1=Math.round((CELL-z)*step);
-      let sum=0,cnt=0;
-      for(let by=by0;by<by1;by++) for(let bx=bx0;bx<bx1;bx++){sum+=px[(by*BUF+bx)*4];cnt++}
-      targetSil[(col*CELL+lx)*CELL+z]=(cnt>0&&sum/cnt>60)?1:0;
+  for (let col = 0; col < nCols; col++) {
+    const ch = chars[col] || padChar;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = BUF;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, BUF, BUF);
+    let fs = Math.round(BUF * 0.70);
+    ctx.font = `bold ${fs}px ${fam}`;
+    const wm = ctx.measureText(ch).width;
+    if (wm > BUF * 0.84) fs = Math.round(fs * BUF * 0.84 / wm);
+    ctx.font = `bold ${fs}px ${fam}`;
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(ch, BUF / 2, baseline);
+    const px = ctx.getImageData(0, 0, BUF, BUF).data;
+    const step = BUF / cellSize;
+    for (let lx = 0; lx < cellSize; lx++) {
+      for (let z = 0; z < cellSize; z++) {
+        const bx0 = Math.round(lx * step), bx1 = Math.round((lx + 1) * step);
+        const by0 = Math.round((cellSize - 1 - z) * step), by1 = Math.round((cellSize - z) * step);
+        let sum = 0, cnt = 0;
+        for (let by = by0; by < by1; by++)
+          for (let bx = bx0; bx < bx1; bx++) { sum += px[(by * BUF + bx) * 4]; cnt++; }
+        targetSil[(col * cellSize + lx) * cellSize + z] = (cnt > 0 && sum / cnt > 60) ? 1 : 0;
+      }
     }
   }
 }
 
-// ── Three.js ──────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// GAUSSIAN BLUR
+// ═══════════════════════════════════════════════════════════════════════════
+function gaussKernel(sigma) {
+  const r = Math.ceil(sigma * 3);
+  const k = new Float32Array(2 * r + 1);
+  let s = 0;
+  for (let i = 0; i <= 2 * r; i++) { k[i] = Math.exp(-0.5 * ((i - r) / sigma) ** 2); s += k[i]; }
+  for (let i = 0; i < k.length; i++) k[i] /= s;
+  return { k, r };
+}
+
+// Blur a column-major 2D array: data[x * h + z], size w x h
+function blurSlice(data, w, h, sigma) {
+  const { k, r } = gaussKernel(sigma);
+  const tmp = new Float32Array(w * h);
+  // Horizontal (along x)
+  for (let z = 0; z < h; z++) {
+    for (let x = 0; x < w; x++) {
+      let acc = 0;
+      for (let d = -r; d <= r; d++)
+        acc += data[Math.max(0, Math.min(w - 1, x + d)) * h + z] * k[d + r];
+      tmp[x * h + z] = acc;
+    }
+  }
+  const out = new Float32Array(w * h);
+  // Vertical (along z)
+  for (let x = 0; x < w; x++) {
+    for (let z = 0; z < h; z++) {
+      let acc = 0;
+      for (let d = -r; d <= r; d++)
+        acc += tmp[x * h + Math.max(0, Math.min(h - 1, z + d))] * k[d + r];
+      out[x * h + z] = acc;
+    }
+  }
+  return out;
+}
+
+// Bilinear sample of column-major data[x * h + z]
+function sampleSlice(data, w, h, x, z) {
+  x = Math.max(0, Math.min(w - 1, x));
+  z = Math.max(0, Math.min(h - 1, z));
+  const x0 = Math.floor(x), z0 = Math.floor(z);
+  const x1 = Math.min(w - 1, x0 + 1), z1 = Math.min(h - 1, z0 + 1);
+  const fx = x - x0, fz = z - z0;
+  return data[x0 * h + z0] * (1 - fx) * (1 - fz) +
+         data[x1 * h + z0] * fx * (1 - fz) +
+         data[x0 * h + z1] * (1 - fx) * fz +
+         data[x1 * h + z1] * fx * fz;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NAIVE SURFACE NETS — smooth mesh from 3D density field
+// ═══════════════════════════════════════════════════════════════════════════
+const SN_CORNERS_X = [0,1,0,1,0,1,0,1];
+const SN_CORNERS_Y = [0,0,1,1,0,0,1,1];
+const SN_CORNERS_Z = [0,0,0,0,1,1,1,1];
+const SN_EDGES = [[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];
+
+function surfaceNets(sampleDensity, N) {
+  // sampleDensity(x, y, z) returns density [0..1], isosurface at 0.5
+  // N: grid resolution per axis
+  const positions = [];
+  const indices = [];
+  const vertMap = new Int32Array(N * N * N).fill(-1);
+
+  // Pass 1: create vertices
+  for (let gz = 0; gz < N - 1; gz++) {
+    for (let gy = 0; gy < N - 1; gy++) {
+      for (let gx = 0; gx < N - 1; gx++) {
+        const c = [];
+        let mask = 0;
+        for (let i = 0; i < 8; i++) {
+          const v = sampleDensity(gx + SN_CORNERS_X[i], gy + SN_CORNERS_Y[i], gz + SN_CORNERS_Z[i]);
+          c.push(v);
+          if (v >= 0.5) mask |= 1 << i;
+        }
+        if (mask === 0 || mask === 255) continue;
+
+        let vx = 0, vy = 0, vz = 0, cnt = 0;
+        for (const [a, b] of SN_EDGES) {
+          if ((c[a] >= 0.5) !== (c[b] >= 0.5)) {
+            const t = Math.max(0, Math.min(1, (0.5 - c[a]) / (c[b] - c[a])));
+            vx += gx + SN_CORNERS_X[a] + t * (SN_CORNERS_X[b] - SN_CORNERS_X[a]);
+            vy += gy + SN_CORNERS_Y[a] + t * (SN_CORNERS_Y[b] - SN_CORNERS_Y[a]);
+            vz += gz + SN_CORNERS_Z[a] + t * (SN_CORNERS_Z[b] - SN_CORNERS_Z[a]);
+            cnt++;
+          }
+        }
+        vertMap[gx + gy * N + gz * N * N] = positions.length / 3;
+        positions.push(vx / cnt, vy / cnt, vz / cnt);
+      }
+    }
+  }
+
+  // Pass 2: create faces
+  for (let gz = 0; gz < N - 1; gz++) {
+    for (let gy = 0; gy < N - 1; gy++) {
+      for (let gx = 0; gx < N - 1; gx++) {
+        const vi = vertMap[gx + gy * N + gz * N * N];
+        if (vi < 0) continue;
+        const d0 = sampleDensity(gx, gy, gz);
+
+        // X-edge: (gx,gy,gz)→(gx+1,gy,gz)
+        if (gy > 0 && gz > 0 && (d0 >= 0.5) !== (sampleDensity(gx + 1, gy, gz) >= 0.5)) {
+          const a = vi;
+          const b = vertMap[gx + (gy - 1) * N + gz * N * N];
+          const c = vertMap[gx + (gy - 1) * N + (gz - 1) * N * N];
+          const d = vertMap[gx + gy * N + (gz - 1) * N * N];
+          if (a >= 0 && b >= 0 && c >= 0 && d >= 0) {
+            if (d0 >= 0.5) { indices.push(a, d, c, a, c, b); }
+            else           { indices.push(a, b, c, a, c, d); }
+          }
+        }
+
+        // Y-edge: (gx,gy,gz)→(gx,gy+1,gz)
+        if (gx > 0 && gz > 0 && (d0 >= 0.5) !== (sampleDensity(gx, gy + 1, gz) >= 0.5)) {
+          const a = vi;
+          const b = vertMap[gx + gy * N + (gz - 1) * N * N];
+          const c = vertMap[(gx - 1) + gy * N + (gz - 1) * N * N];
+          const d = vertMap[(gx - 1) + gy * N + gz * N * N];
+          if (a >= 0 && b >= 0 && c >= 0 && d >= 0) {
+            if (d0 >= 0.5) { indices.push(a, d, c, a, c, b); }
+            else           { indices.push(a, b, c, a, c, d); }
+          }
+        }
+
+        // Z-edge: (gx,gy,gz)→(gx,gy,gz+1)
+        if (gx > 0 && gy > 0 && (d0 >= 0.5) !== (sampleDensity(gx, gy, gz + 1) >= 0.5)) {
+          const a = vi;
+          const b = vertMap[(gx - 1) + gy * N + gz * N * N];
+          const c = vertMap[(gx - 1) + (gy - 1) * N + gz * N * N];
+          const d = vertMap[gx + (gy - 1) * N + gz * N * N];
+          if (a >= 0 && b >= 0 && c >= 0 && d >= 0) {
+            if (d0 >= 0.5) { indices.push(a, d, c, a, c, b); }
+            else           { indices.push(a, b, c, a, c, d); }
+          }
+        }
+      }
+    }
+  }
+
+  return { positions: new Float32Array(positions), indices: new Uint32Array(indices) };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MESH GENERATION (per module → combined geometry)
+// ═══════════════════════════════════════════════════════════════════════════
+function buildModuleMeshes(silA, silB, cellSize, gridRes, sigma) {
+  const allPos = [], allIdx = [], allCol = [];
+  let baseVert = 0;
+  const nx = nCols * cellSize;
+
+  for (let mod = 0; mod < nCols; mod++) {
+    // Extract and blur module slices
+    const fSlice = new Float32Array(cellSize * cellSize);
+    const sSlice = new Float32Array(cellSize * cellSize);
+    for (let lx = 0; lx < cellSize; lx++) {
+      for (let z = 0; z < cellSize; z++) {
+        fSlice[lx * cellSize + z] = silA[(mod * cellSize + lx) * cellSize + z];
+        sSlice[lx * cellSize + z] = silB[(mod * cellSize + lx) * cellSize + z];
+      }
+    }
+    const bf = blurSlice(fSlice, cellSize, cellSize, sigma);
+    const bs = blurSlice(sSlice, cellSize, cellSize, sigma);
+
+    const N = gridRes;
+    const scale = (cellSize - 1) / (N - 1);
+
+    // Pre-sample the density field for performance
+    const fieldSize = N * N * N;
+    const field = new Float32Array(fieldSize);
+    for (let gz = 0; gz < N; gz++) {
+      for (let gy = 0; gy < N; gy++) {
+        for (let gx = 0; gx < N; gx++) {
+          const sx = gx * scale, sy = gy * scale, sz = gz * scale;
+          const fv = sampleSlice(bf, cellSize, cellSize, sx, sz);
+          const sv = sampleSlice(bs, cellSize, cellSize, sy, sz);
+          field[gx + gy * N + gz * N * N] = Math.min(fv, sv);
+        }
+      }
+    }
+
+    const density = (x, y, z) => {
+      if (x < 0 || x >= N || y < 0 || y >= N || z < 0 || z >= N) return 0;
+      return field[x + y * N + z * N * N];
+    };
+
+    const mesh = surfaceNets(density, N);
+    if (mesh.positions.length === 0) continue;
+
+    // Transform positions to world space and compute vertex colors
+    const worldScale = cellSize / N;
+    const ox = mod * cellSize - nx / 2;
+    const oz = mod * cellSize - nx / 2;
+    const oy = -cellSize / 2;
+
+    for (let i = 0; i < mesh.positions.length; i += 3) {
+      const px = mesh.positions[i], py = mesh.positions[i + 1], pz = mesh.positions[i + 2];
+      // World: X = front, Y = height, Z = side
+      allPos.push(
+        ox + px * worldScale,
+        oy + pz * worldScale,  // height = gz direction
+        oz + py * worldScale   // depth = gy direction
+      );
+
+      // Vertex color: compare front vs side density
+      const sx = px * scale, sy = py * scale, sz = pz * scale;
+      const fv = sampleSlice(bf, cellSize, cellSize, sx, sz);
+      const sv = sampleSlice(bs, cellSize, cellSize, sy, sz);
+      if (fv <= sv) {
+        allCol.push(0.94, 0.63, 0.19); // amber (front)
+      } else {
+        allCol.push(0.19, 0.56, 0.94); // blue (side)
+      }
+    }
+
+    for (let i = 0; i < mesh.indices.length; i++) {
+      allIdx.push(mesh.indices[i] + baseVert);
+    }
+    baseVert += mesh.positions.length / 3;
+  }
+
+  if (allPos.length === 0) return null;
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(allPos, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(allCol, 3));
+  geo.setIndex(allIdx);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THREE.JS SCENE
+// ═══════════════════════════════════════════════════════════════════════════
 const v3w = document.getElementById('v3wrap');
-const renderer = new THREE.WebGLRenderer({antialias:true,alpha:false});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.setClearColor(0xf0f0f4,1);
+renderer.setClearColor(0xf0f0f4, 1);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 v3w.appendChild(renderer.domElement);
 
-const scene  = new THREE.Scene();
-scene.fog = new THREE.Fog(0xf0f0f4, 800, 2000);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xf0f0f4, 2000, 6000);
+const camera = new THREE.OrthographicCamera(-100, 100, 100, -100, 0.1, 10000);
 
-// Orthographic camera
-const camera = new THREE.OrthographicCamera(-100,100,100,-100,0.1,10000);
-
-// ── Lighting (warm ambient + key + fill + back) ───────────────────────────
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
-scene.add(ambientLight);
-
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
 const keyLight = new THREE.DirectionalLight(0xfff5e0, 1.2);
 keyLight.position.set(200, 400, 200);
 keyLight.castShadow = true;
-keyLight.shadow.mapSize.width  = 2048;
-keyLight.shadow.mapSize.height = 2048;
-keyLight.shadow.camera.near    = 10;
-keyLight.shadow.camera.far     = 2000;
-keyLight.shadow.camera.left    = -300;
-keyLight.shadow.camera.right   =  300;
-keyLight.shadow.camera.top     =  300;
-keyLight.shadow.camera.bottom  = -300;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.near = 10;
+keyLight.shadow.camera.far = 2000;
+keyLight.shadow.camera.left = keyLight.shadow.camera.bottom = -300;
+keyLight.shadow.camera.right = keyLight.shadow.camera.top = 300;
 keyLight.shadow.bias = -0.001;
 scene.add(keyLight);
-
 const fillLight = new THREE.DirectionalLight(0xe0eeff, 0.4);
 fillLight.position.set(-200, 100, 200);
 scene.add(fillLight);
+scene.add(new THREE.DirectionalLight(0xffffff, 0.25)).position.set(0, -200, -400);
 
-const backLight = new THREE.DirectionalLight(0xffffff, 0.25);
-backLight.position.set(0, -200, -400);
-scene.add(backLight);
-
-// ── Materials ─────────────────────────────────────────────────────────────
-// Front-biased faces: warm amber/terracotta
-const matFront = new THREE.MeshStandardMaterial({
-  color:0xf0a030, roughness:0.35, metalness:0.05
+// Material
+const matSmooth = new THREE.MeshStandardMaterial({
+  vertexColors: true, roughness: 0.35, metalness: 0.05, side: THREE.DoubleSide
 });
-// Side-biased faces: cool blue
-const matSide = new THREE.MeshStandardMaterial({
-  color:0x3090f0, roughness:0.35, metalness:0.05
-});
-// Base plate: light grey, slightly glossy
-const matBase = new THREE.MeshStandardMaterial({
-  color:0xe8e8ec, roughness:0.5, metalness:0.0
-});
+const matBase = new THREE.MeshStandardMaterial({ color: 0xe8e8ec, roughness: 0.5 });
 
-// ── Scene rebuild ─────────────────────────────────────────────────────────
-let bboxHelper=null, extraLines=[], plateMesh=null;
-let meshFront=null, meshSide=null;
-const _m4=new THREE.Matrix4();
-const MAX_VOX=2000000;
+// Scene objects
+let mainMesh = null, plateMesh = null, extraLines = [];
 
-function rebuildScene(){
-  [bboxHelper,plateMesh,meshFront,meshSide,...extraLines]
-    .filter(Boolean)
-    .forEach(o=>{scene.remove(o);if(o.geometry)o.geometry.dispose()});
-  extraLines=[];
+function rebuildScene() {
+  // Clear old
+  [mainMesh, plateMesh, ...extraLines].filter(Boolean).forEach(o => {
+    scene.remove(o);
+    if (o.geometry) o.geometry.dispose();
+  });
+  extraLines = [];
+  mainMesh = null;
 
-  const nx=NX(),nz=CELL;
+  const nx = NX(), nz = CELL;
 
-  // Base plate: thin rounded rectangle under the modules
-  // Sits just below z=-nz/2, extends a little beyond the nx extent
-  const plateW=nx*1.06, plateD=nx*1.06, plateH=nz*0.08;
-  const plateGeo=new THREE.BoxGeometry(plateW,plateH,plateD);
-  plateMesh=new THREE.Mesh(plateGeo,matBase);
-  plateMesh.position.set(0,-nz/2-plateH/2,0);
-  plateMesh.receiveShadow=true;
+  // Base plate
+  const pw = nx * 1.08, pd = nx * 1.08, ph = nz * 0.06;
+  const pGeo = new THREE.BoxGeometry(pw, ph, pd);
+  plateMesh = new THREE.Mesh(pGeo, matBase);
+  plateMesh.position.set(0, -nz / 2 - ph / 2, 0);
+  plateMesh.receiveShadow = true;
   scene.add(plateMesh);
 
-  // Module dividers (faint vertical lines)
-  if(nCols>1){
-    const dmat=new THREE.LineBasicMaterial({color:0xccccdd,transparent:true,opacity:.5});
-    for(let c=1;c<nCols;c++){
-      const xp=c*CELL-nx/2;
-      const zp=c*CELL-nx/2;
-      function mkLine(pts){
-        const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),dmat);
-        scene.add(l);extraLines.push(l);
-      }
-      mkLine([new THREE.Vector3(xp,-nz/2,-nx/2),new THREE.Vector3(xp,nz/2,-nx/2),
-              new THREE.Vector3(xp,nz/2,nx/2), new THREE.Vector3(xp,-nz/2,nx/2),
-              new THREE.Vector3(xp,-nz/2,-nx/2)]);
-      mkLine([new THREE.Vector3(-nx/2,-nz/2,zp),new THREE.Vector3(-nx/2,nz/2,zp),
-              new THREE.Vector3(nx/2,nz/2,zp),  new THREE.Vector3(nx/2,-nz/2,zp),
-              new THREE.Vector3(-nx/2,-nz/2,zp)]);
+  // Module dividers
+  if (nCols > 1) {
+    const dmat = new THREE.LineBasicMaterial({ color: 0xccccdd, transparent: true, opacity: 0.5 });
+    for (let c = 1; c < nCols; c++) {
+      const xp = c * CELL - nx / 2, zp = c * CELL - nx / 2;
+      const mkLine = pts => {
+        const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), dmat);
+        scene.add(l); extraLines.push(l);
+      };
+      mkLine([
+        new THREE.Vector3(xp, -nz / 2, -nx / 2), new THREE.Vector3(xp, nz / 2, -nx / 2),
+        new THREE.Vector3(xp, nz / 2, nx / 2), new THREE.Vector3(xp, -nz / 2, nx / 2),
+        new THREE.Vector3(xp, -nz / 2, -nx / 2)
+      ]);
+      mkLine([
+        new THREE.Vector3(-nx / 2, -nz / 2, zp), new THREE.Vector3(-nx / 2, nz / 2, zp),
+        new THREE.Vector3(nx / 2, nz / 2, zp), new THREE.Vector3(nx / 2, -nz / 2, zp),
+        new THREE.Vector3(-nx / 2, -nz / 2, zp)
+      ]);
     }
   }
 
-  // Two instanced meshes
-  function mkMesh(mat){
-    const m=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),mat,MAX_VOX);
-    m.count=0; m.castShadow=true; m.receiveShadow=true;
-    scene.add(m); return m;
-  }
-  meshFront=mkMesh(matFront);
-  meshSide =mkMesh(matSide);
-
-  // Camera frustum
-  orthoFrustum = nx*0.55+nz*0.55;
-  camDist = Math.max(nx,nz)*5;
-  // Update shadow camera range
-  const sc=keyLight.shadow.camera;
-  sc.left=sc.bottom=-(nx+nz);
-  sc.right=sc.top=(nx+nz);
+  // Camera
+  orthoFrustum = nx * 0.55 + nz * 0.55;
+  camDist = Math.max(nx, nz) * 3;
+  scene.fog.near = camDist * 1.5;
+  scene.fog.far = camDist * 4;
+  const sc = keyLight.shadow.camera;
+  sc.left = sc.bottom = -(nx + nz);
+  sc.right = sc.top = (nx + nz);
   sc.updateProjectionMatrix();
-  keyLight.position.set(nx*1.5,nz*4,nx*1.5);
-
+  keyLight.position.set(nx * 1.5, nz * 4, nx * 1.5);
   resizeRenderer();
   updCam();
 }
-rebuildScene();
 
-// ── Resize ────────────────────────────────────────────────────────────────
-function resizeRenderer(){
-  const w=v3w.clientWidth,h=v3w.clientHeight;
-  if(w<2||h<2)return;
-  renderer.setSize(w,h);
-  const a=w/h;
-  camera.left=-orthoFrustum*a;camera.right=orthoFrustum*a;
-  camera.top=orthoFrustum;camera.bottom=-orthoFrustum;
+// ═══════════════════════════════════════════════════════════════════════════
+// CAMERA
+// ═══════════════════════════════════════════════════════════════════════════
+let theta = Math.PI / 4, phi = 1.25, camDist = 600, orthoFrustum = 80;
+let autoRot = true, oscTime = 0;
+const OSC_BASE = Math.PI / 4, OSC_AMP = Math.PI / 2 * 1.05, OSC_SPD = 0.005;
+
+function updCam() {
+  camera.position.set(
+    camDist * Math.sin(phi) * Math.sin(theta),
+    camDist * Math.cos(phi),
+    camDist * Math.sin(phi) * Math.cos(theta)
+  );
+  camera.lookAt(0, 0, 0);
+}
+
+function resizeRenderer() {
+  const w = v3w.clientWidth, h = v3w.clientHeight;
+  if (w < 2 || h < 2) return;
+  renderer.setSize(w, h);
+  const a = w / h;
+  camera.left = -orthoFrustum * a; camera.right = orthoFrustum * a;
+  camera.top = orthoFrustum; camera.bottom = -orthoFrustum;
   camera.updateProjectionMatrix();
 }
 new ResizeObserver(resizeRenderer).observe(v3w);
-setTimeout(resizeRenderer,60);
+setTimeout(resizeRenderer, 60);
+window.addEventListener('resize', () => { updateCanvasSize(); resizeRenderer(); });
 
-// ── Camera ────────────────────────────────────────────────────────────────
-function updCam(){
-  camera.position.set(
-    camDist*Math.sin(phi)*Math.sin(theta),
-    camDist*Math.cos(phi),
-    camDist*Math.sin(phi)*Math.cos(theta)
-  );
-  camera.lookAt(0,0,0);
-}
-updCam();
-
-let drag=false,pp=null;
-v3w.addEventListener('pointerdown',e=>{
-  drag=true;pp={x:e.clientX,y:e.clientY};
-  v3w.setPointerCapture(e.pointerId);
-  setAutoRot(false);
+// Drag controls
+let drag = false, pp = null;
+v3w.addEventListener('pointerdown', e => {
+  drag = true; pp = { x: e.clientX, y: e.clientY };
+  v3w.setPointerCapture(e.pointerId); setAutoRot(false);
 });
-v3w.addEventListener('pointermove',e=>{
-  if(!drag||!pp)return;
-  theta-=(e.clientX-pp.x)*.012;
-  phi=Math.max(.07,Math.min(Math.PI-.07,phi+(e.clientY-pp.y)*.012));
-  pp={x:e.clientX,y:e.clientY};updCam();
+v3w.addEventListener('pointermove', e => {
+  if (!drag || !pp) return;
+  theta -= (e.clientX - pp.x) * 0.012;
+  phi = Math.max(0.07, Math.min(Math.PI - 0.07, phi + (e.clientY - pp.y) * 0.012));
+  pp = { x: e.clientX, y: e.clientY }; updCam();
 });
-v3w.addEventListener('pointerup',()=>{drag=false;pp=null});
-v3w.addEventListener('pointercancel',()=>{drag=false;pp=null});
+v3w.addEventListener('pointerup', () => { drag = false; pp = null; });
+v3w.addEventListener('pointercancel', () => { drag = false; pp = null; });
 
-function setAutoRot(v){
-  autoRot=v;
-  document.getElementById('ar').classList.toggle('active',v);
-  if(v) oscTime=Math.asin(Math.max(-1,Math.min(1,(theta-OSC_BASE)/OSC_AMP)));
+function setAutoRot(v) {
+  autoRot = v;
+  document.getElementById('ar').classList.toggle('active', v);
+  if (v) oscTime = Math.asin(Math.max(-1, Math.min(1, (theta - OSC_BASE) / OSC_AMP)));
 }
-document.getElementById('sf').onclick=()=>{setAutoRot(false);theta=0;           phi=Math.PI/2;updCam()};
-document.getElementById('ss').onclick=()=>{setAutoRot(false);theta=-Math.PI/2;  phi=Math.PI/2;updCam()};
-document.getElementById('si').onclick=()=>{setAutoRot(false);theta=Math.PI/4;   phi=1.2;      updCam()};
-document.getElementById('ar').onclick=function(){setAutoRot(!autoRot)};
+document.getElementById('sf').onclick = () => { setAutoRot(false); theta = 0; phi = Math.PI / 2; updCam(); };
+document.getElementById('ss').onclick = () => { setAutoRot(false); theta = -Math.PI / 2; phi = Math.PI / 2; updCam(); };
+document.getElementById('si').onclick = () => { setAutoRot(false); theta = Math.PI / 4; phi = 1.2; updCam(); };
+document.getElementById('ar').onclick = () => setAutoRot(!autoRot);
 
-// ── Render loop ───────────────────────────────────────────────────────────
-(function loop(){
+// Render loop
+(function loop() {
   requestAnimationFrame(loop);
-  if(autoRot){
-    oscTime+=OSC_SPD;
-    theta=OSC_BASE+OSC_AMP*Math.sin(oscTime);
-    phi=1.15+0.08*Math.cos(oscTime*0.7); // gentle vertical oscillation too
+  if (autoRot) {
+    oscTime += OSC_SPD;
+    theta = OSC_BASE + OSC_AMP * Math.sin(oscTime);
+    phi = 1.15 + 0.08 * Math.cos(oscTime * 0.7);
     updCam();
   }
-  renderer.render(scene,camera);
+  renderer.render(scene, camera);
 })();
 
-// ── Voxel update ──────────────────────────────────────────────────────────
-let pending=false;
-const bmsg=document.getElementById('bmsg');
+// ═══════════════════════════════════════════════════════════════════════════
+// MESH UPDATE (debounced)
+// ═══════════════════════════════════════════════════════════════════════════
+const bmsg = document.getElementById('bmsg');
+let pending = false;
 
-function scheduleUpdate(){
-  if(pending)return;pending=true;
-  bmsg.textContent='Computing…';
-  setTimeout(doUpdate,20);
-}
-function doUpdate(){
-  pending=false;rebuildMasks();
-  const nx=NX(),nz=CELL;
-  let cF=0,cS=0;
-  for(let mod=0;mod<nCols;mod++){
-    const x0=mod*CELL,y0=mod*CELL;
-    for(let lx=0;lx<CELL;lx++){
-      const x=x0+lx;
-      let any=false;for(let w=0;w<NBIT;w++)if(mask1[x*NBIT+w]){any=true;break}
-      if(!any)continue;
-      for(let ly=0;ly<CELL;ly++){
-        const y=y0+ly;
-        for(let w=0;w<NBIT;w++){
-          let bits=mask1[x*NBIT+w]&mask2[y*NBIT+w];
-          while(bits){
-            const lsb=bits&(-bits);bits^=lsb;
-            let tz=0,tmp=lsb;while(!(tmp&1)){tz++;tmp>>>=1}
-            const z=w*32+tz;if(z>=nz)continue;
-            _m4.makeTranslation(x-nx/2+.5,z-nz/2+.5,y-nx/2+.5);
-            if(lx<=ly){if(cF<MAX_VOX){meshFront.setMatrixAt(cF,_m4);cF++}}
-            else       {if(cS<MAX_VOX){meshSide .setMatrixAt(cS,_m4);cS++}}
-          }
-        }
-      }
-    }
-  }
-  meshFront.count=cF;meshFront.instanceMatrix.needsUpdate=true;
-  meshSide .count=cS;meshSide .instanceMatrix.needsUpdate=true;
-  const tot=cF+cS;
-  document.getElementById('vc').textContent=tot>0?tot.toLocaleString()+' voxels':'No intersection';
-  bmsg.textContent='';
+function scheduleUpdate() {
+  if (pending) return; pending = true;
+  bmsg.textContent = 'Computing\u2026';
+  setTimeout(doUpdate, 30);
 }
 
-// ── STL export (SDF-smoothed) ─────────────────────────────────────────────
-document.getElementById('exportBtn').addEventListener('click',exportSTL);
+function doUpdate() {
+  pending = false;
 
-// 1D Gaussian kernel
-function gaussKernel(sigma){
-  const r=Math.ceil(sigma*3);
-  const k=new Float32Array(2*r+1);
-  let s=0;for(let i=0;i<=2*r;i++){k[i]=Math.exp(-.5*((i-r)/sigma)**2);s+=k[i]}
-  for(let i=0;i<k.length;i++)k[i]/=s;
-  return{k,r};
-}
-function gaussBlur2D(flat,w,h,sigma){
-  const{k,r}=gaussKernel(sigma);
-  let tmp=new Float32Array(w*h);
-  // horizontal
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-    let acc=0;for(let d=-r;d<=r;d++)acc+=flat[y*w+Math.max(0,Math.min(w-1,x+d))]*k[d+r];
-    tmp[y*w+x]=acc;
+  // Remove old mesh
+  if (mainMesh) { scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh = null; }
+
+  const GRID = Math.min(CELL, 96); // surface nets grid (capped for perf)
+  const geo = buildModuleMeshes(sil1, sil2, CELL, GRID, 1.8);
+
+  if (geo) {
+    mainMesh = new THREE.Mesh(geo, matSmooth);
+    mainMesh.castShadow = true;
+    mainMesh.receiveShadow = true;
+    scene.add(mainMesh);
+    const triCount = geo.index ? geo.index.count / 3 : 0;
+    document.getElementById('vc').textContent = triCount > 0 ? triCount.toLocaleString() + ' triangles' : 'No intersection';
+  } else {
+    document.getElementById('vc').textContent = 'No intersection';
   }
-  const out=new Float32Array(w*h);
-  // vertical
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-    let acc=0;for(let d=-r;d<=r;d++)acc+=tmp[Math.max(0,Math.min(h-1,y+d))*w+x]*k[d+r];
-    out[y*w+x]=acc;
-  }
-  return out;
-}
-function bilerp(den,w,h,x,y){
-  const x0=Math.floor(x),y0=Math.floor(y);
-  const x1=Math.min(w-1,x0+1),y1=Math.min(h-1,y0+1);
-  const fx=x-x0,fy=y-y0;
-  return den[y0*w+x0]*(1-fx)*(1-fy)+den[y0*w+x1]*fx*(1-fy)+
-         den[y1*w+x0]*(1-fx)*fy+den[y1*w+x1]*fx*fy;
+  bmsg.textContent = '';
 }
 
-async function exportSTL(){
-  const factor=parseInt(document.getElementById('exportQ').value)||2;
-  const ECELL=CELL*factor,ENBIT=Math.ceil(ECELL/32),ENX=nCols*ECELL;
-  const ESCALE=0.5/factor;
-  bmsg.textContent=`Preparing ${factor}× export (${ECELL}px/glyph)…`;
-  await new Promise(r=>setTimeout(r,40));
+// ═══════════════════════════════════════════════════════════════════════════
+// STL EXPORT (high-res surface nets)
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('exportBtn').addEventListener('click', exportSTL);
 
-  // Reindex sil from [x*CELL+z] to [z*nx+x] for blur
-  const nx=NX();
-  function reindex(sil,w,h){
-    const f=new Float32Array(w*h);
-    for(let x=0;x<w;x++)for(let z=0;z<h;z++)f[z*w+x]=sil[x*h+z];
-    return f;
-  }
-  const sigma=1.4;
-  const b1=gaussBlur2D(reindex(sil1,nx,CELL),nx,CELL,sigma);
-  const b2=gaussBlur2D(reindex(sil2,nx,CELL),nx,CELL,sigma);
+async function exportSTL() {
+  const factor = parseInt(document.getElementById('exportQ').value) || 2;
+  const ECELL = CELL * factor;
+  const SNET = Math.min(ECELL, 192); // surface nets grid cap
+  const sigma = 1.2 + factor * 0.1;
+  const ESCALE = 0.5 / factor; // mm per grid unit
 
-  function s1(ex,ez){return bilerp(b1,nx,CELL,(ex+.5)/factor,(ez+.5)/factor)}
-  function s2(ey,ez){return bilerp(b2,nx,CELL,(ey+.5)/factor,(ez+.5)/factor)}
+  bmsg.textContent = `Preparing ${factor}x export (${ECELL}px/glyph)\u2026`;
+  await new Promise(r => setTimeout(r, 40));
 
-  function solid(ex,ey,ez){
-    if(ex<0||ex>=ENX||ey<0||ey>=ENX||ez<0||ez>=ECELL)return false;
-    if(Math.floor(ex/ECELL)!==Math.floor(ey/ECELL))return false;
-    return s1(ex,ez)>0.5&&s2(ey,ez)>0.5;
+  // Re-render at higher resolution
+  const enx = nCols * ECELL;
+  const esil1 = new Uint8Array(enx * ECELL);
+  const esil2 = new Uint8Array(enx * ECELL);
+
+  // Temporarily override CELL for stampName
+  const origCell = CELL;
+  CELL = ECELL;
+  allocArrays();
+  await stampName(chars1, font1, esil1, ECELL);
+  await stampName(chars2, font2, esil2, ECELL);
+  CELL = origCell;
+  allocArrays();
+
+  bmsg.textContent = 'Generating smooth mesh\u2026';
+  await new Promise(r => setTimeout(r, 20));
+
+  const geo = buildModuleMeshes(esil1, esil2, ECELL, SNET, sigma);
+
+  if (!geo || !geo.index) {
+    bmsg.textContent = 'No geometry to export';
+    setTimeout(() => bmsg.textContent = '', 4000);
+    return;
   }
 
-  const FACES=[
-    {n:[1,0,0], q:[[1,0,0],[1,1,0],[1,1,1],[1,0,1]],adj:(x,y,z)=>solid(x+1,y,z)},
-    {n:[-1,0,0],q:[[0,1,0],[0,0,0],[0,0,1],[0,1,1]],adj:(x,y,z)=>solid(x-1,y,z)},
-    {n:[0,1,0], q:[[0,1,0],[1,1,0],[1,1,1],[0,1,1]],adj:(x,y,z)=>solid(x,y+1,z)},
-    {n:[0,-1,0],q:[[1,0,0],[0,0,0],[0,0,1],[1,0,1]],adj:(x,y,z)=>solid(x,y-1,z)},
-    {n:[0,0,1], q:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]],adj:(x,y,z)=>solid(x,y,z+1)},
-    {n:[0,0,-1],q:[[1,0,0],[0,0,0],[0,1,0],[1,1,0]],adj:(x,y,z)=>solid(x,y,z-1)},
-  ];
-  const tris=[];
-  for(let mod=0;mod<nCols;mod++){
-    const x0=mod*ECELL,y0=mod*ECELL;
-    bmsg.textContent=`Meshing ${mod+1}/${nCols}…`;
-    await new Promise(r=>setTimeout(r,0));
-    for(let lx=0;lx<ECELL;lx++){
-      const x=x0+lx;
-      for(let ly=0;ly<ECELL;ly++){
-        const y=y0+ly;
-        for(let ez=0;ez<ECELL;ez++){
-          if(!solid(x,y,ez))continue;
-          for(const f of FACES){
-            if(f.adj(x,y,ez))continue;
-            const[a,b,c,d]=f.q.map(([dx,dy,dz])=>
-              [(x+dx)*ESCALE,(ez+dz)*ESCALE,(y+dy)*ESCALE]);
-            tris.push([f.n,a,b,c]);tris.push([f.n,a,c,d]);
-          }
-        }
-      }
-    }
+  // Write binary STL
+  const pos = geo.getAttribute('position');
+  const idx = geo.index;
+  const triCount = idx.count / 3;
+  const buf = new ArrayBuffer(84 + triCount * 50);
+  const dv = new DataView(buf);
+  const hdr = `ShadowSculptor n=${nCols} snet=${SNET} sigma=${sigma.toFixed(1)} s=${ESCALE.toFixed(3)}mm`;
+  for (let i = 0; i < 80; i++) dv.setUint8(i, i < hdr.length ? hdr.charCodeAt(i) : 0);
+  dv.setUint32(80, triCount, true);
+
+  let off = 84;
+  const worldScale = ECELL / SNET;
+  for (let t = 0; t < triCount; t++) {
+    const ia = idx.getX(t * 3), ib = idx.getX(t * 3 + 1), ic = idx.getX(t * 3 + 2);
+    const ax = pos.getX(ia) * ESCALE / worldScale, ay = pos.getY(ia) * ESCALE / worldScale, az = pos.getZ(ia) * ESCALE / worldScale;
+    const bx = pos.getX(ib) * ESCALE / worldScale, by = pos.getY(ib) * ESCALE / worldScale, bz = pos.getZ(ib) * ESCALE / worldScale;
+    const cx = pos.getX(ic) * ESCALE / worldScale, cy = pos.getY(ic) * ESCALE / worldScale, cz = pos.getZ(ic) * ESCALE / worldScale;
+    // Face normal
+    const e1x = bx - ax, e1y = by - ay, e1z = bz - az;
+    const e2x = cx - ax, e2y = cy - ay, e2z = cz - az;
+    let nx = e1y * e2z - e1z * e2y, ny = e1z * e2x - e1x * e2z, nz2 = e1x * e2y - e1y * e2x;
+    const nl = Math.sqrt(nx * nx + ny * ny + nz2 * nz2) || 1;
+    nx /= nl; ny /= nl; nz2 /= nl;
+    [nx, ny, nz2, ax, ay, az, bx, by, bz, cx, cy, cz].forEach((v, i) => dv.setFloat32(off + i * 4, v, true));
+    dv.setUint16(off + 48, 0, true);
+    off += 50;
   }
-  const buf=new ArrayBuffer(84+tris.length*50);
-  const dv=new DataView(buf);
-  const hdr=`ShadowSculptor n=${nCols} c=${ECELL} blur=${sigma} s=${ESCALE.toFixed(3)}mm`;
-  for(let i=0;i<80;i++)dv.setUint8(i,i<hdr.length?hdr.charCodeAt(i):0);
-  dv.setUint32(80,tris.length,true);
-  let off=84;
-  for(const[n,v0,v1,v2]of tris){
-    [n[0],n[1],n[2],v0[0],v0[1],v0[2],v1[0],v1[1],v1[2],v2[0],v2[1],v2[2]]
-      .forEach((v,i)=>dv.setFloat32(off+i*4,v,true));
-    dv.setUint16(off+48,0,true);off+=50;
-  }
-  const blob=new Blob([buf],{type:'application/octet-stream'});
-  Object.assign(document.createElement('a'),{
-    href:URL.createObjectURL(blob),
-    download:`shadow_sculptor_${nCols}mod_${factor}x.stl`
+
+  const blob = new Blob([buf], { type: 'application/octet-stream' });
+  Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `shadow_sculptor_${nCols}mod_${factor}x.stl`
   }).click();
-  bmsg.textContent=`✓ ${tris.length.toLocaleString()} triangles · ${(buf.byteLength/1024/1024).toFixed(1)} MB`;
-  setTimeout(()=>bmsg.textContent='',8000);
+
+  bmsg.textContent = `Done: ${triCount.toLocaleString()} triangles, ${(buf.byteLength / 1024 / 1024).toFixed(1)} MB`;
+  setTimeout(() => bmsg.textContent = '', 8000);
 }
 
-// ── Draw canvases ─────────────────────────────────────────────────────────
-let redraw1,redraw2;
-function makeDrawer({id,getSil,ink,erId,clId,fiId,brId}){
-  const canvas=document.getElementById(id);
-  const RS=5;
-  let erasing=false,brushSize=2,isDown=false,lgx=-1,lgz=-1;
-  document.getElementById(erId).addEventListener('click',function(){erasing=!erasing;this.classList.toggle('active',erasing)});
-  document.getElementById(clId).addEventListener('click',()=>{getSil().fill(0);redraw();scheduleUpdate()});
-  document.getElementById(fiId).addEventListener('click',()=>{getSil().fill(1);redraw();scheduleUpdate()});
-  document.getElementById(brId).addEventListener('input',function(){brushSize=parseInt(this.value)});
-  function ptrToGrid(e){
-    const r=canvas.getBoundingClientRect(),nx=NX();
-    return{
-      gx:Math.max(0,Math.min(nx-1,Math.floor((e.clientX-r.left)/r.width*nx))),
-      gz:Math.max(0,Math.min(CELL-1,CELL-1-Math.floor((e.clientY-r.top)/r.height*CELL)))
+// ═══════════════════════════════════════════════════════════════════════════
+// RASTER EDITOR (2D pixel canvases)
+// ═══════════════════════════════════════════════════════════════════════════
+let redraw1, redraw2;
+function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId }) {
+  const canvas = document.getElementById(id);
+  const RS = 5;
+  let erasing = false, brushSize = 2, isDown = false, lgx = -1, lgz = -1;
+  document.getElementById(erId).addEventListener('click', function() { erasing = !erasing; this.classList.toggle('active', erasing); });
+  document.getElementById(clId).addEventListener('click', () => { getSil().fill(0); redraw(); scheduleUpdate(); });
+  document.getElementById(fiId).addEventListener('click', () => { getSil().fill(1); redraw(); scheduleUpdate(); });
+  document.getElementById(brId).addEventListener('input', function() { brushSize = parseInt(this.value); });
+  function ptrToGrid(e) {
+    const r = canvas.getBoundingClientRect(), nx = NX();
+    return {
+      gx: Math.max(0, Math.min(nx - 1, Math.floor((e.clientX - r.left) / r.width * nx))),
+      gz: Math.max(0, Math.min(CELL - 1, CELL - 1 - Math.floor((e.clientY - r.top) / r.height * CELL)))
     };
   }
-  function paintAt(gx,gz){
-    if(gx===lgx&&gz===lgz)return;lgx=gx;lgz=gz;
-    const sil=getSil(),nx=NX(),h=(brushSize-1)>>1;let ch=false;
-    for(let dz=-h;dz<=h;dz++)for(let dx=-h;dx<=h;dx++){
-      const x=gx+dx,z=gz+dz;
-      if(x<0||x>=nx||z<0||z>=CELL)continue;
-      const i=x*CELL+z,v=erasing?0:1;
-      if(sil[i]!==v){sil[i]=v;ch=true}
+  function paintAt(gx, gz) {
+    if (gx === lgx && gz === lgz) return; lgx = gx; lgz = gz;
+    const sil = getSil(), nx = NX(), h = (brushSize - 1) >> 1;
+    let ch = false;
+    for (let dz = -h; dz <= h; dz++) for (let dx = -h; dx <= h; dx++) {
+      const x = gx + dx, z = gz + dz;
+      if (x < 0 || x >= nx || z < 0 || z >= CELL) continue;
+      const i = x * CELL + z, v = erasing ? 0 : 1;
+      if (sil[i] !== v) { sil[i] = v; ch = true; }
     }
-    if(ch){redraw();scheduleUpdate()}
+    if (ch) { redraw(); scheduleUpdate(); }
   }
-  canvas.addEventListener('pointerdown',e=>{isDown=true;lgx=lgz=-1;canvas.setPointerCapture(e.pointerId);paintAt(...Object.values(ptrToGrid(e)))});
-  canvas.addEventListener('pointermove',e=>{if(isDown)paintAt(...Object.values(ptrToGrid(e)))});
-  canvas.addEventListener('pointerup',()=>isDown=false);
-  canvas.addEventListener('pointercancel',()=>isDown=false);
-  function redraw(){
-    const nx=NX(),BX=nx*RS,BZ=CELL*RS;
-    canvas.width=BX;canvas.height=BZ;
-    const ctx=canvas.getContext('2d'),sil=getSil();
-    ctx.fillStyle='#07070f';ctx.fillRect(0,0,BX,BZ);
-    // fine grid
-    ctx.strokeStyle='#10102a';ctx.lineWidth=.4;
-    for(let i=0;i<=nx;i++){const p=i*RS;ctx.beginPath();ctx.moveTo(p,0);ctx.lineTo(p,BZ);ctx.stroke()}
-    for(let j=0;j<=CELL;j++){const p=j*RS;ctx.beginPath();ctx.moveTo(0,p);ctx.lineTo(BX,p);ctx.stroke()}
-    // module dividers
-    if(nCols>1){ctx.strokeStyle='#28285a';ctx.lineWidth=1.5;
-      for(let c=1;c<nCols;c++){const p=c*CELL*RS;ctx.beginPath();ctx.moveTo(p,0);ctx.lineTo(p,BZ);ctx.stroke()}}
-    // ink
-    ctx.fillStyle=ink;
-    for(let x=0;x<nx;x++)for(let z=0;z<CELL;z++)
-      if(sil[x*CELL+z])ctx.fillRect(x*RS+.5,(CELL-1-z)*RS+.5,RS-1,RS-1);
-    ctx.strokeStyle='#1e1e38';ctx.lineWidth=1;ctx.strokeRect(.5,.5,BX-1,BZ-1);
+  canvas.addEventListener('pointerdown', e => { isDown = true; lgx = lgz = -1; canvas.setPointerCapture(e.pointerId); paintAt(...Object.values(ptrToGrid(e))); });
+  canvas.addEventListener('pointermove', e => { if (isDown) paintAt(...Object.values(ptrToGrid(e))); });
+  canvas.addEventListener('pointerup', () => isDown = false);
+  canvas.addEventListener('pointercancel', () => isDown = false);
+  function redraw() {
+    const nx = NX(), BX = nx * RS, BZ = CELL * RS;
+    canvas.width = BX; canvas.height = BZ;
+    const ctx = canvas.getContext('2d'), sil = getSil();
+    ctx.fillStyle = '#07070f'; ctx.fillRect(0, 0, BX, BZ);
+    ctx.strokeStyle = '#10102a'; ctx.lineWidth = 0.4;
+    for (let i = 0; i <= nx; i++) { const p = i * RS; ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, BZ); ctx.stroke(); }
+    for (let j = 0; j <= CELL; j++) { const p = j * RS; ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(BX, p); ctx.stroke(); }
+    if (nCols > 1) {
+      ctx.strokeStyle = '#28285a'; ctx.lineWidth = 1.5;
+      for (let c = 1; c < nCols; c++) { const p = c * CELL * RS; ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, BZ); ctx.stroke(); }
+    }
+    ctx.fillStyle = ink;
+    for (let x = 0; x < nx; x++) for (let z = 0; z < CELL; z++)
+      if (sil[x * CELL + z]) ctx.fillRect(x * RS + 0.5, (CELL - 1 - z) * RS + 0.5, RS - 1, RS - 1);
+    ctx.strokeStyle = '#1e1e38'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, BX - 1, BZ - 1);
   }
-  redraw();return redraw;
+  redraw();
+  return redraw;
 }
-redraw1=makeDrawer({id:'c1',getSil:()=>sil1,ink:'rgba(240,150,40,.9)',  erId:'er1',clId:'cl1',fiId:'fi1',brId:'br1'});
-redraw2=makeDrawer({id:'c2',getSil:()=>sil2,ink:'rgba(40,160,240,.9)',   erId:'er2',clId:'cl2',fiId:'fi2',brId:'br2'});
+redraw1 = makeDrawer({ id: 'c1', getSil: () => sil1, ink: 'rgba(240,150,40,.9)', erId: 'er1', clId: 'cl1', fiId: 'fi1', brId: 'br1' });
+redraw2 = makeDrawer({ id: 'c2', getSil: () => sil2, ink: 'rgba(40,160,240,.9)', erId: 'er2', clId: 'cl2', fiId: 'fi2', brId: 'br2' });
 
-// ── Stamp ─────────────────────────────────────────────────────────────────
-document.getElementById('stampBoth').addEventListener('click',async function(){
-  const r1=document.getElementById('name1').value||'ಪ';
-  const r2=document.getElementById('name2').value||'ಶು';
-  applyNames(r1,r2,document.getElementById('fnt1').value,document.getElementById('fnt2').value);
-  bmsg.textContent='Rendering glyphs…';
-  await Promise.all([stampName(chars1,font1,sil1),stampName(chars2,font2,sil2)]);
-  redraw1();redraw2();scheduleUpdate();
-});
-['name1','name2'].forEach(id=>document.getElementById(id)
-  .addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('stampBoth').click()}));
+// ═══════════════════════════════════════════════════════════════════════════
+// UI WIRING
+// ═══════════════════════════════════════════════════════════════════════════
 
-// ── Font upload ───────────────────────────────────────────────────────────
-document.getElementById('fontFile').addEventListener('change',async function(){
-  const file=this.files[0];if(!file)return;
-  try{
-    const name='CF_'+Date.now();
-    const face=new FontFace(name,await file.arrayBuffer());
-    await face.load();document.fonts.add(face);
-    uploadedFontFamily=name;
-    document.getElementById('uploadedFontName').textContent='✓ '+file.name;
-    ['f1up','f2up'].forEach(id=>{const o=document.getElementById(id);o.textContent='✓ '+file.name;o.value='__up__';o.disabled=false});
-    document.getElementById('fnt1').value='__up__';
-    document.getElementById('fnt2').value='__up__';
-  }catch(e){document.getElementById('uploadedFontName').textContent='Error: '+e.message}
+// Generate button
+document.getElementById('generateBtn').addEventListener('click', async function() {
+  const r1 = document.getElementById('name1').value || 'BUSY';
+  const r2 = document.getElementById('name2').value || 'FREE';
+  applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
+  bmsg.textContent = 'Rendering glyphs\u2026';
+  await Promise.all([stampName(chars1, font1, sil1), stampName(chars2, font2, sil2)]);
+  redraw1(); redraw2(); scheduleUpdate();
 });
 
-// ── Resolution ────────────────────────────────────────────────────────────
-document.getElementById('resSlider').addEventListener('input',async function(){
-  CELL=parseInt(this.value);
-  document.getElementById('resVal').textContent=CELL;
-  const r1=document.getElementById('name1').value;
-  const r2=document.getElementById('name2').value;
-  applyNames(r1||'ಪ',r2||'ಶು',document.getElementById('fnt1').value,document.getElementById('fnt2').value);
-  await Promise.all([stampName(chars1,font1,sil1),stampName(chars2,font2,sil2)]);
-  redraw1();redraw2();scheduleUpdate();
+// Enter to generate
+['name1', 'name2'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('generateBtn').click();
+  })
+);
+
+// Apply edits button
+document.getElementById('applyEdits').addEventListener('click', () => scheduleUpdate());
+
+// Font upload
+document.getElementById('fontFile').addEventListener('change', async function() {
+  const file = this.files[0]; if (!file) return;
+  try {
+    const name = 'CF_' + Date.now();
+    const face = new FontFace(name, await file.arrayBuffer());
+    await face.load(); document.fonts.add(face);
+    uploadedFontFamily = name;
+    document.getElementById('uploadedFontName').textContent = file.name;
+    ['f1up', 'f2up'].forEach(id => {
+      const o = document.getElementById(id);
+      o.textContent = file.name; o.value = '__up__'; o.disabled = false;
+    });
+    document.getElementById('fnt1').value = '__up__';
+    document.getElementById('fnt2').value = '__up__';
+  } catch(e) {
+    document.getElementById('uploadedFontName').textContent = 'Error: ' + e.message;
+  }
 });
 
-// ── Init ──────────────────────────────────────────────────────────────────
-(async()=>{
-  applyNames('ಪ','ಶು','sans-serif','sans-serif');
-  await Promise.all([stampName(chars1,font1,sil1),stampName(chars2,font2,sil2)]);
-  redraw1();redraw2();scheduleUpdate();
+// Resolution slider
+document.getElementById('resSlider').addEventListener('input', async function() {
+  CELL = parseInt(this.value);
+  document.getElementById('resVal').textContent = CELL;
+  const r1 = document.getElementById('name1').value;
+  const r2 = document.getElementById('name2').value;
+  applyNames(r1 || 'BUSY', r2 || 'FREE', document.getElementById('fnt1').value, document.getElementById('fnt2').value);
+  await Promise.all([stampName(chars1, font1, sil1), stampName(chars2, font2, sil2)]);
+  redraw1(); redraw2(); scheduleUpdate();
+});
+
+// Padding picker
+document.querySelectorAll('.pad-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pad-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    padChar = btn.dataset.pad;
+    document.getElementById('padCustom').value = '';
+  });
+});
+document.getElementById('padCustom').addEventListener('input', function() {
+  if (this.value) {
+    padChar = this.value;
+    document.querySelectorAll('.pad-opt').forEach(b => b.classList.remove('active'));
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+rebuildScene();
+updCam();
+(async () => {
+  applyNames('BUSY', 'FREE', 'sans-serif', 'sans-serif');
+  await Promise.all([stampName(chars1, font1, sil1), stampName(chars2, font2, sil2)]);
+  redraw1(); redraw2(); scheduleUpdate();
 })();
 </script>
 </body>
