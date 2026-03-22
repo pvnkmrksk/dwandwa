@@ -1,5 +1,5 @@
 /* global THREE */
-import { nCols } from './state.js';
+import S from './state.js';
 
 function gaussKernel(sigma) {
   const r = Math.ceil(sigma * 3);
@@ -132,9 +132,9 @@ function surfaceNets(sampleDensity, N) {
 export function buildModuleMeshes(silA, silB, cellSize, gridRes, sigma) {
   const allPos = [], allIdx = [], allCol = [];
   let baseVert = 0;
-  const nx = nCols * cellSize;
+  const nx = S.nCols * cellSize;
 
-  for (let mod = 0; mod < nCols; mod++) {
+  for (let mod = 0; mod < S.nCols; mod++) {
     const fSlice = new Float32Array(cellSize * cellSize);
     const sSlice = new Float32Array(cellSize * cellSize);
     for (let lx = 0; lx < cellSize; lx++) {

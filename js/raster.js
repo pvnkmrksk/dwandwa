@@ -1,21 +1,16 @@
-import {
-  CELL,
-  nCols,
-  uploadedFontFamily,
-  padChar,
-} from './state.js';
+import S from './state.js';
 
 export const BASELINE_FRAC = 0.76;
 
 export async function stampName(chars, fontStr, targetSil, cellSize) {
-  cellSize = cellSize || CELL;
-  const fam = (fontStr === '__up__' && uploadedFontFamily) ? uploadedFontFamily : fontStr;
+  cellSize = cellSize || S.CELL;
+  const fam = (fontStr === '__up__' && S.uploadedFontFamily) ? S.uploadedFontFamily : fontStr;
   try { await document.fonts.load(`bold 80px ${fam}`, chars.join('')); } catch(e) {}
   const BUF = Math.max(cellSize * 8, 512);
   const baseline = Math.round(BUF * BASELINE_FRAC);
   targetSil.fill(0);
-  for (let col = 0; col < nCols; col++) {
-    const ch = chars[col] || padChar;
+  for (let col = 0; col < S.nCols; col++) {
+    const ch = chars[col] || S.padChar;
     const cv = document.createElement('canvas');
     cv.width = cv.height = BUF;
     const ctx = cv.getContext('2d');

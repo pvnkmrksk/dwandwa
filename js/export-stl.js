@@ -1,20 +1,12 @@
 /* global THREE */
-import {
-  CELL,
-  nCols,
-  chars1,
-  chars2,
-  font1,
-  font2,
-  allocArrays,
-} from './state.js';
+import S, { allocArrays } from './state.js';
 import { stampName } from './raster.js';
 import { buildModuleMeshes } from './mesh.js';
 
 export async function exportSTL() {
   const bmsg = document.getElementById('bmsg');
   const factor = parseInt(document.getElementById('exportQ').value) || 2;
-  const ECELL = CELL * factor;
+  const ECELL = S.CELL * factor;
   const SNET = Math.min(ECELL, 192);
   const sigma = 1.2 + factor * 0.1;
   const ESCALE = 0.5 / factor;
@@ -22,16 +14,16 @@ export async function exportSTL() {
   bmsg.textContent = `Preparing ${factor}x export (${ECELL}px/glyph)\u2026`;
   await new Promise(r => setTimeout(r, 40));
 
-  const enx = nCols * ECELL;
+  const enx = S.nCols * ECELL;
   const esil1 = new Uint8Array(enx * ECELL);
   const esil2 = new Uint8Array(enx * ECELL);
 
-  const origCell = CELL;
-  CELL = ECELL;
+  const origCell = S.CELL;
+  S.CELL = ECELL;
   allocArrays();
-  await stampName(chars1, font1, esil1, ECELL);
-  await stampName(chars2, font2, esil2, ECELL);
-  CELL = origCell;
+  await stampName(S.chars1, S.font1, esil1, ECELL);
+  await stampName(S.chars2, S.font2, esil2, ECELL);
+  S.CELL = origCell;
   allocArrays();
 
   bmsg.textContent = 'Generating smooth mesh\u2026';
@@ -50,7 +42,7 @@ export async function exportSTL() {
   const triCount = idx.count / 3;
   const buf = new ArrayBuffer(84 + triCount * 50);
   const dv = new DataView(buf);
-  const hdr = `ShadowSculptor n=${nCols} snet=${SNET} sigma=${sigma.toFixed(1)} s=${ESCALE.toFixed(3)}mm`;
+  const hdr = `ShadowSculptor n=${S.nCols} snet=${SNET} sigma=${sigma.toFixed(1)} s=${ESCALE.toFixed(3)}mm`;
   for (let i = 0; i < 80; i++) dv.setUint8(i, i < hdr.length ? hdr.charCodeAt(i) : 0);
   dv.setUint32(80, triCount, true);
 
@@ -74,7 +66,7 @@ export async function exportSTL() {
   const blob = new Blob([buf], { type: 'application/octet-stream' });
   Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(blob),
-    download: `shadow_sculptor_${nCols}mod_${factor}x.stl`
+    download: `shadow_sculptor_${S.nCols}mod_${factor}x.stl`
   }).click();
 
   bmsg.textContent = `Done: ${triCount.toLocaleString()} triangles, ${(buf.byteLength / 1024 / 1024).toFixed(1)} MB`;

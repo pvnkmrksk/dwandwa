@@ -1,11 +1,5 @@
 /* global THREE */
-import {
-  CELL,
-  nCols,
-  sil1,
-  sil2,
-  NX,
-} from './state.js';
+import S, { NX } from './state.js';
 import { buildModuleMeshes } from './mesh.js';
 import { updateCanvasSize } from './layout.js';
 
@@ -54,7 +48,7 @@ export function rebuildScene() {
   extraLines = [];
   mainMesh = null;
 
-  const nx = NX(), nz = CELL;
+  const nx = NX(), nz = S.CELL;
 
   const pw = nx * 1.08, pd = nx * 1.08, ph = nz * 0.06;
   const pGeo = new THREE.BoxGeometry(pw, ph, pd);
@@ -63,10 +57,10 @@ export function rebuildScene() {
   plateMesh.receiveShadow = true;
   scene.add(plateMesh);
 
-  if (nCols > 1) {
+  if (S.nCols > 1) {
     const dmat = new THREE.LineBasicMaterial({ color: 0xccccdd, transparent: true, opacity: 0.5 });
-    for (let c = 1; c < nCols; c++) {
-      const xp = c * CELL - nx / 2, zp = c * CELL - nx / 2;
+    for (let c = 1; c < S.nCols; c++) {
+      const xp = c * S.CELL - nx / 2, zp = c * S.CELL - nx / 2;
       const mkLine = pts => {
         const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), dmat);
         scene.add(l); extraLines.push(l);
@@ -97,9 +91,12 @@ export function rebuildScene() {
   updCam();
 }
 
-let theta = Math.PI / 4, phi = 1.25, camDist = 600, orthoFrustum = 80;
+let theta = 0, phi = Math.PI / 2, camDist = 600, orthoFrustum = 80;
 let autoRot = true, oscTime = 0;
-const OSC_BASE = Math.PI / 4, OSC_AMP = Math.PI / 2 * 1.05, OSC_SPD = 0.005;
+// Bounce between front (theta=0) and side (theta=-PI/2), head-on only
+const OSC_CENTER = -Math.PI / 4;      // midpoint between front and side
+const OSC_AMP    =  Math.PI / 4 * 1.12; // ~12% overshoot past each view
+const OSC_SPD    =  0.008;
 
 export function updCam() {
   camera.position.set(
@@ -140,7 +137,7 @@ v3w.addEventListener('pointercancel', () => { drag = false; pp = null; });
 function setAutoRot(v) {
   autoRot = v;
   document.getElementById('ar').classList.toggle('active', v);
-  if (v) oscTime = Math.asin(Math.max(-1, Math.min(1, (theta - OSC_BASE) / OSC_AMP)));
+  if (v) oscTime = Math.asin(Math.max(-1, Math.min(1, (theta - OSC_CENTER) / OSC_AMP)));
 }
 
 export function setCameraFront() {
@@ -150,7 +147,7 @@ export function setCameraSide() {
   setAutoRot(false); theta = -Math.PI / 2; phi = Math.PI / 2; updCam();
 }
 export function setCameraIso() {
-  setAutoRot(false); theta = Math.PI / 4; phi = 1.2; updCam();
+  setAutoRot(false); theta = -Math.PI / 4; phi = 1.15; updCam();
 }
 export function toggleSpin() {
   setAutoRot(!autoRot);
@@ -160,8 +157,8 @@ export function toggleSpin() {
   requestAnimationFrame(loop);
   if (autoRot) {
     oscTime += OSC_SPD;
-    theta = OSC_BASE + OSC_AMP * Math.sin(oscTime);
-    phi = 1.15 + 0.08 * Math.cos(oscTime * 0.7);
+    theta = OSC_CENTER + OSC_AMP * Math.sin(oscTime);
+    phi = Math.PI / 2; // head-on, no vertical tilt
     updCam();
   }
   renderer.render(scene, camera);
@@ -181,8 +178,8 @@ function doUpdate() {
 
   if (mainMesh) { scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh = null; }
 
-  const GRID = Math.min(CELL, 96);
-  const geo = buildModuleMeshes(sil1, sil2, CELL, GRID, 1.8);
+  const GRID = Math.min(S.CELL, 96);
+  const geo = buildModuleMeshes(S.sil1, S.sil2, S.CELL, GRID, 1.8);
 
   if (geo) {
     mainMesh = new THREE.Mesh(geo, matSmooth);
@@ -191,6 +188,13 @@ function doUpdate() {
     scene.add(mainMesh);
     const triCount = geo.index ? geo.index.count / 3 : 0;
     document.getElementById('vc').textContent = triCount > 0 ? triCount.toLocaleString() + ' triangles' : 'No intersection';
+    // Auto-fit camera to mesh + plate
+    const box = new THREE.Box3();
+    box.setFromObject(mainMesh);
+    if (plateMesh) box.expandByObject(plateMesh);
+    const size = box.getSize(new THREE.Vector3());
+    orthoFrustum = Math.max(size.x, size.y, size.z) * 0.62;
+    resizeRenderer();
   } else {
     document.getElementById('vc').textContent = 'No intersection';
   }

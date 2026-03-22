@@ -1,14 +1,4 @@
-import {
-  CELL,
-  chars1,
-  chars2,
-  font1,
-  font2,
-  padChar,
-  sil1,
-  sil2,
-  uploadedFontFamily,
-} from './state.js';
+import S, { allocArrays } from './state.js';
 import { applyNames } from './text.js';
 import { stampName } from './raster.js';
 import {
@@ -28,7 +18,7 @@ export function wireUi({ redraw1, redraw2 }) {
     const r2 = document.getElementById('name2').value || 'FREE';
     applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
     bmsg.textContent = 'Rendering glyphs\u2026';
-    await Promise.all([stampName(chars1, font1, sil1), stampName(chars2, font2, sil2)]);
+    await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
     redraw1(); redraw2(); scheduleUpdate();
   });
 
@@ -46,7 +36,7 @@ export function wireUi({ redraw1, redraw2 }) {
       const name = 'CF_' + Date.now();
       const face = new FontFace(name, await file.arrayBuffer());
       await face.load(); document.fonts.add(face);
-      uploadedFontFamily = name;
+      S.uploadedFontFamily = name;
       document.getElementById('uploadedFontName').textContent = file.name;
       ['f1up', 'f2up'].forEach(id => {
         const o = document.getElementById(id);
@@ -60,12 +50,12 @@ export function wireUi({ redraw1, redraw2 }) {
   });
 
   document.getElementById('resSlider').addEventListener('input', async function() {
-    CELL = parseInt(this.value);
-    document.getElementById('resVal').textContent = CELL;
+    S.CELL = parseInt(this.value);
+    document.getElementById('resVal').textContent = S.CELL;
     const r1 = document.getElementById('name1').value;
     const r2 = document.getElementById('name2').value;
     applyNames(r1 || 'BUSY', r2 || 'FREE', document.getElementById('fnt1').value, document.getElementById('fnt2').value);
-    await Promise.all([stampName(chars1, font1, sil1), stampName(chars2, font2, sil2)]);
+    await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
     redraw1(); redraw2(); scheduleUpdate();
   });
 
@@ -73,13 +63,13 @@ export function wireUi({ redraw1, redraw2 }) {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.pad-opt').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      padChar = btn.dataset.pad;
+      S.padChar = btn.dataset.pad;
       document.getElementById('padCustom').value = '';
     });
   });
   document.getElementById('padCustom').addEventListener('input', function() {
     if (this.value) {
-      padChar = this.value;
+      S.padChar = this.value;
       document.querySelectorAll('.pad-opt').forEach(b => b.classList.remove('active'));
     }
   });

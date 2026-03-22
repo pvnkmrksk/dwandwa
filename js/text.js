@@ -1,12 +1,4 @@
-import {
-  nCols,
-  chars1,
-  chars2,
-  font1,
-  font2,
-  padChar,
-  allocArrays,
-} from './state.js';
+import S, { allocArrays } from './state.js';
 import { rebuildScene } from './scene.js';
 import { updateCanvasSize } from './layout.js';
 
@@ -26,13 +18,13 @@ function padded(g1, g2, pad) {
 export function applyNames(raw1, raw2, f1, f2) {
   const g1 = splitGraphemes(raw1.trim()).slice(0, 8);
   const g2 = splitGraphemes(raw2.trim()).slice(0, 8);
-  const { p1, p2, len } = padded(g1, g2, padChar);
-  font1 = f1; font2 = f2; nCols = len; chars1 = p1; chars2 = p2;
+  const { p1, p2, len } = padded(g1, g2, S.padChar);
+  S.font1 = f1; S.font2 = f2; S.nCols = len; S.chars1 = p1; S.chars2 = p2;
   const padHtml = (pad, rg) =>
     pad.map((c, i) => `<span class="${i < rg.length ? 'pc' : 'pp'}">${c}</span>`).join('');
   document.getElementById('padPreview').innerHTML =
-    padHtml(chars1, g1) + ' &middot; ' + padHtml(chars2, g2);
-  document.getElementById('modCount').textContent = nCols;
+    padHtml(S.chars1, g1) + ' &middot; ' + padHtml(S.chars2, g2);
+  document.getElementById('modCount').textContent = S.nCols;
   allocArrays();
   updateCanvasSize();
   rebuildScene();
