@@ -178,11 +178,29 @@ details[open] .raster-summary{border-bottom-color:var(--border)}
 #resVal{font-size:11px;font-weight:600;color:var(--text2);min-width:24px}
 #resSlider{width:64px}
 
-/* ── Help bar ───────────────────────────────────── */
-.help-bar{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:10px 16px;color:var(--text3);font-size:11px;
+/* ── Help FAB ───────────────────────────────────── */
+.help-fab{
+  position:fixed;bottom:20px;right:20px;z-index:100;
 }
-.help-item{cursor:help;border-bottom:1px dotted var(--border2);transition:color .15s}
-.help-item:hover{color:var(--text2)}
-.help-sep{color:var(--border2);font-size:9px}
+.help-icon{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--border2);
+  color:var(--text3);font-size:14px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+  cursor:help;box-shadow:0 2px 8px rgba(0,0,0,.1);
+  transition:all .15s;
+}
+.help-fab:hover .help-icon,.help-fab:focus .help-icon{
+  border-color:var(--accent);color:var(--accent);
+}
+.help-tooltip{
+  display:none;position:absolute;bottom:42px;right:0;
+  width:300px;padding:14px 16px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r12);box-shadow:0 4px 20px rgba(0,0,0,.12);
+  font-size:12px;color:var(--text2);line-height:1.6;
+}
+.help-tooltip p{margin:0 0 8px}
+.help-tooltip p:last-child{margin-bottom:0}
+.help-tooltip b{color:var(--text);font-weight:600}
+.help-fab:hover .help-tooltip,.help-fab:focus-within .help-tooltip{display:block}

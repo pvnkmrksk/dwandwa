@@ -8,7 +8,7 @@ export async function exportSTL() {
   const factor = parseInt(document.getElementById('exportQ').value) || 2;
   const ECELL = S.CELL * factor;
   const SNET = Math.min(ECELL, 192);
-  const sigma = 1.2 + factor * 0.1;
+  const sigma = 0.6 + factor * 0.1;
   const ESCALE = 0.5 / factor;
 
   bmsg.textContent = `Preparing ${factor}x export (${ECELL}px/glyph)\u2026`;

@@ -1,6 +1,12 @@
 import S, { NX } from './state.js';
 import { scheduleUpdate } from './scene.js';
 
+let meshTimer = null;
+function debouncedMeshUpdate() {
+  clearTimeout(meshTimer);
+  meshTimer = setTimeout(() => scheduleUpdate(), 500);
+}
+
 export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId }) {
   const canvas = document.getElementById(id);
   const RS = 5;
@@ -42,7 +48,7 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
         }
       }
     }
-    if (ch) { redraw(); scheduleUpdate(); }
+    if (ch) { redraw(); debouncedMeshUpdate(); }
   }
 
   canvas.addEventListener('pointerdown', e => { isDown = true; lgx = lgz = -1; canvas.setPointerCapture(e.pointerId); paintAt(...Object.values(ptrToGrid(e))); });

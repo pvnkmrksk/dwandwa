@@ -175,12 +175,20 @@ export function buildModuleMeshes(silA, silB, cellSize, gridRes, sigma) {
     const oz = -cellSize / 2; // all modules share same Z center
     const oy = -cellSize / 2;
 
+    // 45° rotation constants (baked into geometry for connected platform)
+    const cos45 = Math.SQRT1_2, sin45 = Math.SQRT1_2;
+
     for (let i = 0; i < mesh.positions.length; i += 3) {
       const px = mesh.positions[i], py = mesh.positions[i + 1], pz = mesh.positions[i + 2];
+      // World coords before rotation
+      const wx = ox + px * worldScale;
+      const wy = oy + pz * worldScale;
+      const wz = oz + py * worldScale;
+      // Rotate 45° around Y
       allPos.push(
-        ox + px * worldScale,
-        oy + pz * worldScale,
-        oz + py * worldScale
+        wx * cos45 + wz * sin45,
+        wy,
+        -wx * sin45 + wz * cos45
       );
 
       const sx = px * scale, sy = py * scale, sz = pz * scale;

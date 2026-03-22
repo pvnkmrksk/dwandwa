@@ -65,14 +65,17 @@ function clearSceneObjects() {
 function buildPlatform(nx, nz) {
   if (!platformEnabled) return;
   const pad = nx * platPadPct / 100;
-  const pw = nx + pad * 2, pd = nx + pad * 2;
+  // The letters are rotated 45°, so the footprint is rotated too
+  // Platform needs to cover the rotated bounding box
+  const diag = (nx + pad * 2) * Math.SQRT1_2;
+  const pw = diag + pad, pd = diag + pad;
   const ph = nz * 0.08;
-  const fillet = Math.min(nz * platFilletPct / 100, ph * 0.8, 4);
+  const fillet = Math.min(nz * platFilletPct / 100, ph * 1.5, 6);
 
   let geo;
-  if (fillet > 0.5) {
+  if (fillet > 0.3) {
     const shape = new THREE.Shape();
-    const hw = pw / 2, hd = pd / 2, r = fillet;
+    const hw = pw / 2, hd = pd / 2, r = Math.min(fillet, hw * 0.5, hd * 0.5);
     shape.moveTo(-hw + r, -hd);
     shape.lineTo(hw - r, -hd);
     shape.quadraticCurveTo(hw, -hd, hw, -hd + r);
@@ -84,8 +87,8 @@ function buildPlatform(nx, nz) {
     shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
     geo = new THREE.ExtrudeGeometry(shape, {
       depth: ph, bevelEnabled: true,
-      bevelThickness: Math.min(fillet, ph * 0.4),
-      bevelSize: Math.min(fillet, ph * 0.4),
+      bevelThickness: Math.min(r, ph * 0.5),
+      bevelSize: Math.min(r, ph * 0.5),
       bevelSegments: 3
     });
     geo.rotateX(-Math.PI / 2);
@@ -93,6 +96,7 @@ function buildPlatform(nx, nz) {
     geo = new THREE.BoxGeometry(pw, ph, pd);
   }
   const mesh = new THREE.Mesh(geo, matBase);
+  // Position flush with letter bottoms so they connect for printing
   mesh.position.set(0, -nz / 2 - ph * 0.5, 0);
   mesh.receiveShadow = true;
   mesh.castShadow = true;
@@ -155,11 +159,12 @@ export function rebuildScene() {
 
 let theta = -Math.PI / 4, phi = Math.PI / 2.3, camDist = 600, orthoFrustum = 80;
 let autoRot = true, oscTime = 0;
+// Head-on = -PI/4 (diagonal). ±PI/4 from there = 0 (front word) and -PI/2 (side word)
 const OSC_CENTER = -Math.PI / 4;
-const OSC_AMP    =  Math.PI / 4 * 1.08;
-const OSC_SPD    =  0.006;
-const PHI_CENTER =  Math.PI / 2.3;
-const PHI_AMP    =  0.05;
+const OSC_AMP    =  Math.PI / 4 * 1.06; // slight overshoot
+const OSC_SPD    =  0.005;
+const PHI_CENTER =  Math.PI / 2.3; // slightly above head-on
+const PHI_AMP    =  0.04;
 
 export function updCam() {
   camera.position.set(
@@ -261,12 +266,10 @@ function doUpdate() {
   if (mainMesh) { scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh = null; }
 
   const GRID = Math.min(S.CELL, 96);
-  const geo = buildModuleMeshes(S.sil1, S.sil2, S.CELL, GRID, 1.8);
+  const geo = buildModuleMeshes(S.sil1, S.sil2, S.CELL, GRID, 0.9);
 
   if (geo) {
     mainMesh = new THREE.Mesh(geo, matSmooth);
-    // Rotate 45° around Y so front/side views project onto the two walls
-    mainMesh.rotation.y = Math.PI / 4;
     mainMesh.castShadow = true;
     mainMesh.receiveShadow = true;
     scene.add(mainMesh);
