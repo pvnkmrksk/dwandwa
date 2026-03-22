@@ -1,0 +1,10 @@
+{
+  "name": "dwandwa",
+  "private": true,
+  "scripts": {
+    "dev": "vite --host"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
