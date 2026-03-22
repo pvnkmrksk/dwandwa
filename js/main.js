@@ -20,6 +20,7 @@ const redraw1 = makeDrawer({
   clId: 'cl1',
   fiId: 'fi1',
   brId: 'br1',
+  feathId: 'feath1',
 });
 const redraw2 = makeDrawer({
   id: 'c2',
@@ -29,6 +30,7 @@ const redraw2 = makeDrawer({
   clId: 'cl2',
   fiId: 'fi2',
   brId: 'br2',
+  feathId: 'feath2',
 });
 
 wireUi({ redraw1, redraw2 });

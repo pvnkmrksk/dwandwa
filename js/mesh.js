@@ -172,7 +172,7 @@ export function buildModuleMeshes(silA, silB, cellSize, gridRes, sigma) {
 
     const worldScale = cellSize / N;
     const ox = mod * cellSize - nx / 2;
-    const oz = mod * cellSize - nx / 2;
+    const oz = -cellSize / 2; // all modules share same Z center
     const oy = -cellSize / 2;
 
     for (let i = 0; i < mesh.positions.length; i += 3) {
