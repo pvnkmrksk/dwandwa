@@ -125,6 +125,16 @@ input[type=range]::-webkit-slider-thumb{
 #v3wrap{width:100%;height:60vw;min-height:300px;max-height:520px;background:#f0f0f4;overflow:hidden;touch-action:none}
 #v3wrap canvas{display:block}
 
+/* ── Scene controls ────────────────────────────── */
+.scene-controls{
+  padding:8px 16px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;background:var(--panel);font-size:11px;
+}
+.ctrl-toggle{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text2);font-size:11px;font-weight:500;white-space:nowrap}
+.ctrl-toggle input{margin:0}
+#platControls{transition:opacity .15s}
+#platControls.disabled{opacity:.3;pointer-events:none}
+
 /* ── Export bar ─────────────────────────────────── */
 .export-bar{
   padding:10px 16px;border-top:1px solid var(--border);

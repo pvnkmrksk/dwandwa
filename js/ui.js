@@ -1,5 +1,5 @@
 import S, { allocArrays } from './state.js';
-import { applyNames } from './text.js';
+import { applyNames, updatePreview } from './text.js';
 import { stampName } from './raster.js';
 import {
   scheduleUpdate,
@@ -22,11 +22,14 @@ export function wireUi({ redraw1, redraw2 }) {
     redraw1(); redraw2(); scheduleUpdate();
   });
 
-  ['name1', 'name2'].forEach(id =>
-    document.getElementById(id).addEventListener('keydown', e => {
+  // Live preview update as user types
+  ['name1', 'name2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => updatePreview());
+    el.addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('generateBtn').click();
-    })
-  );
+    });
+  });
 
   document.getElementById('applyEdits').addEventListener('click', () => scheduleUpdate());
 
@@ -65,12 +68,14 @@ export function wireUi({ redraw1, redraw2 }) {
       btn.classList.add('active');
       S.padChar = btn.dataset.pad;
       document.getElementById('padCustom').value = '';
+      updatePreview();
     });
   });
   document.getElementById('padCustom').addEventListener('input', function() {
     if (this.value) {
       S.padChar = this.value;
       document.querySelectorAll('.pad-opt').forEach(b => b.classList.remove('active'));
+      updatePreview();
     }
   });
 

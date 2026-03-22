@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Dwanda · Shadow Sculptor</title>
+<title>Dwandwa · 3D Shadow Illusion Sculptor</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Kannada:wght@700&family=Noto+Serif+Kannada:wght@700&family=Noto+Sans+Devanagari:wght@700&family=Noto+Nastaliq+Urdu:wght@700&family=Noto+Sans+Tamil:wght@700&family=Noto+Sans+Telugu:wght@700&family=Noto+Sans+Malayalam:wght@700&family=Noto+Sans+Bengali:wght@700&family=Noto+Sans+Gujarati:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
 <header>
-  <div class="logo">Shadow <em>Sculptor</em></div>
+  <div class="logo">Dwandwa</div>
   <div class="logo-sep"></div>
-  <div class="tagline">Dwanda — dual meaning, one form · 3D illusion</div>
+  <div class="tagline">3D Shadow Illusion Sculptor</div>
 </header>
 
 <div class="main">
@@ -23,7 +23,7 @@
       <div class="input-row">
         <span class="dot dot-f"></span>
         <label class="row-label">front</label>
-        <input type="text" id="name1" placeholder="BUSY" maxlength="16">
+        <input type="text" id="name1" value="BUSY" maxlength="16">
         <select id="fnt1">
           <option value="sans-serif">Sans</option>
           <option value="serif">Serif</option>
@@ -44,7 +44,7 @@
       <div class="input-row">
         <span class="dot dot-s"></span>
         <label class="row-label">side</label>
-        <input type="text" id="name2" placeholder="FREE" maxlength="16">
+        <input type="text" id="name2" value="FREE" maxlength="16">
         <select id="fnt2">
           <option value="sans-serif">Sans</option>
           <option value="serif">Serif</option>
@@ -96,6 +96,15 @@
       <span id="vc">-</span>
     </div>
     <div id="v3wrap"></div>
+    <div class="scene-controls">
+      <label class="ctrl-toggle"><input type="checkbox" id="platformOn" checked> Platform</label>
+      <div class="ctrl-group" id="platControls">
+        <span class="ctrl-label">Pad</span>
+        <input type="range" id="platPad" min="0" max="40" value="10" style="width:56px">
+        <span class="ctrl-label">Fillet</span>
+        <input type="range" id="platFillet" min="0" max="20" value="4" style="width:56px">
+      </div>
+    </div>
     <div class="export-bar">
       <select id="exportQ">
         <option value="1">1x draft</option>

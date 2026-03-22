@@ -17,24 +17,22 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xf0f0f4, 2000, 6000);
 const camera = new THREE.OrthographicCamera(-100, 100, 100, -100, 0.1, 10000);
 
-// ── Lighting: key + fill + rim + ambient ──
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+// ── Lighting ──
+scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
-// Key light — warm, casts shadows on both backdrops
-const keyLight = new THREE.DirectionalLight(0xfff5e0, 1.4);
+const keyLight = new THREE.DirectionalLight(0xfff5e0, 1.3);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
 keyLight.shadow.camera.near = 10;
 keyLight.shadow.camera.far = 3000;
-keyLight.shadow.bias = -0.001;
+keyLight.shadow.bias = -0.0015;
 scene.add(keyLight);
+scene.add(keyLight.target);
 
-// Fill light — cool, softer, opposite side
-const fillLight = new THREE.DirectionalLight(0xe0eeff, 0.5);
+const fillLight = new THREE.DirectionalLight(0xe0eeff, 0.45);
 scene.add(fillLight);
 
-// Rim light — subtle backlight for edge definition
-const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.25);
 scene.add(rimLight);
 
 // ── Materials ──
@@ -42,10 +40,18 @@ const matSmooth = new THREE.MeshStandardMaterial({
   vertexColors: true, roughness: 0.35, metalness: 0.05, side: THREE.DoubleSide
 });
 const matBase = new THREE.MeshStandardMaterial({ color: 0xe0e0e4, roughness: 0.6, metalness: 0.02 });
-const matBackdrop = new THREE.MeshStandardMaterial({ color: 0xeaeaee, roughness: 0.8, metalness: 0, side: THREE.DoubleSide });
+// Backdrops: very subtle, just a flat surface to catch shadows
+const matBackdrop = new THREE.MeshStandardMaterial({
+  color: 0xf0f0f3, roughness: 0.95, metalness: 0, side: THREE.FrontSide
+});
 
 let mainMesh = null;
-let sceneObjects = []; // base, backdrops, etc.
+let sceneObjects = [];
+
+// ── Platform settings ──
+let platformEnabled = true;
+let platPadPct = 10;  // percent of nx
+let platFilletPct = 4; // percent of CELL
 
 function clearSceneObjects() {
   sceneObjects.forEach(o => {
@@ -56,54 +62,64 @@ function clearSceneObjects() {
   if (mainMesh) { scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh = null; }
 }
 
-function buildBase(nx, nz) {
-  // Rounded base plate with fillet
-  const pw = nx * 1.12, pd = nx * 1.12, ph = nz * 0.08;
-  const filletR = Math.min(ph * 0.5, 2);
-  const shape = new THREE.Shape();
-  const hw = pw / 2, hd = pd / 2;
-  // Rounded rectangle profile (XZ plane, extruded along Y for fillet look)
-  shape.moveTo(-hw + filletR, -hd);
-  shape.lineTo(hw - filletR, -hd);
-  shape.quadraticCurveTo(hw, -hd, hw, -hd + filletR);
-  shape.lineTo(hw, hd - filletR);
-  shape.quadraticCurveTo(hw, hd, hw - filletR, hd);
-  shape.lineTo(-hw + filletR, hd);
-  shape.quadraticCurveTo(-hw, hd, -hw, hd - filletR);
-  shape.lineTo(-hw, -hd + filletR);
-  shape.quadraticCurveTo(-hw, -hd, -hw + filletR, -hd);
+function buildPlatform(nx, nz) {
+  if (!platformEnabled) return;
+  const pad = nx * platPadPct / 100;
+  const pw = nx + pad * 2, pd = nx + pad * 2;
+  const ph = nz * 0.08;
+  const fillet = Math.min(nz * platFilletPct / 100, ph * 0.8, 4);
 
-  const extrudeSettings = { depth: ph, bevelEnabled: true, bevelThickness: filletR, bevelSize: filletR, bevelSegments: 3 };
-  const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  // Rotate so extrusion goes upward (Y)
-  geo.rotateX(-Math.PI / 2);
+  let geo;
+  if (fillet > 0.5) {
+    const shape = new THREE.Shape();
+    const hw = pw / 2, hd = pd / 2, r = fillet;
+    shape.moveTo(-hw + r, -hd);
+    shape.lineTo(hw - r, -hd);
+    shape.quadraticCurveTo(hw, -hd, hw, -hd + r);
+    shape.lineTo(hw, hd - r);
+    shape.quadraticCurveTo(hw, hd, hw - r, hd);
+    shape.lineTo(-hw + r, hd);
+    shape.quadraticCurveTo(-hw, hd, -hw, hd - r);
+    shape.lineTo(-hw, -hd + r);
+    shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
+    geo = new THREE.ExtrudeGeometry(shape, {
+      depth: ph, bevelEnabled: true,
+      bevelThickness: Math.min(fillet, ph * 0.4),
+      bevelSize: Math.min(fillet, ph * 0.4),
+      bevelSegments: 3
+    });
+    geo.rotateX(-Math.PI / 2);
+  } else {
+    geo = new THREE.BoxGeometry(pw, ph, pd);
+  }
   const mesh = new THREE.Mesh(geo, matBase);
-  mesh.position.set(0, -nz / 2 - ph, 0);
+  mesh.position.set(0, -nz / 2 - ph * 0.5, 0);
   mesh.receiveShadow = true;
   mesh.castShadow = true;
   scene.add(mesh);
   sceneObjects.push(mesh);
-  return { pw, pd, ph };
 }
 
 function buildBackdrops(nx, nz) {
-  const wallH = nz * 1.6;
-  const wallW = nx * 1.1;
-  const wallD = 1;
+  // Thin, subtle walls positioned just behind the mesh to catch shadows
+  const wallH = nz * 2.0;
+  const wallW = nx * 1.4;
   const baseY = -nz / 2;
+  const offset = nx * 0.58;
 
-  // Back wall (behind, catches front shadow) — at -Z
-  const backGeo = new THREE.BoxGeometry(wallW, wallH, wallD);
+  // Back wall at -Z (catches shadow from front view)
+  const backGeo = new THREE.PlaneGeometry(wallW, wallH);
   const backWall = new THREE.Mesh(backGeo, matBackdrop);
-  backWall.position.set(0, baseY + wallH / 2, -nx * 0.56);
+  backWall.position.set(0, baseY + wallH / 2, -offset);
   backWall.receiveShadow = true;
   scene.add(backWall);
   sceneObjects.push(backWall);
 
-  // Side wall (right side, catches side shadow) — at +X
-  const sideGeo = new THREE.BoxGeometry(wallD, wallH, wallW);
+  // Side wall at +X (catches shadow from side view)
+  const sideGeo = new THREE.PlaneGeometry(wallW, wallH);
   const sideWall = new THREE.Mesh(sideGeo, matBackdrop);
-  sideWall.position.set(nx * 0.56, baseY + wallH / 2, 0);
+  sideWall.position.set(offset, baseY + wallH / 2, 0);
+  sideWall.rotation.y = -Math.PI / 2;
   sideWall.receiveShadow = true;
   scene.add(sideWall);
   sceneObjects.push(sideWall);
@@ -111,30 +127,26 @@ function buildBackdrops(nx, nz) {
 
 export function rebuildScene() {
   clearSceneObjects();
-
   const nx = NX(), nz = S.CELL;
 
-  const base = buildBase(nx, nz);
+  buildPlatform(nx, nz);
   buildBackdrops(nx, nz);
 
-  // Update camera and lights for scene size
   orthoFrustum = nx * 0.55 + nz * 0.55;
   camDist = Math.max(nx, nz) * 3;
   scene.fog.near = camDist * 1.5;
   scene.fog.far = camDist * 4;
 
-  // Shadow camera covers full scene
-  const sc = keyLight.shadow.camera;
   const extent = (nx + nz) * 1.5;
+  const sc = keyLight.shadow.camera;
   sc.left = sc.bottom = -extent;
   sc.right = sc.top = extent;
   sc.updateProjectionMatrix();
 
-  // Position lights relative to scene
-  keyLight.position.set(nx * 0.8, nz * 3, -nx * 0.6);
+  // Light from upper-front-left so shadows cast onto back wall and side wall
+  keyLight.position.set(-nx * 0.6, nz * 3, nx * 0.8);
   keyLight.target.position.set(0, 0, 0);
-  scene.add(keyLight.target);
-  fillLight.position.set(-nx * 1.2, nz * 1.5, nx * 0.8);
+  fillLight.position.set(nx * 1.2, nz * 1.5, -nx * 0.8);
   rimLight.position.set(0, -nz, nx * 2);
 
   resizeRenderer();
@@ -143,12 +155,11 @@ export function rebuildScene() {
 
 let theta = -Math.PI / 4, phi = Math.PI / 2.3, camDist = 600, orthoFrustum = 80;
 let autoRot = true, oscTime = 0;
-// Orbit 180° in front plane: from front (theta=0) to side (theta=-PI/2)
 const OSC_CENTER = -Math.PI / 4;
-const OSC_AMP    =  Math.PI / 4 * 1.08; // slight overshoot
+const OSC_AMP    =  Math.PI / 4 * 1.08;
 const OSC_SPD    =  0.006;
-const PHI_CENTER =  Math.PI / 2.3; // slightly above head-on for depth
-const PHI_AMP   =  0.05; // subtle vertical wobble
+const PHI_CENTER =  Math.PI / 2.3;
+const PHI_AMP    =  0.05;
 
 export function updCam() {
   camera.position.set(
@@ -210,12 +221,31 @@ export function toggleSpin() {
   if (autoRot) {
     oscTime += OSC_SPD;
     theta = OSC_CENTER + OSC_AMP * Math.sin(oscTime);
-    phi = PHI_CENTER + PHI_AMP * Math.sin(oscTime * 0.7); // gentle tilt
+    phi = PHI_CENTER + PHI_AMP * Math.sin(oscTime * 0.7);
     updCam();
   }
   renderer.render(scene, camera);
 })();
 
+// ── Platform UI ──
+const platCheckbox = document.getElementById('platformOn');
+const platControlsDiv = document.getElementById('platControls');
+const platPadSlider = document.getElementById('platPad');
+const platFilletSlider = document.getElementById('platFillet');
+
+function updatePlatformUI() {
+  platformEnabled = platCheckbox.checked;
+  platControlsDiv.classList.toggle('disabled', !platformEnabled);
+  platPadPct = parseInt(platPadSlider.value);
+  platFilletPct = parseInt(platFilletSlider.value);
+  rebuildScene();
+  if (mainMesh) scheduleUpdate();
+}
+platCheckbox.addEventListener('change', updatePlatformUI);
+platPadSlider.addEventListener('input', updatePlatformUI);
+platFilletSlider.addEventListener('input', updatePlatformUI);
+
+// ── Mesh update ──
 const bmsg = document.getElementById('bmsg');
 let pending = false;
 
@@ -235,12 +265,14 @@ function doUpdate() {
 
   if (geo) {
     mainMesh = new THREE.Mesh(geo, matSmooth);
+    // Rotate 45° around Y so front/side views project onto the two walls
+    mainMesh.rotation.y = Math.PI / 4;
     mainMesh.castShadow = true;
     mainMesh.receiveShadow = true;
     scene.add(mainMesh);
     const triCount = geo.index ? geo.index.count / 3 : 0;
     document.getElementById('vc').textContent = triCount > 0 ? triCount.toLocaleString() + ' triangles' : 'No intersection';
-    // Auto-fit camera to mesh (not backdrops, those are background)
+    // Auto-fit camera to mesh
     const box = new THREE.Box3();
     box.setFromObject(mainMesh);
     const size = box.getSize(new THREE.Vector3());

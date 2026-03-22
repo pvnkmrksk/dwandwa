@@ -15,13 +15,25 @@ function padded(g1, g2, pad) {
   return { p1, p2, len };
 }
 
+export function updatePreview() {
+  const raw1 = document.getElementById('name1').value || 'BUSY';
+  const raw2 = document.getElementById('name2').value || 'FREE';
+  const g1 = splitGraphemes(raw1.trim()).slice(0, 8);
+  const g2 = splitGraphemes(raw2.trim()).slice(0, 8);
+  const { p1, p2 } = padded(g1, g2, S.padChar);
+  const padHtml = (chars, origGraphemes) =>
+    chars.map((c, i) => `<span class="${i < origGraphemes.length ? 'pc' : 'pp'}">${c}</span>`).join('');
+  document.getElementById('padPreview').innerHTML =
+    padHtml(p1, g1) + ' &middot; ' + padHtml(p2, g2);
+}
+
 export function applyNames(raw1, raw2, f1, f2) {
   const g1 = splitGraphemes(raw1.trim()).slice(0, 8);
   const g2 = splitGraphemes(raw2.trim()).slice(0, 8);
   const { p1, p2, len } = padded(g1, g2, S.padChar);
   S.font1 = f1; S.font2 = f2; S.nCols = len; S.chars1 = p1; S.chars2 = p2;
-  const padHtml = (pad, rg) =>
-    pad.map((c, i) => `<span class="${i < rg.length ? 'pc' : 'pp'}">${c}</span>`).join('');
+  const padHtml = (chars, origGraphemes) =>
+    chars.map((c, i) => `<span class="${i < origGraphemes.length ? 'pc' : 'pp'}">${c}</span>`).join('');
   document.getElementById('padPreview').innerHTML =
     padHtml(S.chars1, g1) + ' &middot; ' + padHtml(S.chars2, g2);
   document.getElementById('modCount').textContent = S.nCols;
