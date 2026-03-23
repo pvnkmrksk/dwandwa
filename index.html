@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Dwandwa · 3D Shadow Illusion Sculptor</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Kannada:wght@700&family=Noto+Serif+Kannada:wght@700&family=Noto+Sans+Devanagari:wght@700&family=Noto+Nastaliq+Urdu:wght@700&family=Noto+Sans+Tamil:wght@700&family=Noto+Sans+Telugu:wght@700&family=Noto+Sans+Malayalam:wght@700&family=Noto+Sans+Bengali:wght@700&family=Noto+Sans+Gujarati:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
 <header>
-  <div class="logo">Dwandwa</div>
+  <img src="logo.svg" alt="ದ್ವಂದ್ವ Dwandwa" class="logo-img">
   <div class="logo-sep"></div>
   <div class="tagline">3D Shadow Illusion Sculptor</div>
 </header>
@@ -21,9 +22,8 @@
   <div class="card">
     <div class="input-section">
       <div class="input-row">
-        <span class="dot dot-f"></span>
-        <label class="row-label">front</label>
-        <input type="text" id="name1" value="BUSY" maxlength="16">
+        <span class="color-bar bar-f"></span>
+        <input type="text" id="name1" value="BUSY" maxlength="16" placeholder="Front word">
         <select id="fnt1">
           <option value="sans-serif">Sans</option>
           <option value="serif">Serif</option>
@@ -42,9 +42,8 @@
         </select>
       </div>
       <div class="input-row">
-        <span class="dot dot-s"></span>
-        <label class="row-label">side</label>
-        <input type="text" id="name2" value="FREE" maxlength="16">
+        <span class="color-bar bar-s"></span>
+        <input type="text" id="name2" value="FREE" maxlength="16" placeholder="Side word">
         <select id="fnt2">
           <option value="sans-serif">Sans</option>
           <option value="serif">Serif</option>
@@ -67,7 +66,7 @@
         <span id="uploadedFontName"></span>
       </div>
       <div class="pad-row">
-        <span class="pad-label" title="Fill character used when words have different lengths">Pad</span>
+        <span class="pad-label" data-tip="Fill character used when one word is shorter than the other — fills the gap so both words have equal length">Pad</span>
         <button class="pad-opt active" data-pad="♥">♥</button>
         <button class="pad-opt" data-pad="★">★</button>
         <button class="pad-opt" data-pad="●">●</button>
@@ -123,9 +122,9 @@
     <details id="rasterDetails">
       <summary class="raster-summary">Pixel Editor &mdash; join islands &amp; manual edits</summary>
       <div class="raster-content">
-        <div class="raster-stack">
+        <div class="raster-grid">
           <div class="raster-panel">
-            <div class="raster-head"><span class="dot dot-f"></span> Front silhouette</div>
+            <div class="raster-head"><span class="color-bar bar-f"></span> Front silhouette</div>
             <div class="canvas-wrap canvas-wrap-lg" id="w1"><canvas id="c1"></canvas></div>
             <div class="draw-tools">
               <button class="btn" id="er1">Erase</button>
@@ -136,7 +135,7 @@
             </div>
           </div>
           <div class="raster-panel">
-            <div class="raster-head"><span class="dot dot-s"></span> Side silhouette</div>
+            <div class="raster-head"><span class="color-bar bar-s"></span> Side silhouette</div>
             <div class="canvas-wrap canvas-wrap-lg" id="w2"><canvas id="c2"></canvas></div>
             <div class="draw-tools">
               <button class="btn" id="er2">Erase</button>

@@ -171,24 +171,27 @@ export function buildModuleMeshes(silA, silB, cellSize, gridRes, sigma) {
     if (mesh.positions.length === 0) continue;
 
     const worldScale = cellSize / N;
-    const ox = mod * cellSize - nx / 2;
-    const oz = -cellSize / 2; // all modules share same Z center
+    // Module spacing: each module is cellSize wide, rotated 45° so footprint
+    // is cellSize * sqrt(2). Add small gap so letters don't overlap.
+    const modSpacing = cellSize * Math.SQRT1_2 * 1.15;
+    const totalWidth = S.nCols * modSpacing;
+    const modCenterX = mod * modSpacing - totalWidth / 2 + modSpacing / 2;
     const oy = -cellSize / 2;
 
-    // 45° rotation constants (baked into geometry for connected platform)
+    // 45° rotation around each module's own center
     const cos45 = Math.SQRT1_2, sin45 = Math.SQRT1_2;
 
     for (let i = 0; i < mesh.positions.length; i += 3) {
       const px = mesh.positions[i], py = mesh.positions[i + 1], pz = mesh.positions[i + 2];
-      // World coords before rotation
-      const wx = ox + px * worldScale;
-      const wy = oy + pz * worldScale;
-      const wz = oz + py * worldScale;
-      // Rotate 45° around Y
+      // Local coords centered on module (before rotation)
+      const lx = (px * worldScale) - cellSize / 2;
+      const ly = pz * worldScale + oy; // Y = height (from pz)
+      const lz = (py * worldScale) - cellSize / 2;
+      // Rotate 45° around module's own Y axis, then translate to line position
       allPos.push(
-        wx * cos45 + wz * sin45,
-        wy,
-        -wx * sin45 + wz * cos45
+        modCenterX + lx * cos45 + lz * sin45,
+        ly,
+        -lx * sin45 + lz * cos45
       );
 
       const sx = px * scale, sy = py * scale, sz = pz * scale;

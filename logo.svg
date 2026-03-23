@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <defs>
+    <clipPath id="left-half">
+      <rect x="0" y="0" width="200" height="120"/>
+    </clipPath>
+    <clipPath id="right-half">
+      <rect x="200" y="0" width="200" height="120"/>
+    </clipPath>
+    <!-- Shadow filter for depth -->
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Background (transparent) -->
+
+  <!-- Duality mark: two overlapping offset copies of the Kannada text -->
+  <g transform="translate(200, 60)" filter="url(#shadow)">
+    <!-- Blue layer - shifted left and up (one perspective) -->
+    <text
+      x="-4" y="4"
+      font-family="'Noto Sans Kannada', 'Tunga', sans-serif"
+      font-size="64"
+      font-weight="700"
+      fill="#3090F0"
+      opacity="0.85"
+      text-anchor="middle"
+      dominant-baseline="central"
+      letter-spacing="2"
+    >ದ್ವಂದ್ವ</text>
+
+    <!-- Amber layer - shifted right and down (other perspective) -->
+    <text
+      x="4" y="-4"
+      font-family="'Noto Sans Kannada', 'Tunga', sans-serif"
+      font-size="64"
+      font-weight="700"
+      fill="#F0A030"
+      opacity="0.85"
+      text-anchor="middle"
+      dominant-baseline="central"
+      letter-spacing="2"
+    >ದ್ವಂದ್ವ</text>
+
+    <!-- Intersection: where both overlap appears as a blend -->
+    <!-- Using mix-blend to create the "3D anaglyph" duality effect -->
+  </g>
+
+  <!-- Subtle tagline -->
+  <text
+    x="200" y="108"
+    font-family="'Inter', 'Helvetica Neue', sans-serif"
+    font-size="11"
+    fill="#888"
+    text-anchor="middle"
+    letter-spacing="4"
+    text-transform="uppercase"
+  >SHADOW SCULPTOR</text>
+</svg>

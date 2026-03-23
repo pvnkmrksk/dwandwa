@@ -1,6 +1,5 @@
 import S from './state.js';
 import {
-  rebuildScene,
   updCam,
   scheduleUpdate,
 } from './scene.js';
@@ -9,7 +8,6 @@ import { stampName } from './raster.js';
 import { makeDrawer } from './editor.js';
 import { wireUi } from './ui.js';
 
-rebuildScene();
 updCam();
 
 const redraw1 = makeDrawer({
@@ -33,10 +31,16 @@ const redraw2 = makeDrawer({
   feathId: 'feath2',
 });
 
+// wireUi loads URL params into form fields first
 wireUi({ redraw1, redraw2 });
 
+// Auto-generate from whatever's in the form (URL params or defaults)
 (async () => {
-  applyNames('BUSY', 'FREE', 'sans-serif', 'sans-serif');
+  const r1 = document.getElementById('name1').value || 'BUSY';
+  const r2 = document.getElementById('name2').value || 'FREE';
+  const f1 = document.getElementById('fnt1').value;
+  const f2 = document.getElementById('fnt2').value;
+  applyNames(r1, r2, f1, f2);
   await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
   redraw1(); redraw2(); scheduleUpdate();
 })();

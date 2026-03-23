@@ -16,11 +16,10 @@ header{
   background:rgba(245,245,247,.85);backdrop-filter:blur(14px);
   border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:50;
-  padding:0 32px;height:48px;
-  display:flex;align-items:center;gap:16px;
+  padding:0 24px;height:48px;
+  display:flex;align-items:center;gap:14px;
 }
-.logo{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em}
-.logo em{color:var(--accent);font-style:normal}
+.logo-img{height:28px;width:auto}
 .logo-sep{width:1px;height:14px;background:var(--border2)}
 .tagline{font-size:12px;color:var(--text3);display:none}
 @media(min-width:640px){.tagline{display:block}}
@@ -32,10 +31,11 @@ header{
 /* ── Input section ──────────────────────────────── */
 .input-section{padding:20px 20px 16px}
 .input-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.row-label{font-size:11px;font-weight:600;color:var(--text2);width:32px;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
-.dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.dot-f{background:var(--front)}
-.dot-s{background:var(--side)}
+
+/* Color bars instead of dots (no radio-button look) */
+.color-bar{width:3px;height:28px;border-radius:2px;flex-shrink:0}
+.bar-f{background:var(--front)}
+.bar-s{background:var(--side)}
 
 input[type=text]{
   flex:1;min-width:0;
@@ -55,7 +55,7 @@ select{
 select:focus{border-color:var(--accent)}
 select option,select optgroup{background:white;color:var(--text)}
 
-.sub-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-left:40px}
+.sub-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-left:12px}
 .upload-label{
   cursor:pointer;display:inline-flex;align-items:center;gap:4px;
   padding:5px 10px;background:var(--panel);border:1px solid var(--border2);
@@ -66,9 +66,24 @@ select option,select optgroup{background:white;color:var(--text)}
 #uploadedFontName{font-size:11px;color:var(--accent);font-weight:500}
 
 /* ── Padding picker ─────────────────────────────── */
-.pad-row{display:flex;align-items:center;gap:5px;margin-bottom:12px;padding-left:40px;flex-wrap:wrap}
-.pad-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-right:2px;cursor:help;position:relative}
-.pad-label[title]{border-bottom:1px dotted var(--text3)}
+.pad-row{display:flex;align-items:center;gap:5px;margin-bottom:12px;padding-left:12px;flex-wrap:wrap}
+.pad-label{
+  font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;
+  margin-right:2px;cursor:help;position:relative;
+  border-bottom:1px dotted var(--text3);
+}
+/* Tooltip on hover for pad label */
+.pad-label::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  width:220px;padding:8px 10px;
+  background:var(--text);color:white;font-size:11px;line-height:1.4;
+  border-radius:var(--r6);text-transform:none;letter-spacing:0;font-weight:400;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:10;
+}
+.pad-label:hover::after{opacity:1}
+
 .pad-opt{
   width:28px;height:28px;border-radius:50%;
   border:1px solid var(--border);background:var(--panel);
@@ -85,7 +100,7 @@ select option,select optgroup{background:white;color:var(--text)}
 }
 .pad-custom:focus{border-color:var(--accent)}
 
-.gen-row{display:flex;align-items:center;gap:12px;padding-left:40px}
+.gen-row{display:flex;align-items:center;gap:12px;padding-left:12px}
 .pad-preview{font-size:13px;letter-spacing:.04em;color:var(--text3);display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .pad-preview .pc{color:var(--text);font-weight:600}
 .pad-preview .pp{color:var(--text3);opacity:.4}
@@ -155,14 +170,18 @@ input[type=range]::-webkit-slider-thumb{
 details[open] .raster-summary::before{transform:rotate(90deg)}
 details[open] .raster-summary{border-bottom-color:var(--border)}
 .raster-content{padding:16px}
-.raster-stack{display:flex;flex-direction:column;gap:20px}
+
+/* 2-column grid on wider screens */
+.raster-grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:600px){.raster-grid{grid-template-columns:1fr 1fr}}
+
 .raster-panel{width:100%}
 .raster-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:12px;font-weight:500;color:var(--text2)}
 .canvas-wrap{
   background:#080812;border:1px solid #1a1a2e;border-radius:var(--r8);
   overflow:hidden;touch-action:none;position:relative;max-width:100%;
 }
-.canvas-wrap-lg{height:200px}
+.canvas-wrap-lg{height:260px}
 .canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
 .draw-tools{display:flex;align-items:center;gap:5px;margin-top:8px;flex-wrap:wrap}
 .draw-tools label{gap:4px;font-size:11px}

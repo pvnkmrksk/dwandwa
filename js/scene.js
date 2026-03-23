@@ -10,7 +10,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setClearColor(0xf0f0f4, 1);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = 1.1;
 v3w.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -18,64 +18,73 @@ scene.fog = new THREE.Fog(0xf0f0f4, 2000, 6000);
 const camera = new THREE.OrthographicCamera(-100, 100, 100, -100, 0.1, 10000);
 
 // ── Lighting ──
-scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+// Soft ambient
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-const keyLight = new THREE.DirectionalLight(0xfff5e0, 1.3);
+// Key light: upper-left, casts shadows onto both backdrop walls
+const keyLight = new THREE.DirectionalLight(0xfff5e0, 1.2);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
-keyLight.shadow.camera.near = 10;
-keyLight.shadow.camera.far = 3000;
-keyLight.shadow.bias = -0.0015;
+keyLight.shadow.camera.near = 1;
+keyLight.shadow.camera.far = 5000;
+keyLight.shadow.bias = -0.001;
+keyLight.shadow.normalBias = 0.5;
 scene.add(keyLight);
 scene.add(keyLight.target);
 
-const fillLight = new THREE.DirectionalLight(0xe0eeff, 0.45);
+// Fill light from opposite side
+const fillLight = new THREE.DirectionalLight(0xe0eeff, 0.35);
 scene.add(fillLight);
 
-const rimLight = new THREE.DirectionalLight(0xffffff, 0.25);
+// Rim/back light for depth
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.2);
 scene.add(rimLight);
 
 // ── Materials ──
 const matSmooth = new THREE.MeshStandardMaterial({
   vertexColors: true, roughness: 0.35, metalness: 0.05, side: THREE.DoubleSide
 });
-const matBase = new THREE.MeshStandardMaterial({ color: 0xe0e0e4, roughness: 0.6, metalness: 0.02 });
-// Backdrops: very subtle, just a flat surface to catch shadows
+const matBase = new THREE.MeshStandardMaterial({
+  color: 0xe8e8ec, roughness: 0.5, metalness: 0.02
+});
 const matBackdrop = new THREE.MeshStandardMaterial({
-  color: 0xf0f0f3, roughness: 0.95, metalness: 0, side: THREE.FrontSide
+  color: 0xf4f4f6, roughness: 0.95, metalness: 0, side: THREE.DoubleSide,
+  transparent: true, opacity: 0.7
 });
 
 let mainMesh = null;
-let sceneObjects = [];
+let platformObjects = [];  // just platform + backdrops (rebuild cheaply)
+let lastMeshBox = null;    // bounding box of last mesh for platform sizing
 
 // ── Platform settings ──
 let platformEnabled = true;
-let platPadPct = 10;  // percent of nx
-let platFilletPct = 4; // percent of CELL
+let platPadPct = 10;
+let platFilletPct = 4;
 
-function clearSceneObjects() {
-  sceneObjects.forEach(o => {
+function clearPlatformObjects() {
+  platformObjects.forEach(o => {
     scene.remove(o);
     if (o.geometry) o.geometry.dispose();
   });
-  sceneObjects = [];
-  if (mainMesh) { scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh = null; }
+  platformObjects = [];
 }
 
-function buildPlatform(nx, nz) {
-  if (!platformEnabled) return;
-  const pad = nx * platPadPct / 100;
-  // The letters are rotated 45°, so the footprint is rotated too
-  // Platform needs to cover the rotated bounding box
-  const diag = (nx + pad * 2) * Math.SQRT1_2;
-  const pw = diag + pad, pd = diag + pad;
-  const ph = nz * 0.08;
-  const fillet = Math.min(nz * platFilletPct / 100, ph * 1.5, 6);
+function buildPlatform(box) {
+  if (!platformEnabled || !box) return;
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  const padFrac = platPadPct / 100;
+  const pw = size.x * (1 + padFrac * 2) + 4;
+  const pd = size.z * (1 + padFrac * 2) + 4;
+  const ph = Math.max(size.y * 0.06, 1.5);
+  const maxFillet = Math.min(pw, pd, ph * 3) * 0.4;
+  const fillet = maxFillet * platFilletPct / 20;
 
   let geo;
   if (fillet > 0.3) {
     const shape = new THREE.Shape();
-    const hw = pw / 2, hd = pd / 2, r = Math.min(fillet, hw * 0.5, hd * 0.5);
+    const hw = pw / 2, hd = pd / 2, r = Math.min(fillet, hw * 0.4, hd * 0.4);
     shape.moveTo(-hw + r, -hd);
     shape.lineTo(hw - r, -hd);
     shape.quadraticCurveTo(hw, -hd, hw, -hd + r);
@@ -87,8 +96,8 @@ function buildPlatform(nx, nz) {
     shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
     geo = new THREE.ExtrudeGeometry(shape, {
       depth: ph, bevelEnabled: true,
-      bevelThickness: Math.min(r, ph * 0.5),
-      bevelSize: Math.min(r, ph * 0.5),
+      bevelThickness: Math.min(r * 0.6, ph * 0.4),
+      bevelSize: Math.min(r * 0.6, ph * 0.4),
       bevelSegments: 3
     });
     geo.rotateX(-Math.PI / 2);
@@ -96,75 +105,112 @@ function buildPlatform(nx, nz) {
     geo = new THREE.BoxGeometry(pw, ph, pd);
   }
   const mesh = new THREE.Mesh(geo, matBase);
-  // Position flush with letter bottoms so they connect for printing
-  mesh.position.set(0, -nz / 2 - ph * 0.5, 0);
+  // Flush with bottom of letters
+  mesh.position.set(center.x, box.min.y - ph * 0.5, center.z);
   mesh.receiveShadow = true;
   mesh.castShadow = true;
   scene.add(mesh);
-  sceneObjects.push(mesh);
+  platformObjects.push(mesh);
 }
 
-function buildBackdrops(nx, nz) {
-  // Thin, subtle walls positioned just behind the mesh to catch shadows
-  const wallH = nz * 2.0;
-  const wallW = nx * 1.4;
-  const baseY = -nz / 2;
-  const offset = nx * 0.58;
+function buildBackdrops(box) {
+  if (!box) return;
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
 
-  // Back wall at -Z (catches shadow from front view)
-  const backGeo = new THREE.PlaneGeometry(wallW, wallH);
+  // L-shaped corner walls behind the letters (meeting at the back-right corner)
+  const wallH = size.y * 1.8;
+  const wallW = size.x * 1.6;
+  const baseY = box.min.y;
+  // Offset behind mesh, close enough to catch sharp shadows
+  const gap = size.z * 0.4;
+
+  // Back wall at -Z (shadow visible from front view θ≈0)
+  const backGeo = new THREE.PlaneGeometry(wallW * 1.2, wallH);
   const backWall = new THREE.Mesh(backGeo, matBackdrop);
-  backWall.position.set(0, baseY + wallH / 2, -offset);
+  backWall.position.set(center.x, baseY + wallH / 2, box.min.z - gap);
   backWall.receiveShadow = true;
   scene.add(backWall);
-  sceneObjects.push(backWall);
+  platformObjects.push(backWall);
 
-  // Side wall at +X (catches shadow from side view)
-  const sideGeo = new THREE.PlaneGeometry(wallW, wallH);
+  // Right wall at +X (shadow visible from side view θ≈-PI/2)
+  const sideGeo = new THREE.PlaneGeometry(wallW * 1.2, wallH);
   const sideWall = new THREE.Mesh(sideGeo, matBackdrop);
-  sideWall.position.set(offset, baseY + wallH / 2, 0);
+  sideWall.position.set(box.max.x + gap, baseY + wallH / 2, center.z);
   sideWall.rotation.y = -Math.PI / 2;
   sideWall.receiveShadow = true;
   scene.add(sideWall);
-  sceneObjects.push(sideWall);
+  platformObjects.push(sideWall);
+
+  // Floor plane for ground shadow (subtle)
+  const floorGeo = new THREE.PlaneGeometry(wallW * 2, wallW * 2);
+  const floor = new THREE.Mesh(floorGeo, matBackdrop);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(center.x, baseY - (platformEnabled ? size.y * 0.08 : 0.5), center.z);
+  floor.receiveShadow = true;
+  scene.add(floor);
+  platformObjects.push(floor);
 }
 
-export function rebuildScene() {
-  clearSceneObjects();
-  const nx = NX(), nz = S.CELL;
+function updateLighting(box) {
+  if (!box) return;
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const extent = Math.max(size.x, size.y, size.z) * 2;
 
-  buildPlatform(nx, nz);
-  buildBackdrops(nx, nz);
-
-  orthoFrustum = nx * 0.55 + nz * 0.55;
-  camDist = Math.max(nx, nz) * 3;
-  scene.fog.near = camDist * 1.5;
-  scene.fog.far = camDist * 4;
-
-  const extent = (nx + nz) * 1.5;
+  // Shadow camera must cover entire scene including backdrops
   const sc = keyLight.shadow.camera;
-  sc.left = sc.bottom = -extent;
-  sc.right = sc.top = extent;
+  sc.left = sc.bottom = -extent * 2;
+  sc.right = sc.top = extent * 2;
+  sc.far = extent * 8;
   sc.updateProjectionMatrix();
 
-  // Light from upper-front-left so shadows cast onto back wall and side wall
-  keyLight.position.set(-nx * 0.6, nz * 3, nx * 0.8);
-  keyLight.target.position.set(0, 0, 0);
-  fillLight.position.set(nx * 1.2, nz * 1.5, -nx * 0.8);
-  rimLight.position.set(0, -nz, nx * 2);
+  // Key light: from upper-left-front → casts shadows onto back wall (-Z) and right wall (+X)
+  // This is the diagonal that projects onto both walls
+  keyLight.position.set(
+    center.x - extent * 1.0,   // from left (casts shadow rightward onto +X wall)
+    center.y + extent * 1.5,   // from above
+    center.z + extent * 1.0    // from front (casts shadow backward onto -Z wall)
+  );
+  keyLight.target.position.copy(center);
 
-  resizeRenderer();
-  updCam();
+  // Fill: softer, from opposite direction
+  fillLight.position.set(
+    center.x + extent * 0.6,
+    center.y + extent * 0.4,
+    center.z - extent * 0.5
+  );
+
+  // Rim: from behind for edge definition
+  rimLight.position.set(
+    center.x + extent * 0.3,
+    center.y - extent * 0.2,
+    center.z + extent * 0.8
+  );
 }
 
+// Called by text.js when word lengths change (updates lighting/fog for new dimensions)
+export function rebuildScene() {
+  rebuildPlatform();
+}
+
+export function rebuildPlatform() {
+  clearPlatformObjects();
+  if (lastMeshBox) {
+    buildPlatform(lastMeshBox);
+    buildBackdrops(lastMeshBox);
+  }
+}
+
+// ── Camera ──
 let theta = -Math.PI / 4, phi = Math.PI / 2.3, camDist = 600, orthoFrustum = 80;
 let autoRot = true, oscTime = 0;
 // Head-on = -PI/4 (diagonal). ±PI/4 from there = 0 (front word) and -PI/2 (side word)
 const OSC_CENTER = -Math.PI / 4;
-const OSC_AMP    =  Math.PI / 4 * 1.06; // slight overshoot
+const OSC_AMP    =  Math.PI / 4 * 1.06;
 const OSC_SPD    =  0.005;
-const PHI_CENTER =  Math.PI / 2.3; // slightly above head-on
-const PHI_AMP    =  0.04;
+const PHI_CENTER =  Math.PI / 2.3;
+const PHI_AMP    =  0.03;
 
 export function updCam() {
   camera.position.set(
@@ -188,6 +234,15 @@ new ResizeObserver(resizeRenderer).observe(v3w);
 setTimeout(resizeRenderer, 60);
 window.addEventListener('resize', () => { updateCanvasSize(); resizeRenderer(); });
 
+// ── Scroll zoom on preview ──
+v3w.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = 1 + e.deltaY * 0.001;
+  orthoFrustum = Math.max(5, Math.min(500, orthoFrustum * factor));
+  resizeRenderer();
+}, { passive: false });
+
+// ── Pointer drag ──
 let drag = false, pp = null;
 v3w.addEventListener('pointerdown', e => {
   drag = true; pp = { x: e.clientX, y: e.clientY };
@@ -232,7 +287,7 @@ export function toggleSpin() {
   renderer.render(scene, camera);
 })();
 
-// ── Platform UI ──
+// ── Platform UI (no mesh rebuild!) ──
 const platCheckbox = document.getElementById('platformOn');
 const platControlsDiv = document.getElementById('platControls');
 const platPadSlider = document.getElementById('platPad');
@@ -243,8 +298,8 @@ function updatePlatformUI() {
   platControlsDiv.classList.toggle('disabled', !platformEnabled);
   platPadPct = parseInt(platPadSlider.value);
   platFilletPct = parseInt(platFilletSlider.value);
-  rebuildScene();
-  if (mainMesh) scheduleUpdate();
+  // Only rebuild platform + backdrops, NOT the mesh
+  rebuildPlatform();
 }
 platCheckbox.addEventListener('change', updatePlatformUI);
 platPadSlider.addEventListener('input', updatePlatformUI);
@@ -273,16 +328,31 @@ function doUpdate() {
     mainMesh.castShadow = true;
     mainMesh.receiveShadow = true;
     scene.add(mainMesh);
+
     const triCount = geo.index ? geo.index.count / 3 : 0;
     document.getElementById('vc').textContent = triCount > 0 ? triCount.toLocaleString() + ' triangles' : 'No intersection';
-    // Auto-fit camera to mesh
-    const box = new THREE.Box3();
-    box.setFromObject(mainMesh);
+
+    // Compute bounding box for auto-fit and platform
+    const box = new THREE.Box3().setFromObject(mainMesh);
+    lastMeshBox = box.clone();
     const size = box.getSize(new THREE.Vector3());
+
+    // Auto-fit camera
     orthoFrustum = Math.max(size.x, size.y, size.z) * 0.75;
+    camDist = Math.max(size.x, size.y, size.z) * 4;
+    scene.fog.near = camDist * 1.5;
+    scene.fog.far = camDist * 5;
+
+    // Rebuild platform, backdrops, and lighting to match mesh
+    rebuildPlatform();
+    updateLighting(lastMeshBox);
     resizeRenderer();
   } else {
     document.getElementById('vc').textContent = 'No intersection';
+    lastMeshBox = null;
   }
   bmsg.textContent = '';
 }
+
+// Initial setup
+updCam();
