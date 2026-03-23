@@ -327,9 +327,9 @@ function doUpdate() {
     lastMeshBox = box.clone();
     const size = box.getSize(new THREE.Vector3());
 
-    // Auto-fit camera
-    orthoFrustum = Math.max(size.x, size.y, size.z) * 0.75;
-    camDist = Math.max(size.x, size.y, size.z) * 4;
+    // Auto-fit camera — use diagonal extent for rotated modules
+    orthoFrustum = Math.max(size.x, size.y, size.z) * 0.55;
+    camDist = Math.max(size.x, size.y, size.z) * 3;
     scene.fog.near = camDist * 1.5;
     scene.fog.far = camDist * 5;
 
