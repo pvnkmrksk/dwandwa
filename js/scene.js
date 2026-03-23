@@ -48,8 +48,8 @@ const matBase = new THREE.MeshStandardMaterial({
   color: 0xe8e8ec, roughness: 0.5, metalness: 0.02
 });
 const matBackdrop = new THREE.MeshStandardMaterial({
-  color: 0xf4f4f6, roughness: 0.95, metalness: 0, side: THREE.DoubleSide,
-  transparent: true, opacity: 0.7
+  color: 0xf0f0f4, roughness: 0.95, metalness: 0, side: THREE.DoubleSide,
+  transparent: true, opacity: 0.45
 });
 
 let mainMesh = null;
@@ -118,38 +118,28 @@ function buildBackdrops(box) {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
-  // L-shaped corner walls behind the letters (meeting at the back-right corner)
-  const wallH = size.y * 1.8;
-  const wallW = size.x * 1.6;
+  // Subtle L-shaped walls for shadow reference
+  const wallH = size.y * 1.5;
+  const wallW = size.x * 1.3;
   const baseY = box.min.y;
-  // Offset behind mesh, close enough to catch sharp shadows
-  const gap = size.z * 0.4;
+  const gap = Math.max(size.z * 0.5, 3);
 
-  // Back wall at -Z (shadow visible from front view θ≈0)
-  const backGeo = new THREE.PlaneGeometry(wallW * 1.2, wallH);
+  // Back wall at -Z
+  const backGeo = new THREE.PlaneGeometry(wallW, wallH);
   const backWall = new THREE.Mesh(backGeo, matBackdrop);
   backWall.position.set(center.x, baseY + wallH / 2, box.min.z - gap);
   backWall.receiveShadow = true;
   scene.add(backWall);
   platformObjects.push(backWall);
 
-  // Right wall at +X (shadow visible from side view θ≈-PI/2)
-  const sideGeo = new THREE.PlaneGeometry(wallW * 1.2, wallH);
+  // Right wall at +X
+  const sideGeo = new THREE.PlaneGeometry(wallW, wallH);
   const sideWall = new THREE.Mesh(sideGeo, matBackdrop);
   sideWall.position.set(box.max.x + gap, baseY + wallH / 2, center.z);
   sideWall.rotation.y = -Math.PI / 2;
   sideWall.receiveShadow = true;
   scene.add(sideWall);
   platformObjects.push(sideWall);
-
-  // Floor plane for ground shadow (subtle)
-  const floorGeo = new THREE.PlaneGeometry(wallW * 2, wallW * 2);
-  const floor = new THREE.Mesh(floorGeo, matBackdrop);
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.set(center.x, baseY - (platformEnabled ? size.y * 0.08 : 0.5), center.z);
-  floor.receiveShadow = true;
-  scene.add(floor);
-  platformObjects.push(floor);
 }
 
 function updateLighting(box) {

@@ -40,7 +40,9 @@ header{
 input[type=text]{
   flex:1;min-width:0;
   background:var(--panel);border:1px solid var(--border);border-radius:var(--r8);
-  color:var(--text);font-family:var(--sys);font-size:16px;font-weight:500;
+  color:var(--text);
+  font-family:'Noto Sans Kannada','Noto Sans Devanagari','Noto Sans Tamil','Noto Sans Telugu','Noto Sans Malayalam','Noto Sans Bengali','Noto Sans Gujarati','Noto Nastaliq Urdu',var(--sys);
+  font-size:16px;font-weight:500;
   padding:7px 10px;outline:none;transition:border-color .15s,box-shadow .15s;
 }
 input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
@@ -101,7 +103,7 @@ select option,select optgroup{background:white;color:var(--text)}
 .pad-custom:focus{border-color:var(--accent)}
 
 .gen-row{display:flex;align-items:center;gap:12px;padding-left:12px}
-.pad-preview{font-size:13px;letter-spacing:.04em;color:var(--text3);display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.pad-preview{font-size:13px;letter-spacing:.04em;color:var(--text3);display:flex;gap:4px;flex-wrap:wrap;align-items:center;font-family:'Noto Sans Kannada','Noto Sans Devanagari','Noto Sans Tamil','Noto Sans Telugu','Noto Sans Malayalam','Noto Sans Bengali','Noto Sans Gujarati','Noto Nastaliq Urdu',var(--sys)}
 .pad-preview .pc{color:var(--text);font-weight:600}
 .pad-preview .pp{color:var(--text3);opacity:.4}
 
