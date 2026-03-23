@@ -7,6 +7,7 @@ const S = {
   font2: 'sans-serif',
   uploadedFontFamily: null,
   padChar: '\u2665',
+  letterGapPct: 15, // % of cellSize
   sil1: null,
   sil2: null,
 };

@@ -13,9 +13,32 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
   let erasing = false, brushSize = 3, isDown = false, lgx = -1, lgz = -1;
   const feathEl = document.getElementById(feathId);
 
+  // Undo stack (stores snapshots)
+  const undoStack = [];
+  const MAX_UNDO = 20;
+  const undoBtnId = id === 'c1' ? 'undo1' : 'undo2';
+  const undoBtn = document.getElementById(undoBtnId);
+
+  function saveSnapshot() {
+    const sil = getSil();
+    undoStack.push(new Uint8Array(sil));
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+  }
+
+  function undo() {
+    if (undoStack.length === 0) return;
+    const snapshot = undoStack.pop();
+    const sil = getSil();
+    sil.set(snapshot);
+    redraw();
+    debouncedMeshUpdate();
+  }
+
+  if (undoBtn) undoBtn.addEventListener('click', undo);
+
   document.getElementById(erId).addEventListener('click', function() { erasing = !erasing; this.classList.toggle('active', erasing); });
-  document.getElementById(clId).addEventListener('click', () => { getSil().fill(0); redraw(); scheduleUpdate(); });
-  document.getElementById(fiId).addEventListener('click', () => { getSil().fill(1); redraw(); scheduleUpdate(); });
+  document.getElementById(clId).addEventListener('click', () => { saveSnapshot(); getSil().fill(0); redraw(); scheduleUpdate(); });
+  document.getElementById(fiId).addEventListener('click', () => { saveSnapshot(); getSil().fill(1); redraw(); scheduleUpdate(); });
   document.getElementById(brId).addEventListener('input', function() { brushSize = parseInt(this.value); });
 
   function ptrToGrid(e) {
@@ -30,7 +53,6 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
     if (gx === lgx && gz === lgz) return; lgx = gx; lgz = gz;
     const sil = getSil(), nx = NX();
     const r = (brushSize - 1) / 2;
-    const feather = feathEl && feathEl.checked;
     let ch = false;
 
     for (let dz = -Math.ceil(r); dz <= Math.ceil(r); dz++) {
@@ -51,7 +73,12 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
     if (ch) { redraw(); debouncedMeshUpdate(); }
   }
 
-  canvas.addEventListener('pointerdown', e => { isDown = true; lgx = lgz = -1; canvas.setPointerCapture(e.pointerId); paintAt(...Object.values(ptrToGrid(e))); });
+  canvas.addEventListener('pointerdown', e => {
+    saveSnapshot(); // save before stroke
+    isDown = true; lgx = lgz = -1;
+    canvas.setPointerCapture(e.pointerId);
+    paintAt(...Object.values(ptrToGrid(e)));
+  });
   canvas.addEventListener('pointermove', e => { if (isDown) paintAt(...Object.values(ptrToGrid(e))); });
   canvas.addEventListener('pointerup', () => isDown = false);
   canvas.addEventListener('pointercancel', () => isDown = false);
@@ -62,7 +89,6 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
     const ctx = canvas.getContext('2d'), sil = getSil();
     ctx.fillStyle = '#07070f'; ctx.fillRect(0, 0, BX, BZ);
 
-    // Draw filled pixels with soft glow when feather is on
     const feather = feathEl && feathEl.checked;
     ctx.fillStyle = ink;
     for (let x = 0; x < nx; x++) {
@@ -73,7 +99,6 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
       }
     }
 
-    // Feather: overlay a soft blurred version
     if (feather) {
       ctx.filter = 'blur(3px)';
       ctx.globalAlpha = 0.3;
@@ -88,11 +113,6 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
       ctx.filter = 'none';
       ctx.globalAlpha = 1;
     }
-
-    // Subtle grid
-    ctx.strokeStyle = '#10102a'; ctx.lineWidth = 0.3;
-    for (let i = 0; i <= nx; i++) { const p = i * RS; ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, BZ); ctx.stroke(); }
-    for (let j = 0; j <= S.CELL; j++) { const p = j * RS; ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(BX, p); ctx.stroke(); }
 
     // Module separators
     if (S.nCols > 1) {

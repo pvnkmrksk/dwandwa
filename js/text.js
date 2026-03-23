@@ -2,9 +2,52 @@ import S, { allocArrays } from './state.js';
 import { rebuildScene } from './scene.js';
 import { updateCanvasSize } from './layout.js';
 
+// Virama/halant characters for Indic scripts that join consonants
+const VIRAMAS = new Set([
+  '\u094D', // Devanagari
+  '\u09CD', // Bengali
+  '\u0A4D', // Gurmukhi
+  '\u0ACD', // Gujarati
+  '\u0B4D', // Oriya
+  '\u0BCD', // Tamil
+  '\u0C4D', // Telugu
+  '\u0CCD', // Kannada
+  '\u0D4D', // Malayalam
+  '\u0DCA', // Sinhala
+]);
+
+function endsWithVirama(s) {
+  for (let i = s.length - 1; i >= 0; i--) {
+    if (VIRAMAS.has(s[i])) return true;
+    // Skip combining marks to find the virama
+    const cp = s.charCodeAt(i);
+    if (cp >= 0x0300 && cp <= 0x036F) continue; // combining diacriticals
+    if (cp >= 0x0900 && cp <= 0x0DFF) {
+      // In Indic range — check if it's a combining mark (Mn category)
+      // Viramas are specific, non-virama combining marks don't count
+      return false;
+    }
+    return false;
+  }
+  return false;
+}
+
 export function splitGraphemes(s) {
-  try { return [...new Intl.Segmenter().segment(s)].map(x => x.segment); }
-  catch(e) { return [...s]; }
+  let segs;
+  try { segs = [...new Intl.Segmenter().segment(s)].map(x => x.segment); }
+  catch(e) { segs = [...s]; }
+
+  // Merge segments where one ends with virama (halant) — browser segmenter
+  // sometimes splits consonant clusters like ದ್ + ವ instead of keeping ದ್ವ
+  const merged = [];
+  for (let i = 0; i < segs.length; i++) {
+    if (merged.length > 0 && endsWithVirama(merged[merged.length - 1])) {
+      merged[merged.length - 1] += segs[i];
+    } else {
+      merged.push(segs[i]);
+    }
+  }
+  return merged;
 }
 
 function padded(g1, g2, pad) {

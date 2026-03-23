@@ -5,13 +5,29 @@ import { buildModuleMeshes } from './mesh.js';
 
 export async function exportSTL() {
   const bmsg = document.getElementById('bmsg');
+  const exportBtn = document.getElementById('exportBtn');
+  const progressEl = document.getElementById('exportProgress');
+  const barEl = document.getElementById('exportBar');
   const factor = parseInt(document.getElementById('exportQ').value) || 2;
   const ECELL = S.CELL * factor;
   const SNET = Math.min(ECELL, 192);
   const sigma = 0.6 + factor * 0.1;
   const ESCALE = 0.5 / factor;
 
-  bmsg.textContent = `Preparing ${factor}x export (${ECELL}px/glyph)\u2026`;
+  const platformOn = document.getElementById('platformOn').checked;
+
+  // Show progress
+  exportBtn.disabled = true;
+  exportBtn.textContent = 'Exporting\u2026';
+  progressEl.hidden = false;
+  barEl.style.width = '0%';
+
+  const setProgress = (pct, msg) => {
+    barEl.style.width = pct + '%';
+    bmsg.textContent = msg;
+  };
+
+  setProgress(5, `Preparing ${factor}x export (${ECELL}px/glyph)\u2026`);
   await new Promise(r => setTimeout(r, 40));
 
   const enx = S.nCols * ECELL;
@@ -21,54 +37,131 @@ export async function exportSTL() {
   const origCell = S.CELL;
   S.CELL = ECELL;
   allocArrays();
+
+  setProgress(15, 'Rendering front glyphs\u2026');
+  await new Promise(r => setTimeout(r, 20));
   await stampName(S.chars1, S.font1, esil1, ECELL);
+
+  setProgress(30, 'Rendering side glyphs\u2026');
+  await new Promise(r => setTimeout(r, 20));
   await stampName(S.chars2, S.font2, esil2, ECELL);
+
   S.CELL = origCell;
   allocArrays();
 
-  bmsg.textContent = 'Generating smooth mesh\u2026';
+  setProgress(45, 'Generating smooth mesh\u2026');
   await new Promise(r => setTimeout(r, 20));
 
   const geo = buildModuleMeshes(esil1, esil2, ECELL, SNET, sigma);
 
   if (!geo || !geo.index) {
     bmsg.textContent = 'No geometry to export';
+    exportBtn.disabled = false;
+    exportBtn.textContent = 'Export STL';
+    progressEl.hidden = true;
     setTimeout(() => bmsg.textContent = '', 4000);
     return;
   }
 
+  setProgress(70, 'Building STL binary\u2026');
+  await new Promise(r => setTimeout(r, 20));
+
+  // Collect all triangles (letters + optional platform)
+  const allTriangles = [];
   const pos = geo.getAttribute('position');
   const idx = geo.index;
   const triCount = idx.count / 3;
-  const buf = new ArrayBuffer(84 + triCount * 50);
-  const dv = new DataView(buf);
-  const hdr = `ShadowSculptor n=${S.nCols} snet=${SNET} sigma=${sigma.toFixed(1)} s=${ESCALE.toFixed(3)}mm`;
-  for (let i = 0; i < 80; i++) dv.setUint8(i, i < hdr.length ? hdr.charCodeAt(i) : 0);
-  dv.setUint32(80, triCount, true);
 
-  let off = 84;
-  const worldScale = ECELL / SNET;
   for (let t = 0; t < triCount; t++) {
     const ia = idx.getX(t * 3), ib = idx.getX(t * 3 + 1), ic = idx.getX(t * 3 + 2);
-    const ax = pos.getX(ia) * ESCALE / worldScale, ay = pos.getY(ia) * ESCALE / worldScale, az = pos.getZ(ia) * ESCALE / worldScale;
-    const bx = pos.getX(ib) * ESCALE / worldScale, by = pos.getY(ib) * ESCALE / worldScale, bz = pos.getZ(ib) * ESCALE / worldScale;
-    const cx = pos.getX(ic) * ESCALE / worldScale, cy = pos.getY(ic) * ESCALE / worldScale, cz = pos.getZ(ic) * ESCALE / worldScale;
-    const e1x = bx - ax, e1y = by - ay, e1z = bz - az;
-    const e2x = cx - ax, e2y = cy - ay, e2z = cz - az;
-    let nx = e1y * e2z - e1z * e2y, ny = e1z * e2x - e1x * e2z, nz2 = e1x * e2y - e1y * e2x;
-    const nl = Math.sqrt(nx * nx + ny * ny + nz2 * nz2) || 1;
-    nx /= nl; ny /= nl; nz2 /= nl;
-    [nx, ny, nz2, ax, ay, az, bx, by, bz, cx, cy, cz].forEach((v, i) => dv.setFloat32(off + i * 4, v, true));
-    dv.setUint16(off + 48, 0, true);
+    allTriangles.push([
+      pos.getX(ia) * ESCALE, pos.getY(ia) * ESCALE, pos.getZ(ia) * ESCALE,
+      pos.getX(ib) * ESCALE, pos.getY(ib) * ESCALE, pos.getZ(ib) * ESCALE,
+      pos.getX(ic) * ESCALE, pos.getY(ic) * ESCALE, pos.getZ(ic) * ESCALE,
+    ]);
+  }
+
+  // Add platform geometry if enabled
+  if (platformOn) {
+    // Build a simple platform matching the mesh bounding box
+    const box = new THREE.Box3();
+    // Compute bounding box from positions
+    for (let i = 0; i < pos.count; i++) {
+      box.expandByPoint(new THREE.Vector3(
+        pos.getX(i) * ESCALE,
+        pos.getY(i) * ESCALE,
+        pos.getZ(i) * ESCALE
+      ));
+    }
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const padFrac = parseInt(document.getElementById('platPad').value) / 100;
+    const pw = size.x * (1 + padFrac * 2) + 0.5;
+    const pd = size.z * (1 + padFrac * 2) + 0.5;
+    const ph = Math.max(size.y * 0.10, 0.3);
+
+    // Simple box platform (6 faces = 12 triangles)
+    const hx = pw / 2, hy = ph, hz = pd / 2;
+    const py = box.min.y; // flush with bottom of letters
+    const cx = center.x, cz = center.z;
+    // Box corners
+    const v = [
+      [cx-hx, py-hy, cz-hz], [cx+hx, py-hy, cz-hz],
+      [cx+hx, py,    cz-hz], [cx-hx, py,    cz-hz],
+      [cx-hx, py-hy, cz+hz], [cx+hx, py-hy, cz+hz],
+      [cx+hx, py,    cz+hz], [cx-hx, py,    cz+hz],
+    ];
+    const faces = [
+      [0,2,1],[0,3,2], // front
+      [4,5,6],[4,6,7], // back
+      [0,1,5],[0,5,4], // bottom
+      [2,3,7],[2,7,6], // top
+      [0,4,7],[0,7,3], // left
+      [1,2,6],[1,6,5], // right
+    ];
+    for (const [a,b,c] of faces) {
+      allTriangles.push([
+        v[a][0], v[a][1], v[a][2],
+        v[b][0], v[b][1], v[b][2],
+        v[c][0], v[c][1], v[c][2],
+      ]);
+    }
+  }
+
+  setProgress(85, 'Writing file\u2026');
+  await new Promise(r => setTimeout(r, 20));
+
+  const totalTris = allTriangles.length;
+  const buf = new ArrayBuffer(84 + totalTris * 50);
+  const dv = new DataView(buf);
+  const hdr = `Dwandwa n=${S.nCols} snet=${SNET} sigma=${sigma.toFixed(1)} s=${ESCALE.toFixed(3)}mm`;
+  for (let i = 0; i < 80; i++) dv.setUint8(i, i < hdr.length ? hdr.charCodeAt(i) : 0);
+  dv.setUint32(80, totalTris, true);
+
+  let off = 84;
+  for (const tri of allTriangles) {
+    const [ax,ay,az, bx,by,bz, cx,cy,cz] = tri;
+    const e1x = bx-ax, e1y = by-ay, e1z = bz-az;
+    const e2x = cx-ax, e2y = cy-ay, e2z = cz-az;
+    let nx = e1y*e2z-e1z*e2y, ny = e1z*e2x-e1x*e2z, nz = e1x*e2y-e1y*e2x;
+    const nl = Math.sqrt(nx*nx+ny*ny+nz*nz) || 1;
+    nx/=nl; ny/=nl; nz/=nl;
+    [nx,ny,nz, ax,ay,az, bx,by,bz, cx,cy,cz].forEach((v,i) => dv.setFloat32(off+i*4, v, true));
+    dv.setUint16(off+48, 0, true);
     off += 50;
   }
+
+  setProgress(100, 'Download starting\u2026');
 
   const blob = new Blob([buf], { type: 'application/octet-stream' });
   Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(blob),
-    download: `shadow_sculptor_${S.nCols}mod_${factor}x.stl`
+    download: `dwandwa_${S.nCols}mod_${factor}x.stl`
   }).click();
 
-  bmsg.textContent = `Done: ${triCount.toLocaleString()} triangles, ${(buf.byteLength / 1024 / 1024).toFixed(1)} MB`;
+  exportBtn.disabled = false;
+  exportBtn.textContent = 'Export STL';
+  progressEl.hidden = true;
+  bmsg.textContent = `Done: ${totalTris.toLocaleString()} triangles, ${(buf.byteLength / 1024 / 1024).toFixed(1)} MB`;
   setTimeout(() => bmsg.textContent = '', 8000);
 }

@@ -21,10 +21,21 @@
   <!-- Input card -->
   <div class="card">
     <div class="input-section">
-      <div class="input-row">
-        <span class="color-bar bar-f"></span>
-        <input type="text" id="name1" value="BUSY" maxlength="16" placeholder="Front word">
-        <select id="fnt1">
+      <!-- Two words side by side -->
+      <div class="word-pair">
+        <div class="word-col">
+          <span class="color-bar bar-f"></span>
+          <input type="text" id="name1" value="BUSY" maxlength="16" placeholder="Front word">
+        </div>
+        <div class="word-col">
+          <span class="color-bar bar-s"></span>
+          <input type="text" id="name2" value="FREE" maxlength="16" placeholder="Side word">
+        </div>
+      </div>
+
+      <!-- Font selectors + custom upload -->
+      <div class="font-row">
+        <select id="fnt1" title="Front font">
           <option value="sans-serif">Sans</option>
           <option value="serif">Serif</option>
           <optgroup label="Indic">
@@ -40,11 +51,7 @@
           </optgroup>
           <option value="__up__" id="f1up" disabled>Custom</option>
         </select>
-      </div>
-      <div class="input-row">
-        <span class="color-bar bar-s"></span>
-        <input type="text" id="name2" value="FREE" maxlength="16" placeholder="Side word">
-        <select id="fnt2">
+        <select id="fnt2" title="Side font">
           <option value="sans-serif">Sans</option>
           <option value="serif">Serif</option>
           <optgroup label="Indic">
@@ -60,21 +67,26 @@
           </optgroup>
           <option value="__up__" id="f2up" disabled>Custom</option>
         </select>
-      </div>
-      <div class="sub-row">
-        <label class="upload-label">+ Font<input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2"></label>
+        <button class="btn btn-upload" id="uploadBtn" title="Upload custom TTF/OTF/WOFF font">+ Font</button>
+        <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" hidden>
         <span id="uploadedFontName"></span>
       </div>
+
+      <!-- Pad picker -->
       <div class="pad-row">
-        <span class="pad-label" data-tip="Fill character used when one word is shorter than the other — fills the gap so both words have equal length">Pad</span>
+        <span class="pad-label" data-tip="Fill character when one word is shorter — pads to equal length">Pad</span>
         <button class="pad-opt active" data-pad="♥">♥</button>
         <button class="pad-opt" data-pad="★">★</button>
-        <button class="pad-opt" data-pad="●">●</button>
+        <button class="pad-opt" data-pad="■">■</button>
+        <button class="pad-opt" data-pad="▲">▲</button>
         <button class="pad-opt" data-pad="◆">◆</button>
-        <button class="pad-opt" data-pad="💙">💙</button>
+        <button class="pad-opt" data-pad="⬟">⬟</button>
+        <button class="pad-opt" data-pad="⬣">⬣</button>
         <button class="pad-opt" data-pad="☾">☾</button>
-        <input type="text" class="pad-custom" id="padCustom" placeholder="..." maxlength="2">
+        <input type="text" class="pad-custom" id="padCustom" placeholder="?" maxlength="2" title="Type any single character">
       </div>
+
+      <!-- Generate + preview -->
       <div class="gen-row">
         <button class="btn btn-primary" id="generateBtn">Generate</button>
         <div class="pad-preview" id="padPreview"></div>
@@ -82,42 +94,7 @@
     </div>
   </div>
 
-  <!-- 3D Preview card -->
-  <div class="card">
-    <div class="view3d-head">
-      <span class="view3d-title"><span id="modCount">-</span> modules</span>
-      <div class="cam-btns">
-        <button class="btn" id="sf">Front</button>
-        <button class="btn" id="ss">Side</button>
-        <button class="btn" id="si">Iso</button>
-        <button class="btn active" id="ar">Spin</button>
-      </div>
-      <span id="vc">-</span>
-    </div>
-    <div id="v3wrap"></div>
-    <div class="scene-controls">
-      <label class="ctrl-toggle"><input type="checkbox" id="platformOn" checked> Platform</label>
-      <div class="ctrl-group" id="platControls">
-        <span class="ctrl-label">Pad</span>
-        <input type="range" id="platPad" min="0" max="40" value="10" style="width:56px">
-        <span class="ctrl-label">Fillet</span>
-        <input type="range" id="platFillet" min="0" max="20" value="4" style="width:56px">
-      </div>
-    </div>
-    <div class="export-bar">
-      <select id="exportQ">
-        <option value="1">1x draft</option>
-        <option value="2" selected>2x good</option>
-        <option value="4">4x fine</option>
-        <option value="8">8x print</option>
-      </select>
-      <button class="btn btn-primary" id="exportBtn" style="padding:6px 14px;font-size:12px">Export STL</button>
-      <span class="export-note">Exported mesh is smoother than preview</span>
-    </div>
-    <div id="bmsg"></div>
-  </div>
-
-  <!-- Raster editor (collapsible) -->
+  <!-- Raster editor (collapsible, between input and 3D) -->
   <div class="card">
     <details id="rasterDetails">
       <summary class="raster-summary">Pixel Editor &mdash; join islands &amp; manual edits</summary>
@@ -130,6 +107,7 @@
               <button class="btn" id="er1">Erase</button>
               <button class="btn" id="cl1">Clear</button>
               <button class="btn" id="fi1">Fill</button>
+              <button class="btn" id="undo1" title="Undo last stroke">Undo</button>
               <label class="btn" title="Feather edges for smoother mesh"><input type="checkbox" id="feath1" checked> Feather</label>
               <div class="brush-row"><span class="brush-label">Brush</span><input type="range" id="br1" min="1" max="12" value="3"></div>
             </div>
@@ -141,6 +119,7 @@
               <button class="btn" id="er2">Erase</button>
               <button class="btn" id="cl2">Clear</button>
               <button class="btn" id="fi2">Fill</button>
+              <button class="btn" id="undo2" title="Undo last stroke">Undo</button>
               <label class="btn" title="Feather edges for smoother mesh"><input type="checkbox" id="feath2" checked> Feather</label>
               <div class="brush-row"><span class="brush-label">Brush</span><input type="range" id="br2" min="1" max="12" value="3"></div>
             </div>
@@ -159,13 +138,55 @@
     </details>
   </div>
 
+  <!-- 3D Preview card -->
+  <div class="card">
+    <div class="view3d-head">
+      <span class="view3d-title"><span id="modCount">-</span> modules</span>
+      <div class="cam-btns">
+        <button class="btn" id="sf" title="View front word">Front</button>
+        <button class="btn" id="ss" title="View side word">Side</button>
+        <button class="btn" id="si" title="Diagonal view">Iso</button>
+        <button class="btn active" id="ar" title="Orbit between views">Spin</button>
+      </div>
+      <span id="vc">-</span>
+    </div>
+    <div id="v3wrap"></div>
+    <div class="scene-controls">
+      <label class="ctrl-toggle"><input type="checkbox" id="platformOn" checked> Platform</label>
+      <div class="ctrl-group" id="platControls">
+        <span class="ctrl-label">Pad</span>
+        <input type="range" id="platPad" min="0" max="40" value="10" style="width:56px">
+        <span class="ctrl-label">Fillet</span>
+        <input type="range" id="platFillet" min="0" max="20" value="4" style="width:56px">
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label" data-tip="Spacing between individual letter modules">Gap</span>
+        <input type="range" id="letterGap" min="0" max="50" value="15" style="width:56px">
+      </div>
+    </div>
+    <div class="export-bar">
+      <select id="exportQ">
+        <option value="1">1x draft</option>
+        <option value="2" selected>2x good</option>
+        <option value="4">4x fine</option>
+        <option value="8">8x print</option>
+      </select>
+      <button class="btn btn-primary" id="exportBtn" style="padding:6px 14px;font-size:12px">Export STL</button>
+      <div id="exportProgress" class="export-progress" hidden>
+        <div class="export-progress-bar" id="exportBar"></div>
+      </div>
+      <span class="export-note">Exported mesh is smoother than preview</span>
+    </div>
+    <div id="bmsg"></div>
+  </div>
+
   <div class="help-fab" tabindex="0">
     <span class="help-icon">?</span>
     <div class="help-tooltip">
       <p><b>How it works</b> — Each letter pair (front[1]×side[1], front[2]×side[2]…) becomes one 3D module. Shorter words are padded.</p>
-      <p><b>Fonts</b> — Upload any TTF/OTF/WOFF, it appears in both selectors.</p>
+      <p><b>Fonts</b> — Upload any TTF/OTF/WOFF. Click "+ Font" to browse.</p>
       <p><b>Editor</b> — Expand the Pixel Editor to paint/erase silhouettes and join floating islands.</p>
-      <p><b>Export</b> — Higher quality = smoother curves. Open STL in Cura / PrusaSlicer.</p>
+      <p><b>Export</b> — Higher quality = smoother curves. Open STL in Cura / PrusaSlicer. Platform exports as one connected piece.</p>
     </div>
   </div>
 

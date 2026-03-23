@@ -7,6 +7,7 @@ import {
   setCameraSide,
   setCameraIso,
   toggleSpin,
+  setLetterGap,
 } from './scene.js';
 import { exportSTL } from './export-stl.js';
 
@@ -28,6 +29,8 @@ function stateToUrl() {
   const pf = document.getElementById('platFillet').value;
   if (pp !== '10') p.set('pp', pp);
   if (pf !== '4') p.set('pf', pf);
+  const lg = document.getElementById('letterGap').value;
+  if (lg !== '15') p.set('lg', lg);
   if (S.CELL !== 64) p.set('res', S.CELL);
   const qs = p.toString();
   const url = window.location.pathname + (qs ? '?' + qs : '');
@@ -51,6 +54,7 @@ function loadFromUrl() {
   }
   if (p.has('pp')) document.getElementById('platPad').value = p.get('pp');
   if (p.has('pf')) document.getElementById('platFillet').value = p.get('pf');
+  if (p.has('lg')) document.getElementById('letterGap').value = p.get('lg');
   if (p.has('res')) {
     S.CELL = parseInt(p.get('res'));
     document.getElementById('resSlider').value = S.CELL;
@@ -69,6 +73,17 @@ export function wireUi({ redraw1, redraw2 }) {
 
   // Load state from URL on startup
   loadFromUrl();
+
+  // Apply letter gap from slider
+  const lgSlider = document.getElementById('letterGap');
+  if (lgSlider) {
+    setLetterGap(parseInt(lgSlider.value));
+    lgSlider.addEventListener('input', function() {
+      setLetterGap(parseInt(this.value));
+      debouncedUrlUpdate();
+      scheduleUpdate();
+    });
+  }
 
   document.getElementById('generateBtn').addEventListener('click', async function() {
     const r1 = document.getElementById('name1').value || 'BUSY';
@@ -90,6 +105,11 @@ export function wireUi({ redraw1, redraw2 }) {
   });
 
   document.getElementById('applyEdits').addEventListener('click', () => scheduleUpdate());
+
+  // Custom font upload — button triggers file input
+  document.getElementById('uploadBtn').addEventListener('click', () => {
+    document.getElementById('fontFile').click();
+  });
 
   document.getElementById('fontFile').addEventListener('change', async function() {
     const file = this.files[0]; if (!file) return;

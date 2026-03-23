@@ -18,10 +18,8 @@ scene.fog = new THREE.Fog(0xf0f0f4, 2000, 6000);
 const camera = new THREE.OrthographicCamera(-100, 100, 100, -100, 0.1, 10000);
 
 // ── Lighting ──
-// Soft ambient
 scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-// Key light: upper-left, casts shadows onto both backdrop walls
 const keyLight = new THREE.DirectionalLight(0xfff5e0, 1.2);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
@@ -32,11 +30,9 @@ keyLight.shadow.normalBias = 0.5;
 scene.add(keyLight);
 scene.add(keyLight.target);
 
-// Fill light from opposite side
 const fillLight = new THREE.DirectionalLight(0xe0eeff, 0.35);
 scene.add(fillLight);
 
-// Rim/back light for depth
 const rimLight = new THREE.DirectionalLight(0xffffff, 0.2);
 scene.add(rimLight);
 
@@ -49,17 +45,22 @@ const matBase = new THREE.MeshStandardMaterial({
 });
 const matBackdrop = new THREE.MeshStandardMaterial({
   color: 0xf0f0f4, roughness: 0.95, metalness: 0, side: THREE.DoubleSide,
-  transparent: true, opacity: 0.45
+  transparent: true, opacity: 0.4
 });
 
 let mainMesh = null;
-let platformObjects = [];  // just platform + backdrops (rebuild cheaply)
-let lastMeshBox = null;    // bounding box of last mesh for platform sizing
+let platformObjects = [];
+let lastMeshBox = null;
 
 // ── Platform settings ──
 let platformEnabled = true;
 let platPadPct = 10;
 let platFilletPct = 4;
+
+// ── Letter gap ──
+export function setLetterGap(pct) {
+  S.letterGapPct = pct;
+}
 
 function clearPlatformObjects() {
   platformObjects.forEach(o => {
@@ -70,21 +71,23 @@ function clearPlatformObjects() {
 }
 
 function buildPlatform(box) {
-  if (!platformEnabled || !box) return;
+  if (!platformEnabled || !box) return null;
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
   const padFrac = platPadPct / 100;
   const pw = size.x * (1 + padFrac * 2) + 4;
   const pd = size.z * (1 + padFrac * 2) + 4;
-  const ph = Math.max(size.y * 0.06, 1.5);
-  const maxFillet = Math.min(pw, pd, ph * 3) * 0.4;
-  const fillet = maxFillet * platFilletPct / 20;
+  // Thicker platform — visible and printable
+  const ph = Math.max(size.y * 0.10, 2.5);
+  // Fillet = border radius only, does NOT change thickness
+  const maxR = Math.min(pw, pd) * 0.25;
+  const filletR = maxR * platFilletPct / 20;
 
   let geo;
-  if (fillet > 0.3) {
+  if (filletR > 0.3) {
     const shape = new THREE.Shape();
-    const hw = pw / 2, hd = pd / 2, r = Math.min(fillet, hw * 0.4, hd * 0.4);
+    const hw = pw / 2, hd = pd / 2, r = filletR;
     shape.moveTo(-hw + r, -hd);
     shape.lineTo(hw - r, -hd);
     shape.quadraticCurveTo(hw, -hd, hw, -hd + r);
@@ -95,47 +98,44 @@ function buildPlatform(box) {
     shape.lineTo(-hw, -hd + r);
     shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
     geo = new THREE.ExtrudeGeometry(shape, {
-      depth: ph, bevelEnabled: true,
-      bevelThickness: Math.min(r * 0.6, ph * 0.4),
-      bevelSize: Math.min(r * 0.6, ph * 0.4),
-      bevelSegments: 3
+      depth: ph, bevelEnabled: false
     });
     geo.rotateX(-Math.PI / 2);
   } else {
     geo = new THREE.BoxGeometry(pw, ph, pd);
   }
   const mesh = new THREE.Mesh(geo, matBase);
-  // Flush with bottom of letters
   mesh.position.set(center.x, box.min.y - ph * 0.5, center.z);
   mesh.receiveShadow = true;
   mesh.castShadow = true;
   scene.add(mesh);
   platformObjects.push(mesh);
+  return { pw, pd, ph, center, baseY: box.min.y };
 }
 
-function buildBackdrops(box) {
+function buildBackdrops(box, platInfo) {
   if (!box) return;
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
-  // Subtle L-shaped walls for shadow reference
-  const wallH = size.y * 1.5;
-  const wallW = size.x * 1.3;
-  const baseY = box.min.y;
+  // Walls meet at 90° at the CENTER of the platform/mesh midpoint
+  const wallH = size.y * 1.8;
+  const wallW = Math.max(size.x, size.z) * 1.8;
+  const baseY = box.min.y - (platformEnabled ? size.y * 0.1 : 0);
   const gap = Math.max(size.z * 0.5, 3);
 
-  // Back wall at -Z
+  // Back wall at -Z, centered on platform midpoint
   const backGeo = new THREE.PlaneGeometry(wallW, wallH);
   const backWall = new THREE.Mesh(backGeo, matBackdrop);
-  backWall.position.set(center.x, baseY + wallH / 2, box.min.z - gap);
+  backWall.position.set(center.x, baseY + wallH / 2, center.z - gap - size.z / 2);
   backWall.receiveShadow = true;
   scene.add(backWall);
   platformObjects.push(backWall);
 
-  // Right wall at +X
+  // Right wall at +X, centered on platform midpoint
   const sideGeo = new THREE.PlaneGeometry(wallW, wallH);
   const sideWall = new THREE.Mesh(sideGeo, matBackdrop);
-  sideWall.position.set(box.max.x + gap, baseY + wallH / 2, center.z);
+  sideWall.position.set(center.x + gap + size.x / 2, baseY + wallH / 2, center.z);
   sideWall.rotation.y = -Math.PI / 2;
   sideWall.receiveShadow = true;
   scene.add(sideWall);
@@ -148,30 +148,26 @@ function updateLighting(box) {
   const center = box.getCenter(new THREE.Vector3());
   const extent = Math.max(size.x, size.y, size.z) * 2;
 
-  // Shadow camera must cover entire scene including backdrops
   const sc = keyLight.shadow.camera;
   sc.left = sc.bottom = -extent * 2;
   sc.right = sc.top = extent * 2;
   sc.far = extent * 8;
   sc.updateProjectionMatrix();
 
-  // Key light: from upper-left-front → casts shadows onto back wall (-Z) and right wall (+X)
-  // This is the diagonal that projects onto both walls
+  // Key light: upper-left-front diagonal, casts onto back wall (-Z) and right wall (+X)
   keyLight.position.set(
-    center.x - extent * 1.0,   // from left (casts shadow rightward onto +X wall)
-    center.y + extent * 1.5,   // from above
-    center.z + extent * 1.0    // from front (casts shadow backward onto -Z wall)
+    center.x - extent * 1.0,
+    center.y + extent * 1.5,
+    center.z + extent * 1.0
   );
   keyLight.target.position.copy(center);
 
-  // Fill: softer, from opposite direction
   fillLight.position.set(
     center.x + extent * 0.6,
     center.y + extent * 0.4,
     center.z - extent * 0.5
   );
 
-  // Rim: from behind for edge definition
   rimLight.position.set(
     center.x + extent * 0.3,
     center.y - extent * 0.2,
@@ -179,7 +175,6 @@ function updateLighting(box) {
   );
 }
 
-// Called by text.js when word lengths change (updates lighting/fog for new dimensions)
 export function rebuildScene() {
   rebuildPlatform();
 }
@@ -187,18 +182,19 @@ export function rebuildScene() {
 export function rebuildPlatform() {
   clearPlatformObjects();
   if (lastMeshBox) {
-    buildPlatform(lastMeshBox);
-    buildBackdrops(lastMeshBox);
+    const platInfo = buildPlatform(lastMeshBox);
+    buildBackdrops(lastMeshBox, platInfo);
   }
 }
 
 // ── Camera ──
 let theta = -Math.PI / 4, phi = Math.PI / 2.3, camDist = 600, orthoFrustum = 80;
 let autoRot = true, oscTime = 0;
-// Head-on = -PI/4 (diagonal). ±PI/4 from there = 0 (front word) and -PI/2 (side word)
-const OSC_CENTER = -Math.PI / 4;
-const OSC_AMP    =  Math.PI / 4 * 1.06;
-const OSC_SPD    =  0.005;
+// 180° orbit: from front (θ=0) to side (θ=-PI) through diagonal
+// Center at -PI/4 (diagonal head-on), amplitude PI/2 * 1.06 for slight overshoot
+const OSC_CENTER = -Math.PI / 2;
+const OSC_AMP    =  Math.PI / 2 * 1.04; // 180° sweep with 4% overshoot
+const OSC_SPD    =  0.004;
 const PHI_CENTER =  Math.PI / 2.3;
 const PHI_AMP    =  0.03;
 
@@ -224,7 +220,7 @@ new ResizeObserver(resizeRenderer).observe(v3w);
 setTimeout(resizeRenderer, 60);
 window.addEventListener('resize', () => { updateCanvasSize(); resizeRenderer(); });
 
-// ── Scroll zoom on preview ──
+// ── Scroll zoom ──
 v3w.addEventListener('wheel', e => {
   e.preventDefault();
   const factor = 1 + e.deltaY * 0.001;
@@ -257,10 +253,10 @@ export function setCameraFront() {
   setAutoRot(false); theta = 0; phi = PHI_CENTER; updCam();
 }
 export function setCameraSide() {
-  setAutoRot(false); theta = -Math.PI / 2; phi = PHI_CENTER; updCam();
+  setAutoRot(false); theta = -Math.PI; phi = PHI_CENTER; updCam();
 }
 export function setCameraIso() {
-  setAutoRot(false); theta = -Math.PI / 4; phi = 1.0; updCam();
+  setAutoRot(false); theta = -Math.PI / 2; phi = 1.0; updCam();
 }
 export function toggleSpin() {
   setAutoRot(!autoRot);
@@ -288,7 +284,6 @@ function updatePlatformUI() {
   platControlsDiv.classList.toggle('disabled', !platformEnabled);
   platPadPct = parseInt(platPadSlider.value);
   platFilletPct = parseInt(platFilletSlider.value);
-  // Only rebuild platform + backdrops, NOT the mesh
   rebuildPlatform();
 }
 platCheckbox.addEventListener('change', updatePlatformUI);
@@ -322,18 +317,15 @@ function doUpdate() {
     const triCount = geo.index ? geo.index.count / 3 : 0;
     document.getElementById('vc').textContent = triCount > 0 ? triCount.toLocaleString() + ' triangles' : 'No intersection';
 
-    // Compute bounding box for auto-fit and platform
     const box = new THREE.Box3().setFromObject(mainMesh);
     lastMeshBox = box.clone();
     const size = box.getSize(new THREE.Vector3());
 
-    // Auto-fit camera — use diagonal extent for rotated modules
     orthoFrustum = Math.max(size.x, size.y, size.z) * 0.55;
     camDist = Math.max(size.x, size.y, size.z) * 3;
     scene.fog.near = camDist * 1.5;
     scene.fog.far = camDist * 5;
 
-    // Rebuild platform, backdrops, and lighting to match mesh
     rebuildPlatform();
     updateLighting(lastMeshBox);
     resizeRenderer();
