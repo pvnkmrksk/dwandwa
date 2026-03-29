@@ -139,10 +139,10 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       const lx = sxf - midX;
       const lz = syf - midY;
       const ly = szf - midZ;
-      const xw = lx * cos45 + lz * sin45;
+      // World XZ: +45° so front/side axes match L-bracket (wall at mesh min Z, letters toward +Z).
+      const xw = lx * cos45 - lz * sin45;
       const yw = ly;
-      let zw = -lx * sin45 + lz * cos45;
-      zw = -zw;
+      const zw = lx * sin45 + lz * cos45;
 
       positions.push(xw, yw, zw);
 
