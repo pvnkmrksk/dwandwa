@@ -1,5 +1,5 @@
 /* global THREE */
-import S, { NX } from './state.js';
+import S from './state.js';
 import { buildModuleMeshes } from './mesh.js';
 import { updateCanvasSize } from './layout.js';
 
@@ -37,7 +37,7 @@ scene.add(rimLight);
 
 // ── Materials ──
 const matSmooth = new THREE.MeshStandardMaterial({
-  vertexColors: true, roughness: 0.35, metalness: 0.05, side: THREE.DoubleSide
+  vertexColors: true, roughness: 0.35, metalness: 0.05, side: THREE.DoubleSide,
 });
 const matBase = new THREE.MeshStandardMaterial({
   color: 0xe8e8ec, roughness: 0.5, metalness: 0.02
@@ -52,16 +52,23 @@ let structureObjects = [];
 let lastMeshBox = null;
 
 // ── Structure settings (L-profile) ──
-let baseEnabled = true, basePadPct = 10, baseFilletPct = 4, baseOverlapPct = 4;
+let baseEnabled = true;
+let basePadXPct = 10, basePadZPct = 10, plateThickPct = 14, baseFilletPct = 4, baseOverlapPct = 4;
 let backEnabled = true, backPadPct = 10, backOverlapPct = 4;
+/** Extra Z offset for struts vs letter backs (% of mesh depth, signed). */
+let strutZPct = 0;
 /** Semi-transparent shadow-reference planes (off by default). */
 const showBackdrops = false;
 
 export function setLetterGap(pct) { S.letterGapPct = pct; }
 
 export function getStructureSettings() {
-  return { baseEnabled, basePadPct, baseFilletPct, baseOverlapPct,
-           backEnabled, backPadPct, backOverlapPct };
+  return {
+    baseEnabled, basePadXPct, basePadZPct, plateThickPct, baseFilletPct, baseOverlapPct,
+    backEnabled, backPadPct, backOverlapPct,
+    alignBackEdges: S.alignBackEdges, equalGapPack: S.equalGapPack, backStrut: S.backStrut,
+    strutZPct,
+  };
 }
 
 function clearStructureObjects() {
@@ -72,88 +79,116 @@ function clearStructureObjects() {
   structureObjects = [];
 }
 
-// L-profile in world space: module centers run along +X (see mesh.js). Extrude along shape Z,
-// then rotateY(π/2) so extrusion maps to +X — base edges align with the letter row, not a 45°
-// diagonal on the plate. Cross-section +X → world −Z (back panel behind letters at low Z).
+// L-profile as two axis-aligned boxes: base slab and back wall move independently.
+// Footprint sizes follow pad % only; overlap base shifts Y (signed), overlap back shifts the wall in Z only.
+// No extrude bevel (avoids broken/shelled geometry and bogus plate growth).
 function buildLProfile(box) {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
-  const basePadF = basePadPct / 100;
+  const basePadXF = basePadXPct / 100;
+  const basePadZF = basePadZPct / 100;
   const backPadF = backPadPct / 100;
+  const t = plateThickPct / 100;
 
-  // Axis-aligned footprint: row length along X, depth along Z (matches mesh AABB)
-  const profileW = size.x * (1 + basePadF * 2) + 4;
-  const baseD = size.z * (1 + basePadF * 2) + 4;
-  const baseH = Math.max(size.y * 0.08, 2.0);
-
+  const baseW = size.x * (1 + basePadXF * 2) + 4;
+  const baseD = size.z * (1 + basePadZF * 2) + 4;
+  const plate = Math.max(size.y * t, 3 + plateThickPct * 0.06);
+  const baseH = plate;
+  const backT = plate;
   const backH = size.y * (1 + backPadF * 2) + 4;
-  const backT = Math.max(size.z * 0.06, 1.5);
 
-  const maxFillet = Math.min(baseH, backT) * 0.8;
-  const filletR = maxFillet * baseFilletPct / 20;
+  const baseTopY = box.min.y + size.y * (baseOverlapPct / 100);
+  const backZDelta = size.z * (backOverlapPct / 100);
+  const zWallFront = box.min.z + backZDelta;
 
-  const baseOverlapY = size.y * baseOverlapPct / 100;
-  const backOverlapZ = size.z * backOverlapPct / 100;
+  if (baseEnabled) {
+    const g = new THREE.BoxGeometry(baseW, baseH, baseD);
+    const mesh = new THREE.Mesh(g, matBase);
+    mesh.position.set(center.x, baseTopY - baseH / 2, box.min.z - baseD / 2);
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+    scene.add(mesh);
+    structureObjects.push(mesh);
+  }
 
-  const baseTopY = box.min.y + baseOverlapY;
+  if (backEnabled) {
+    const g = new THREE.BoxGeometry(baseW, backH, backT);
+    const mesh = new THREE.Mesh(g, matBase);
+    const zC = zWallFront - backT / 2;
+    mesh.position.set(center.x, baseTopY + backH / 2, zC);
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+    scene.add(mesh);
+    structureObjects.push(mesh);
+  }
+}
 
-  // Build L cross-section in shape XY plane
-  // Inner corner at origin: back panel front face x=0, base top y=0
-  // Back panel extends +X (behind), base extends -X (toward viewer)
-  const shape = new THREE.Shape();
+/** Struts: manual mask (top-down) or auto columns using module column origins (moduleTx). */
+function buildBackStruts(box) {
+  if (!S.backStrut || !S.moduleTx) return;
+  const size = box.getSize(new THREE.Vector3());
+  const baseTopY = box.min.y + size.y * (baseOverlapPct / 100);
+  const backPadF = backPadPct / 100;
+  const backH = size.y * (1 + backPadF * 2) + 4;
+  const plate = Math.max(size.y * (plateThickPct / 100), 3 + plateThickPct * 0.06);
+  const backT = plate;
+  const backZDelta = size.z * (backOverlapPct / 100);
+  const zWallFront = box.min.z + backZDelta;
+  const zStrutNudge = size.z * (strutZPct / 100);
 
-  if (baseEnabled && backEnabled) {
-    const r = filletR > 0.3 ? Math.min(filletR, backH * 0.3, baseD * 0.3) : 0;
-    shape.moveTo(backT, -baseH);
-    shape.lineTo(-baseD, -baseH);
-    shape.lineTo(-baseD, 0);
-    if (r > 0.3) {
-      shape.lineTo(-r, 0);
-      const segs = 8;
-      for (let i = 1; i <= segs; i++) {
-        const a = -(Math.PI / 2) * (i / segs);
-        shape.lineTo(-r + r * Math.cos(a), r + r * Math.sin(a));
-      }
-    } else {
-      shape.lineTo(0, 0);
+  const y0 = baseTopY + backH * 0.12;
+  const y1 = baseTopY + backH * 0.88;
+  const yMid = (y0 + y1) / 2;
+  const hY = y1 - y0;
+
+  let useMask = S.strutUseMask && S.strutMask && S.strutMaskW > 0 && S.strutMaskD > 0;
+  let maskAny = false;
+  if (useMask) {
+    for (let i = 0; i < S.strutMask.length; i++) {
+      if (S.strutMask[i]) { maskAny = true; break; }
     }
-    shape.lineTo(0, backH);
-    shape.lineTo(backT, backH);
-    shape.lineTo(backT, -baseH);
-  } else if (baseEnabled) {
-    shape.moveTo(backT, -baseH);
-    shape.lineTo(-baseD, -baseH);
-    shape.lineTo(-baseD, 0);
-    shape.lineTo(backT, 0);
-    shape.lineTo(backT, -baseH);
-  } else if (backEnabled) {
-    shape.moveTo(0, 0);
-    shape.lineTo(0, backH);
-    shape.lineTo(backT, backH);
-    shape.lineTo(backT, 0);
-    shape.lineTo(0, 0);
-  } else {
+  }
+  useMask = useMask && maskAny;
+
+  if (useMask) {
+    const NX = S.strutMaskW;
+    const D = S.strutMaskD;
+    const hx = (size.x / NX) * 0.92;
+    const hz = (size.z / D) * 0.92;
+    for (let iz = 0; iz < D; iz++) {
+      for (let ix = 0; ix < NX; ix++) {
+        if (!S.strutMask[ix + iz * NX]) continue;
+        const xC = box.min.x + (ix + 0.5) / NX * size.x;
+        const zC = box.max.z - (iz + 0.5) / D * size.z + zStrutNudge;
+        const g = new THREE.BoxGeometry(hx, hY, hz);
+        const mesh = new THREE.Mesh(g, matBase);
+        mesh.position.set(xC, yMid, zC);
+        mesh.receiveShadow = true;
+        mesh.castShadow = true;
+        scene.add(mesh);
+        structureObjects.push(mesh);
+      }
+    }
     return;
   }
 
-  const geo = new THREE.ExtrudeGeometry(shape, {
-    depth: profileW,
-    bevelEnabled: false,
-  });
-
-  // shape +Z (extrusion) → world +X; shape +X (back thickness) → world −Z
-  geo.rotateY(Math.PI / 2);
-
-  const mesh = new THREE.Mesh(geo, matBase);
-
-  const backFrontZ = box.min.z + backOverlapZ;
-  // Inner corner (0,0,0): centered on X along the row; z at back face of letter volume
-  mesh.position.set(center.x - profileW / 2, baseTopY, backFrontZ);
-  mesh.receiveShadow = true;
-  mesh.castShadow = true;
-  scene.add(mesh);
-  structureObjects.push(mesh);
+  const strutW = Math.max(1.2, plate * 0.45);
+  for (let i = 0; i < S.nCols; i++) {
+    const cx = S.moduleTx[i];
+    const zStart = box.min.z + zStrutNudge;
+    const zLo = Math.min(zWallFront, zStart);
+    const zHi = Math.max(zWallFront, zStart);
+    const dz = zHi - zLo;
+    if (dz < 0.5) continue;
+    const g = new THREE.BoxGeometry(strutW, hY, dz);
+    const mesh = new THREE.Mesh(g, matBase);
+    mesh.position.set(cx, yMid, (zLo + zHi) / 2);
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+    scene.add(mesh);
+    structureObjects.push(mesh);
+  }
 }
 
 function buildBackdrops(box) {
@@ -222,6 +257,7 @@ export function rebuildStructure() {
   clearStructureObjects();
   if (lastMeshBox) {
     if (baseEnabled || backEnabled) buildLProfile(lastMeshBox);
+    if (S.backStrut && (baseEnabled || backEnabled)) buildBackStruts(lastMeshBox);
     if (showBackdrops) buildBackdrops(lastMeshBox);
   }
 }
@@ -231,11 +267,12 @@ export function rebuildStructure() {
 // Diagonal view (both words equally visible): θ = -π/4
 // Front word more visible: θ → 0 (looking along -Z)
 // Side word more visible: θ → -π/2 (looking along +X)
-// 180° orbit: center -π/4, amplitude π/2
-let theta = -Math.PI / 4, phi = Math.PI / 2.3, camDist = 600, orthoFrustum = 80;
+// Spin: 90° total sweep (iso ±45°), not a full 180° behind the model
+let theta = -Math.PI / 4 + Math.PI / 8, phi = Math.PI / 2.3, camDist = 600, orthoFrustum = 80;
 let autoRot = true, oscTime = 0;
-const OSC_CENTER = -Math.PI / 4;
-const OSC_AMP    =  Math.PI / 2;  // 180° total sweep
+// Midpoint shifted +22.5° from pure iso so spin endpoints show front vs side more evenly
+const OSC_CENTER = -Math.PI / 4 + Math.PI / 8;
+const OSC_AMP    =  Math.PI / 4;  // 90° total sweep
 const OSC_SPD    =  0.004;
 const PHI_CENTER =  Math.PI / 2.3;
 const PHI_AMP    =  0.03;
@@ -249,9 +286,16 @@ export function updCam() {
   camera.lookAt(0, 0, 0);
 }
 
+let resizeAttempts = 0;
+const MAX_RESIZE_ATTEMPTS = 120;
 function resizeRenderer() {
   const w = v3w.clientWidth, h = v3w.clientHeight;
-  if (w < 2 || h < 2) return;
+  if (w < 2 || h < 2) {
+    if (resizeAttempts++ < MAX_RESIZE_ATTEMPTS)
+      requestAnimationFrame(resizeRenderer);
+    return;
+  }
+  resizeAttempts = 0;
   renderer.setSize(w, h);
   const a = w / h;
   camera.left = -orthoFrustum * a; camera.right = orthoFrustum * a;
@@ -314,23 +358,42 @@ export function toggleSpin() { setAutoRot(!autoRot); }
 // ── Structure UI ──
 export function updateStructureUI() {
   baseEnabled = document.getElementById('baseOn').checked;
-  basePadPct = parseInt(document.getElementById('basePad').value);
+  basePadXPct = parseInt(document.getElementById('basePadX').value);
+  basePadZPct = parseInt(document.getElementById('basePadZ').value);
+  plateThickPct = parseInt(document.getElementById('plateThick').value);
   baseFilletPct = parseInt(document.getElementById('baseFillet').value);
   baseOverlapPct = parseInt(document.getElementById('baseOverlap').value);
   backEnabled = document.getElementById('backOn').checked;
   backPadPct = parseInt(document.getElementById('backPad').value);
   backOverlapPct = parseInt(document.getElementById('backOverlap').value);
+  const strutZEl = document.getElementById('strutZ');
+  strutZPct = strutZEl ? parseInt(strutZEl.value) : 0;
+  const ab = document.getElementById('alignBack');
+  const eg = document.getElementById('equalGap');
+  const bs = document.getElementById('backStrut');
+  if (ab) S.alignBackEdges = ab.checked;
+  if (eg) S.equalGapPack = eg.checked;
+  if (bs) S.backStrut = bs.checked;
+  const ptEl = document.getElementById('plateThickVal');
+  if (ptEl) ptEl.textContent = plateThickPct + '%';
+  const boEl = document.getElementById('baseOverlapVal');
+  if (boEl) boEl.textContent = (baseOverlapPct >= 0 ? '+' : '') + baseOverlapPct + '%';
+  const bovEl = document.getElementById('backOverlapVal');
+  if (bovEl) bovEl.textContent = (backOverlapPct >= 0 ? '+' : '') + backOverlapPct + '%';
+  const szEl = document.getElementById('strutZVal');
+  if (szEl) szEl.textContent = (strutZPct >= 0 ? '+' : '') + strutZPct + '%';
   document.getElementById('baseControls').classList.toggle('disabled', !baseEnabled);
   document.getElementById('backControls').classList.toggle('disabled', !backEnabled);
   rebuildStructure();
 }
 
 (function wireStructureControls() {
-  ['baseOn', 'basePad', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap'].forEach(id => {
+  ['baseOn', 'basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap', 'strutZ'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', updateStructureUI);
   });
+  updateStructureUI();
 })();
 
 // ── Mesh update ──
@@ -374,6 +437,9 @@ function doUpdate() {
   } else {
     document.getElementById('vc').textContent = 'No intersection';
     lastMeshBox = null;
+    S.moduleCenterX = null;
+    S.moduleZBack = null;
+    S.moduleTx = null;
   }
   bmsg.textContent = '';
 }

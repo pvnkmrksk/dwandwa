@@ -1,6 +1,8 @@
 import S, { allocArrays } from './state.js';
 import { rebuildScene } from './scene.js';
 import { updateCanvasSize } from './layout.js';
+import { measureColumnCells } from './raster.js';
+import { redrawStrutPlan } from './strut-plan.js';
 
 // Virama/halant characters for Indic scripts that join consonants
 const VIRAMAS = new Set([
@@ -70,7 +72,7 @@ export function updatePreview() {
     padHtml(p1, g1) + ' &middot; ' + padHtml(p2, g2);
 }
 
-export function applyNames(raw1, raw2, f1, f2) {
+export async function applyNames(raw1, raw2, f1, f2) {
   const g1 = splitGraphemes(raw1.trim()).slice(0, 8);
   const g2 = splitGraphemes(raw2.trim()).slice(0, 8);
   const { p1, p2, len } = padded(g1, g2, S.padChar);
@@ -80,7 +82,9 @@ export function applyNames(raw1, raw2, f1, f2) {
   document.getElementById('padPreview').innerHTML =
     padHtml(S.chars1, g1) + ' &middot; ' + padHtml(S.chars2, g2);
   document.getElementById('modCount').textContent = S.nCols;
+  await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2);
   allocArrays();
   updateCanvasSize();
+  redrawStrutPlan();
   rebuildScene();
 }

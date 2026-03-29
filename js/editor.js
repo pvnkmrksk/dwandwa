@@ -1,10 +1,20 @@
-import S, { NX } from './state.js';
+import S, { NX, silColumnIndex } from './state.js';
 import { scheduleUpdate } from './scene.js';
 
 let meshTimer = null;
 function debouncedMeshUpdate() {
   clearTimeout(meshTimer);
   meshTimer = setTimeout(() => scheduleUpdate(), 500);
+}
+
+/** Map global raster x to column + local lx. */
+function gxToColumn(gx) {
+  let c = 0;
+  for (; c < S.nCols; c++) {
+    if (gx < S.colX0[c + 1]) break;
+  }
+  const lx = gx - S.colX0[c];
+  return { c, lx };
 }
 
 export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId }) {
@@ -45,7 +55,7 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
     const r = canvas.getBoundingClientRect(), nx = NX();
     return {
       gx: Math.max(0, Math.min(nx - 1, Math.floor((e.clientX - r.left) / r.width * nx))),
-      gz: Math.max(0, Math.min(S.CELL - 1, S.CELL - 1 - Math.floor((e.clientY - r.top) / r.height * S.CELL)))
+      gz: Math.max(0, Math.min(S.rowCellH - 1, S.rowCellH - 1 - Math.floor((e.clientY - r.top) / r.height * S.rowCellH)))
     };
   }
 
@@ -58,11 +68,13 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
     for (let dz = -Math.ceil(r); dz <= Math.ceil(r); dz++) {
       for (let dx = -Math.ceil(r); dx <= Math.ceil(r); dx++) {
         const x = gx + dx, z = gz + dz;
-        if (x < 0 || x >= nx || z < 0 || z >= S.CELL) continue;
+        if (x < 0 || x >= nx || z < 0 || z >= S.rowCellH) continue;
         const dist = Math.sqrt(dx * dx + dz * dz);
         if (dist > r + 0.5) continue;
 
-        const i = x * S.CELL + z;
+        const { c, lx } = gxToColumn(x);
+        if (lx < 0 || lx >= S.colCellW[c]) continue;
+        const i = silColumnIndex(c, lx, z);
         if (erasing) {
           if (sil[i] !== 0) { sil[i] = 0; ch = true; }
         } else {
@@ -84,7 +96,7 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
   canvas.addEventListener('pointercancel', () => isDown = false);
 
   function redraw() {
-    const nx = NX(), BX = nx * RS, BZ = S.CELL * RS;
+    const nx = NX(), BX = nx * RS, BZ = S.rowCellH * RS;
     canvas.width = BX; canvas.height = BZ;
     const ctx = canvas.getContext('2d'), sil = getSil();
     ctx.fillStyle = '#07070f'; ctx.fillRect(0, 0, BX, BZ);
@@ -92,9 +104,11 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
     const feather = feathEl && feathEl.checked;
     ctx.fillStyle = ink;
     for (let x = 0; x < nx; x++) {
-      for (let z = 0; z < S.CELL; z++) {
-        if (sil[x * S.CELL + z]) {
-          ctx.fillRect(x * RS + 0.5, (S.CELL - 1 - z) * RS + 0.5, RS - 1, RS - 1);
+      for (let z = 0; z < S.rowCellH; z++) {
+        const { c, lx } = gxToColumn(x);
+        if (lx < 0 || lx >= S.colCellW[c]) continue;
+        if (sil[silColumnIndex(c, lx, z)]) {
+          ctx.fillRect(x * RS + 0.5, (S.rowCellH - 1 - z) * RS + 0.5, RS - 1, RS - 1);
         }
       }
     }
@@ -104,9 +118,10 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
       ctx.globalAlpha = 0.3;
       ctx.fillStyle = ink;
       for (let x = 0; x < nx; x++) {
-        for (let z = 0; z < S.CELL; z++) {
-          if (sil[x * S.CELL + z]) {
-            ctx.fillRect(x * RS, (S.CELL - 1 - z) * RS, RS, RS);
+        for (let z = 0; z < S.rowCellH; z++) {
+          const { c, lx } = gxToColumn(x);
+          if (lx >= 0 && lx < S.colCellW[c] && sil[silColumnIndex(c, lx, z)]) {
+            ctx.fillRect(x * RS, (S.rowCellH - 1 - z) * RS, RS, RS);
           }
         }
       }
@@ -114,10 +129,12 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId })
       ctx.globalAlpha = 1;
     }
 
-    // Module separators
     if (S.nCols > 1) {
       ctx.strokeStyle = '#28285a'; ctx.lineWidth = 1.5;
-      for (let c = 1; c < S.nCols; c++) { const p = c * S.CELL * RS; ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, BZ); ctx.stroke(); }
+      for (let c = 1; c < S.nCols; c++) {
+        const p = S.colX0[c] * RS;
+        ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, BZ); ctx.stroke();
+      }
     }
     ctx.strokeStyle = '#1e1e38'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, BX - 1, BZ - 1);
   }

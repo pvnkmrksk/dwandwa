@@ -1,6 +1,6 @@
 /* global THREE */
 import S, { allocArrays } from './state.js';
-import { stampName } from './raster.js';
+import { measureColumnCells, stampName } from './raster.js';
 import { buildModuleMeshes } from './mesh.js';
 import { getStructureSettings } from './scene.js';
 
@@ -51,13 +51,17 @@ export async function exportSTL() {
   setProgress(5, `Preparing ${factor}x export (${ECELL}px/glyph)\u2026`);
   await new Promise(r => setTimeout(r, 40));
 
-  const enx = S.nCols * ECELL;
-  const esil1 = new Uint8Array(enx * ECELL);
-  const esil2 = new Uint8Array(enx * ECELL);
+  const snapCell = S.CELL;
+  const snapColW = S.colCellW ? new Int32Array(S.colCellW) : null;
+  const snapRowH = S.rowCellH;
+  const snapSil1 = new Uint8Array(S.sil1);
+  const snapSil2 = new Uint8Array(S.sil2);
 
-  const origCell = S.CELL;
   S.CELL = ECELL;
+  await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2, ECELL);
   allocArrays();
+  const esil1 = new Uint8Array(S.sil1.length);
+  const esil2 = new Uint8Array(S.sil2.length);
 
   setProgress(15, 'Rendering front glyphs\u2026');
   await new Promise(r => setTimeout(r, 20));
@@ -67,15 +71,31 @@ export async function exportSTL() {
   await new Promise(r => setTimeout(r, 20));
   await stampName(S.chars2, S.font2, esil2, ECELL);
 
-  S.CELL = origCell;
-  allocArrays();
-
   setProgress(45, 'Generating smooth mesh\u2026');
   await new Promise(r => setTimeout(r, 20));
 
   const geo = buildModuleMeshes(esil1, esil2, ECELL, SNET, sigma);
 
+  S.CELL = snapCell;
+  S.colCellW = snapColW;
+  S.rowCellH = snapRowH;
+  if (!S.colCellW || S.colCellW.length !== S.nCols) {
+    await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2);
+  }
+  allocArrays();
+  S.sil1.set(snapSil1);
+  S.sil2.set(snapSil2);
+
   if (!geo || !geo.index) {
+    S.CELL = snapCell;
+    S.colCellW = snapColW;
+    S.rowCellH = snapRowH;
+    if (!S.colCellW || S.colCellW.length !== S.nCols) {
+      await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2);
+    }
+    allocArrays();
+    S.sil1.set(snapSil1);
+    S.sil2.set(snapSil2);
     bmsg.textContent = 'No geometry to export';
     exportBtn.disabled = false;
     exportBtn.textContent = 'Export STL';
@@ -112,33 +132,76 @@ export async function exportSTL() {
   const center = box.getCenter(new THREE.Vector3());
 
   // Add L-profile structure: base at bottom (min.y), back panel at back (min.z)
-  const basePadF = ss.basePadPct / 100;
+  const basePadXF = ss.basePadXPct / 100;
+  const basePadZF = ss.basePadZPct / 100;
   const backPadF = ss.backPadPct / 100;
-  const baseOverlapY = size.y * ss.baseOverlapPct / 100;
-  const backOverlapZ = size.z * ss.backOverlapPct / 100;
+  const t = ss.plateThickPct / 100;
 
-  const baseW = size.x * (1 + basePadF * 2) + 0.5;
-  const baseD = size.z * (1 + basePadF * 2) + 0.5;
-  const baseH = Math.max(size.y * 0.08, 0.2);
-  const baseTopY = box.min.y + baseOverlapY;
+  const baseW = size.x * (1 + basePadXF * 2) + 4;
+  const baseD = size.z * (1 + basePadZF * 2) + 4;
+  const plate = Math.max(size.y * t, 3 + ss.plateThickPct * 0.06);
+  const baseH = plate;
+  const backT = plate;
+  const baseTopY = box.min.y + size.y * (ss.baseOverlapPct / 100);
+  const backZDelta = size.z * (ss.backOverlapPct / 100);
+  const zWallFront = box.min.z + backZDelta;
 
-  const backH = size.y * (1 + backPadF * 2) + 0.5;
-  const backT = Math.max(size.z * 0.06, 0.15);
-  const backFrontZ = box.min.z + backOverlapZ;
+  const backH = size.y * (1 + backPadF * 2) + 4;
 
   if (ss.baseEnabled) {
-    // Base plate: centered on X and Z, at baseTopY
     addBoxTriangles(allTriangles,
-      center.x, baseTopY - baseH / 2, backFrontZ + baseD / 2 - backT,
+      center.x, baseTopY - baseH / 2, box.min.z - baseD / 2,
       baseW / 2, baseH / 2, baseD / 2);
   }
 
   if (ss.backEnabled) {
-    // Back panel: centered on X and Y, at backFrontZ
-    const panelCenterY = baseTopY + backH / 2;
+    const zC = zWallFront - backT / 2;
     addBoxTriangles(allTriangles,
-      center.x, panelCenterY, backFrontZ - backT / 2,
+      center.x, baseTopY + backH / 2, zC,
       baseW / 2, backH / 2, backT / 2);
+  }
+
+  if (ss.backStrut && S.moduleTx && (ss.baseEnabled || ss.backEnabled)) {
+    const strutZAdj = size.z * (ss.strutZPct / 100);
+    const y0 = baseTopY + backH * 0.12;
+    const y1 = baseTopY + backH * 0.88;
+    const yMid = (y0 + y1) / 2;
+    const hY = y1 - y0;
+    let useMask = S.strutUseMask && S.strutMask && S.strutMaskW > 0 && S.strutMaskD > 0;
+    let maskAny = false;
+    if (useMask) {
+      for (let i = 0; i < S.strutMask.length; i++) {
+        if (S.strutMask[i]) { maskAny = true; break; }
+      }
+    }
+    useMask = useMask && maskAny;
+    if (useMask) {
+      const NX = S.strutMaskW;
+      const D = S.strutMaskD;
+      const hx = (size.x / NX) * 0.46;
+      const hz = (size.z / D) * 0.46;
+      for (let iz = 0; iz < D; iz++) {
+        for (let ix = 0; ix < NX; ix++) {
+          if (!S.strutMask[ix + iz * NX]) continue;
+          const xC = box.min.x + (ix + 0.5) / NX * size.x;
+          const zC = box.max.z - (iz + 0.5) / D * size.z + strutZAdj;
+          addBoxTriangles(allTriangles, xC, yMid, zC, hx, hY / 2, hz);
+        }
+      }
+    } else {
+      const strutW = Math.max(1.2, plate * 0.45);
+      for (let i = 0; i < S.nCols; i++) {
+        const cx = S.moduleTx[i] * ESCALE;
+        const zStart = box.min.z + strutZAdj;
+        const zLo = Math.min(zWallFront, zStart);
+        const zHi = Math.max(zWallFront, zStart);
+        const dz = zHi - zLo;
+        if (dz < 0.5) continue;
+        addBoxTriangles(allTriangles,
+          cx, yMid, (zLo + zHi) / 2,
+          strutW / 2, hY / 2, dz / 2);
+      }
+    }
   }
 
   setProgress(85, 'Writing file\u2026');

@@ -11,6 +11,7 @@ import {
   updateStructureUI,
 } from './scene.js';
 import { exportSTL } from './export-stl.js';
+import { initStrutPlanCanvas } from './strut-plan.js';
 
 // ── URL state ──
 function stateToUrl() {
@@ -83,23 +84,38 @@ export function wireUi({ redraw1, redraw2 }) {
   // Fine-tuning overlap value labels
   const baseOverlapSlider = document.getElementById('baseOverlap');
   const backOverlapSlider = document.getElementById('backOverlap');
+  function fmtOverlapPct(v) {
+    const n = parseInt(v, 10);
+    return (n >= 0 ? '+' : '') + n + '%';
+  }
   if (baseOverlapSlider) {
     baseOverlapSlider.addEventListener('input', () => {
-      document.getElementById('baseOverlapVal').textContent = baseOverlapSlider.value + '%';
+      const el = document.getElementById('baseOverlapVal');
+      if (el) el.textContent = fmtOverlapPct(baseOverlapSlider.value);
     });
   }
   if (backOverlapSlider) {
     backOverlapSlider.addEventListener('input', () => {
-      document.getElementById('backOverlapVal').textContent = backOverlapSlider.value + '%';
+      const el = document.getElementById('backOverlapVal');
+      if (el) el.textContent = fmtOverlapPct(backOverlapSlider.value);
     });
   }
+
+  ['alignBack', 'equalGap', 'backStrut'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      updateStructureUI();
+      if (id !== 'backStrut') scheduleUpdate();
+    });
+  });
 
   // Structure toggles trigger URL update
   ['baseOn', 'backOn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => { updateStructureUI(); debouncedUrlUpdate(); });
   });
-  ['basePad', 'baseFillet', 'baseOverlap', 'backPad', 'backOverlap'].forEach(id => {
+  ['basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backPad', 'backOverlap'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', debouncedUrlUpdate);
   });
@@ -107,7 +123,7 @@ export function wireUi({ redraw1, redraw2 }) {
   document.getElementById('generateBtn').addEventListener('click', async function() {
     const r1 = document.getElementById('name1').value || 'BUSY';
     const r2 = document.getElementById('name2').value || 'FREE';
-    applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
+    await applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
     bmsg.textContent = 'Rendering glyphs\u2026';
     await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
     redraw1(); redraw2(); scheduleUpdate();
@@ -157,7 +173,7 @@ export function wireUi({ redraw1, redraw2 }) {
     document.getElementById('resVal').textContent = S.CELL;
     const r1 = document.getElementById('name1').value;
     const r2 = document.getElementById('name2').value;
-    applyNames(r1 || 'BUSY', r2 || 'FREE', document.getElementById('fnt1').value, document.getElementById('fnt2').value);
+    await applyNames(r1 || 'BUSY', r2 || 'FREE', document.getElementById('fnt1').value, document.getElementById('fnt2').value);
     await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
     redraw1(); redraw2(); scheduleUpdate();
     debouncedUrlUpdate();
@@ -188,4 +204,6 @@ export function wireUi({ redraw1, redraw2 }) {
   document.getElementById('ss').onclick = () => setCameraSide();
   document.getElementById('si').onclick = () => setCameraIso();
   document.getElementById('ar').onclick = () => toggleSpin();
+
+  initStrutPlanCanvas({ scheduleUpdate });
 }

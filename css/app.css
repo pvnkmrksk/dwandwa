@@ -232,6 +232,11 @@ details[open] .raster-summary{border-bottom-color:var(--border)}
 #resVal{font-size:11px;font-weight:600;color:var(--text2);min-width:24px}
 #resSlider{width:64px}
 
+.strut-plan-section{margin-top:10px;padding-top:12px;border-top:1px solid var(--border)}
+.ft-hint{font-size:11px;color:var(--text2);line-height:1.45;margin-bottom:8px;max-width:52em}
+.strut-plan-wrap{overflow:auto;max-width:100%;border:1px solid var(--border2);border-radius:var(--r8);background:#0a0a12}
+.strut-canvas{display:block;max-width:100%;height:auto}
+
 /* ── Help FAB ───────────────────────────────────── */
 .help-fab{
   position:fixed;bottom:20px;right:20px;z-index:100;

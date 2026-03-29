@@ -155,29 +155,41 @@
       <label class="ctrl-toggle"><input type="checkbox" id="baseOn" checked> Base</label>
       <label class="ctrl-toggle"><input type="checkbox" id="backOn" checked> Back panel</label>
       <div class="ctrl-group">
-        <span class="ctrl-label" data-tip="Spacing between individual letter modules">Gap</span>
-        <input type="range" id="letterGap" min="0" max="50" value="15" style="width:56px">
+        <span class="ctrl-label" data-tip="Spacing scale: legacy mode scales each module span; with Equal gaps on, Gap % sets mean gap between blocks">Gap</span>
+        <input type="range" id="letterGap" min="-40" max="120" value="15" style="width:56px">
       </div>
+      <label class="ctrl-toggle" title="Align each letter’s rearmost (min Z) plane"><input type="checkbox" id="alignBack"> Align backs</label>
+      <label class="ctrl-toggle" title="Equal horizontal gaps between module bounding boxes (uses Gap % as gap size)"><input type="checkbox" id="equalGap"> Equal gaps</label>
+      <label class="ctrl-toggle" title="Thin plates from each module’s back to the inner wall face"><input type="checkbox" id="backStrut"> Wall struts</label>
     </div>
     <!-- Fine Tuning (collapsible) -->
     <details class="fine-tune-details">
       <summary class="fine-tune-summary">Fine Tuning</summary>
       <div class="fine-tune-content">
         <div class="ft-section">
-          <div class="ft-heading">Base plate</div>
+          <div class="ft-heading">Plate footprint &amp; thickness</div>
           <div class="ft-row" id="baseControls">
             <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Extra padding around letters (% of letter width)">Pad</span>
-              <input type="range" id="basePad" min="0" max="40" value="10" style="width:56px">
+              <span class="ctrl-label" data-tip="Padding along the letter row (X), % of mesh width">Pad X</span>
+              <input type="range" id="basePadX" min="0" max="40" value="10" style="width:56px">
             </div>
             <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Corner radius of base plate">Fillet</span>
+              <span class="ctrl-label" data-tip="Padding along depth (Z), % of mesh depth">Pad Z</span>
+              <input type="range" id="basePadZ" min="0" max="40" value="10" style="width:56px">
+            </div>
+            <div class="ctrl-group">
+              <span class="ctrl-label" data-tip="Base slab height and back panel thickness (% of letter height / depth). One control for both parts.">Thickness</span>
+              <input type="range" id="plateThick" min="6" max="28" value="14" style="width:56px">
+              <span class="ft-val" id="plateThickVal">14%</span>
+            </div>
+            <div class="ctrl-group">
+              <span class="ctrl-label" data-tip="Reserved for future subtractive corner rounding (preview uses sharp boxes)">Round</span>
               <input type="range" id="baseFillet" min="0" max="20" value="4" style="width:56px">
             </div>
             <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="How much the base penetrates into letters (% of letter height). More = stronger bond.">Overlap</span>
-              <input type="range" id="baseOverlap" min="0" max="20" value="4" style="width:56px">
-              <span class="ft-val" id="baseOverlapVal">4%</span>
+              <span class="ctrl-label" data-tip="Base vs letters: 0 = flush; negative = gap; positive = penetration into letters (% of letter height)">Overlap base</span>
+              <input type="range" id="baseOverlap" min="-25" max="40" value="4" style="width:56px">
+              <span class="ft-val" id="baseOverlapVal">+4%</span>
             </div>
           </div>
         </div>
@@ -185,14 +197,31 @@
           <div class="ft-heading">Back panel</div>
           <div class="ft-row" id="backControls">
             <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Extra padding around letters (% of letter extent)">Pad</span>
+              <span class="ctrl-label" data-tip="Extra vertical padding for the back panel (% of letter height)">Pad height</span>
               <input type="range" id="backPad" min="0" max="40" value="10" style="width:56px">
             </div>
             <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="How much the back panel penetrates into letters (% of letter depth). More = stronger bond.">Overlap</span>
-              <input type="range" id="backOverlap" min="0" max="20" value="4" style="width:56px">
-              <span class="ft-val" id="backOverlapVal">4%</span>
+              <span class="ctrl-label" data-tip="Moves only the back wall in Z: 0 = inner face flush with letter backs; negative = wall away from letters; positive = into letters (% of mesh depth). Base slab is unchanged.">Overlap back</span>
+              <input type="range" id="backOverlap" min="-35" max="40" value="4" style="width:56px">
+              <span class="ft-val" id="backOverlapVal">+4%</span>
             </div>
+            <div class="ctrl-group">
+              <span class="ctrl-label" data-tip="Strut depth vs letter backs (% of mesh depth). Auto struts use column centers; tune if misaligned.">Strut Z</span>
+              <input type="range" id="strutZ" min="-35" max="35" value="0" style="width:56px">
+              <span class="ft-val" id="strutZVal">+0%</span>
+            </div>
+          </div>
+        </div>
+        <div class="ft-section strut-plan-section">
+          <div class="ft-heading">Struts — top view (X × depth)</div>
+          <p class="ft-hint">Paint struts in plan view (column outlines = letter modules). Shift+drag erases. <b>Apply to 3D</b> uses this drawing instead of auto column struts.</p>
+          <div class="strut-plan-wrap">
+            <canvas id="strutCanvas" class="strut-canvas"></canvas>
+          </div>
+          <div class="ft-row" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+            <button type="button" class="btn" id="strutClear">Clear mask</button>
+            <button type="button" class="btn" id="strutFillCol">Fill all</button>
+            <button type="button" class="btn btn-primary" id="strutApply3d">Apply to 3D</button>
           </div>
         </div>
       </div>
