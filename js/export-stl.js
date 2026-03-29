@@ -3,7 +3,7 @@ import S, { allocArrays } from './state.js';
 import { measureColumnCells, stampName } from './raster.js';
 import { buildModuleMeshes } from './mesh.js';
 import { getStructureSettings } from './scene.js';
-import { computePlateLayout, mirrorStructureBoxZ } from './structure-layout.js';
+import { computePlateLayout } from './structure-layout.js';
 
 function addBoxTriangles(allTriangles, cx, cy, cz, hx, hy, hz) {
   const v = [
@@ -128,22 +128,37 @@ export async function exportSTL() {
       pos.getX(i) * ESCALE, pos.getY(i) * ESCALE, pos.getZ(i) * ESCALE
     ));
   }
-  const plateBox = mirrorStructureBoxZ(box);
-  const L = computePlateLayout(plateBox, ss);
-  const { size, center, baseW, baseD, plate, baseH, backT, backH, baseTopY, zWallFront } = L;
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const basePadXF = ss.basePadXPct / 100;
+  const basePadZF = ss.basePadZPct / 100;
+  const backPadF = ss.backPadPct / 100;
+  const rel = ss.plateThickPct / 14;
+  const baseOverlapY = size.y * ss.baseOverlapPct / 100;
+  const backOverlapZ = size.z * ss.backOverlapPct / 100;
+  const baseW = size.x * (1 + basePadXF * 2) + 0.5;
+  const baseD = size.z * (1 + basePadZF * 2) + 0.5;
+  const baseH = Math.max(size.y * 0.08 * rel, 0.2);
+  const baseTopY = box.min.y + baseOverlapY;
+  const backH = size.y * (1 + backPadF * 2) + 0.5;
+  const backT = Math.max(size.z * 0.06 * rel, 0.15);
+  const backFrontZ = box.min.z + backOverlapZ;
 
   if (ss.baseEnabled) {
     addBoxTriangles(allTriangles,
-      center.x, baseTopY - baseH / 2, plateBox.min.z - baseD / 2,
+      center.x, baseTopY - baseH / 2, backFrontZ + baseD / 2 - backT,
       baseW / 2, baseH / 2, baseD / 2);
   }
 
   if (ss.backEnabled) {
-    const zC = zWallFront - backT / 2;
+    const panelCenterY = baseTopY + backH / 2;
     addBoxTriangles(allTriangles,
-      center.x, baseTopY + backH / 2, zC,
+      center.x, panelCenterY, backFrontZ - backT / 2,
       baseW / 2, backH / 2, backT / 2);
   }
+
+  const L = computePlateLayout(box, ss);
+  const { plate, zWallFront } = L;
 
   if (ss.backStrut && S.moduleTx && (ss.baseEnabled || ss.backEnabled)) {
     const strutZAdj = size.z * (ss.strutZPct / 100);
@@ -167,8 +182,8 @@ export async function exportSTL() {
       for (let iz = 0; iz < D; iz++) {
         for (let ix = 0; ix < NX; ix++) {
           if (!S.strutMask[ix + iz * NX]) continue;
-          const xC = plateBox.min.x + (ix + 0.5) / NX * size.x;
-          const zC = plateBox.max.z - (iz + 0.5) / D * size.z + strutZAdj;
+          const xC = box.min.x + (ix + 0.5) / NX * size.x;
+          const zC = box.min.z + (iz + 0.5) / D * size.z + strutZAdj;
           addBoxTriangles(allTriangles, xC, yMid, zC, hx, hY / 2, hz);
         }
       }
@@ -176,7 +191,7 @@ export async function exportSTL() {
       const strutW = Math.max(1.2, plate * 0.45);
       for (let i = 0; i < S.nCols; i++) {
         const cx = S.moduleTx[i] * ESCALE;
-        const zStart = plateBox.min.z + strutZAdj;
+        const zStart = box.min.z + strutZAdj;
         const zLo = Math.min(zWallFront, zStart);
         const zHi = Math.max(zWallFront, zStart);
         const dz = zHi - zLo;

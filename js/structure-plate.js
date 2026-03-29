@@ -1,7 +1,7 @@
 /* global THREE */
 import S from './state.js';
 import { scene, matBase, matBackdrop } from './renderer-setup.js';
-import { computePlateLayout, mirrorStructureBoxZ } from './structure-layout.js';
+import { computePlateLayout } from './structure-layout.js';
 
 let structureObjects = [];
 /** Last axis-aligned bounds of the letter mesh (world space, after Y normalization). */
@@ -38,30 +38,82 @@ function clearStructureObjects() {
   structureObjects = [];
 }
 
+/**
+ * Same L-profile as main branch: ExtrudeGeometry + rotateY(π/2), anchored at min-Z back face.
+ * Separate X/Z padding (basePadX / basePadZ); plate thickness scales main’s 8%/6% proportions.
+ */
 function buildLProfile(box) {
-  const L = computePlateLayout(box, getStructureSettings());
-  const { center, baseW, baseD, baseH, backT, backH, baseTopY, zWallFront } = L;
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const ss = getStructureSettings();
 
-  if (baseEnabled) {
-    const g = new THREE.BoxGeometry(baseW, baseH, baseD);
-    const mesh = new THREE.Mesh(g, matBase);
-    mesh.position.set(center.x, baseTopY - baseH / 2, box.min.z - baseD / 2);
-    mesh.receiveShadow = true;
-    mesh.castShadow = true;
-    scene.add(mesh);
-    structureObjects.push(mesh);
+  const basePadXF = ss.basePadXPct / 100;
+  const basePadZF = ss.basePadZPct / 100;
+  const backPadF = ss.backPadPct / 100;
+
+  const profileW = size.x * (1 + basePadXF * 2) + 4;
+  const baseD = size.z * (1 + basePadZF * 2) + 4;
+  const rel = ss.plateThickPct / 14;
+  const baseH = Math.max(size.y * 0.08 * rel, 2.0);
+  const backH = size.y * (1 + backPadF * 2) + 4;
+  const backT = Math.max(size.z * 0.06 * rel, 1.5);
+
+  const maxFillet = Math.min(baseH, backT) * 0.8;
+  const filletR = maxFillet * ss.baseFilletPct / 20;
+
+  const baseOverlapY = size.y * ss.baseOverlapPct / 100;
+  const backOverlapZ = size.z * ss.backOverlapPct / 100;
+  const baseTopY = box.min.y + baseOverlapY;
+  const backFrontZ = box.min.z + backOverlapZ;
+
+  const shape = new THREE.Shape();
+
+  if (baseEnabled && backEnabled) {
+    const r = filletR > 0.3 ? Math.min(filletR, backH * 0.3, baseD * 0.3) : 0;
+    shape.moveTo(backT, -baseH);
+    shape.lineTo(-baseD, -baseH);
+    shape.lineTo(-baseD, 0);
+    if (r > 0.3) {
+      shape.lineTo(-r, 0);
+      const segs = 8;
+      for (let i = 1; i <= segs; i++) {
+        const a = -(Math.PI / 2) * (i / segs);
+        shape.lineTo(-r + r * Math.cos(a), r + r * Math.sin(a));
+      }
+    } else {
+      shape.lineTo(0, 0);
+    }
+    shape.lineTo(0, backH);
+    shape.lineTo(backT, backH);
+    shape.lineTo(backT, -baseH);
+  } else if (baseEnabled) {
+    shape.moveTo(backT, -baseH);
+    shape.lineTo(-baseD, -baseH);
+    shape.lineTo(-baseD, 0);
+    shape.lineTo(backT, 0);
+    shape.lineTo(backT, -baseH);
+  } else if (backEnabled) {
+    shape.moveTo(0, 0);
+    shape.lineTo(0, backH);
+    shape.lineTo(backT, backH);
+    shape.lineTo(backT, 0);
+    shape.lineTo(0, 0);
+  } else {
+    return;
   }
 
-  if (backEnabled) {
-    const g = new THREE.BoxGeometry(baseW, backH, backT);
-    const mesh = new THREE.Mesh(g, matBase);
-    const zC = zWallFront - backT / 2;
-    mesh.position.set(center.x, baseTopY + backH / 2, zC);
-    mesh.receiveShadow = true;
-    mesh.castShadow = true;
-    scene.add(mesh);
-    structureObjects.push(mesh);
-  }
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: profileW,
+    bevelEnabled: false,
+  });
+  geo.rotateY(Math.PI / 2);
+
+  const mesh = new THREE.Mesh(geo, matBase);
+  mesh.position.set(center.x - profileW / 2, baseTopY, backFrontZ);
+  mesh.receiveShadow = true;
+  mesh.castShadow = true;
+  scene.add(mesh);
+  structureObjects.push(mesh);
 }
 
 function buildBackStruts(box) {
@@ -93,7 +145,7 @@ function buildBackStruts(box) {
       for (let ix = 0; ix < NX; ix++) {
         if (!S.strutMask[ix + iz * NX]) continue;
         const xC = box.min.x + (ix + 0.5) / NX * size.x;
-        const zC = box.max.z - (iz + 0.5) / D * size.z + zStrutNudge;
+        const zC = box.min.z + (iz + 0.5) / D * size.z + zStrutNudge;
         const g = new THREE.BoxGeometry(hx, hY, hz);
         const mesh = new THREE.Mesh(g, matBase);
         mesh.position.set(xC, yMid, zC);
@@ -159,10 +211,9 @@ function buildBackdrops(box) {
 export function rebuildStructure() {
   clearStructureObjects();
   if (lastMeshBox) {
-    const plateBox = mirrorStructureBoxZ(lastMeshBox);
-    if (baseEnabled || backEnabled) buildLProfile(plateBox);
-    if (S.backStrut && (baseEnabled || backEnabled)) buildBackStruts(plateBox);
-    if (showBackdrops) buildBackdrops(plateBox);
+    if (baseEnabled || backEnabled) buildLProfile(lastMeshBox);
+    if (S.backStrut && (baseEnabled || backEnabled)) buildBackStruts(lastMeshBox);
+    if (showBackdrops) buildBackdrops(lastMeshBox);
   }
 }
 

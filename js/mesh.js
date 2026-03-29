@@ -139,7 +139,7 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       const lx = sxf - midX;
       const lz = syf - midY;
       const ly = szf - midZ;
-      // World XZ: −45° mix of front (lx) and side (lz) — do not change; L-bracket uses mirrored box in Z.
+      // World XZ: −45° mix of front (lx) and side (lz) — same convention as main mesh.js.
       const xw = lx * cos45 + lz * sin45;
       const yw = ly;
       const zw = -lx * sin45 + lz * cos45;
