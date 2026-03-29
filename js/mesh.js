@@ -76,8 +76,8 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
 
     const xf0 = F.minX, xf1 = F.maxX;
     const yd0 = sideInk.minX, yd1 = sideInk.maxX;
-    let z0 = Math.max(F.minZ, Sd.minZ);
-    let z1 = Math.min(F.maxZ, Sd.maxZ);
+    let z0 = Math.max(F.minZ, sideInk.minZ);
+    let z1 = Math.min(F.maxZ, sideInk.maxZ);
     if (z0 > z1) {
       z0 = full.minZ;
       z1 = full.maxZ;
