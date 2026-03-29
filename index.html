@@ -152,18 +152,51 @@
     </div>
     <div id="v3wrap"></div>
     <div class="scene-controls">
-      <label class="ctrl-toggle"><input type="checkbox" id="platformOn" checked> Platform</label>
-      <div class="ctrl-group" id="platControls">
-        <span class="ctrl-label">Pad</span>
-        <input type="range" id="platPad" min="0" max="40" value="10" style="width:56px">
-        <span class="ctrl-label">Fillet</span>
-        <input type="range" id="platFillet" min="0" max="20" value="4" style="width:56px">
-      </div>
+      <label class="ctrl-toggle"><input type="checkbox" id="baseOn" checked> Base</label>
+      <label class="ctrl-toggle"><input type="checkbox" id="backOn" checked> Back panel</label>
       <div class="ctrl-group">
         <span class="ctrl-label" data-tip="Spacing between individual letter modules">Gap</span>
         <input type="range" id="letterGap" min="0" max="50" value="15" style="width:56px">
       </div>
     </div>
+    <!-- Fine Tuning (collapsible) -->
+    <details class="fine-tune-details">
+      <summary class="fine-tune-summary">Fine Tuning</summary>
+      <div class="fine-tune-content">
+        <div class="ft-section">
+          <div class="ft-heading">Base plate</div>
+          <div class="ft-row" id="baseControls">
+            <div class="ctrl-group">
+              <span class="ctrl-label" data-tip="Extra padding around letters (% of letter width)">Pad</span>
+              <input type="range" id="basePad" min="0" max="40" value="10" style="width:56px">
+            </div>
+            <div class="ctrl-group">
+              <span class="ctrl-label" data-tip="Corner radius of base plate">Fillet</span>
+              <input type="range" id="baseFillet" min="0" max="20" value="4" style="width:56px">
+            </div>
+            <div class="ctrl-group">
+              <span class="ctrl-label" data-tip="How much the base penetrates into letters (% of letter height). More = stronger bond.">Overlap</span>
+              <input type="range" id="baseOverlap" min="0" max="20" value="4" style="width:56px">
+              <span class="ft-val" id="baseOverlapVal">4%</span>
+            </div>
+          </div>
+        </div>
+        <div class="ft-section">
+          <div class="ft-heading">Back panel</div>
+          <div class="ft-row" id="backControls">
+            <div class="ctrl-group">
+              <span class="ctrl-label" data-tip="Extra padding around letters (% of letter extent)">Pad</span>
+              <input type="range" id="backPad" min="0" max="40" value="10" style="width:56px">
+            </div>
+            <div class="ctrl-group">
+              <span class="ctrl-label" data-tip="How much the back panel penetrates into letters (% of letter depth). More = stronger bond.">Overlap</span>
+              <input type="range" id="backOverlap" min="0" max="20" value="4" style="width:56px">
+              <span class="ft-val" id="backOverlapVal">4%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
     <div class="export-bar">
       <select id="exportQ">
         <option value="1">1x draft</option>

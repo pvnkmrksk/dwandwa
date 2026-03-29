@@ -161,6 +161,25 @@ input[type=range]::-webkit-slider-thumb{
 #platControls{transition:opacity .15s}
 #platControls.disabled{opacity:.3;pointer-events:none}
 
+/* ── Fine Tuning (collapsible) ──────────────────── */
+.fine-tune-details{border-top:1px solid var(--border)}
+.fine-tune-summary{
+  padding:8px 16px;font-size:11px;font-weight:500;color:var(--text3);
+  cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;
+  background:var(--panel);text-transform:uppercase;letter-spacing:.06em;
+}
+.fine-tune-summary::-webkit-details-marker{display:none}
+.fine-tune-summary::before{content:'';display:block;width:0;height:0;border:3px solid transparent;border-left:5px solid var(--text3);transition:transform .15s}
+details[open] > .fine-tune-summary::before{transform:rotate(90deg)}
+.fine-tune-content{padding:12px 16px;background:var(--panel);border-top:1px solid var(--border)}
+.ft-section{margin-bottom:10px}
+.ft-section:last-child{margin-bottom:0}
+.ft-heading{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.ft-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ft-row.disabled{opacity:.3;pointer-events:none}
+.ft-val{font-size:10px;color:var(--text2);min-width:22px;font-weight:500}
+#baseControls.disabled,#backControls.disabled{opacity:.3;pointer-events:none}
+
 /* ── Export bar ─────────────────────────────────── */
 .export-bar{
   padding:10px 16px;border-top:1px solid var(--border);

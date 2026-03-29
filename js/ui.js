@@ -8,6 +8,7 @@ import {
   setCameraIso,
   toggleSpin,
   setLetterGap,
+  updateStructureUI,
 } from './scene.js';
 import { exportSTL } from './export-stl.js';
 
@@ -23,12 +24,10 @@ function stateToUrl() {
   if (f1 !== 'sans-serif') p.set('ff', f1);
   if (f2 !== 'sans-serif') p.set('sf', f2);
   if (S.padChar !== '\u2665') p.set('pad', S.padChar);
-  const plat = document.getElementById('platformOn').checked;
-  if (!plat) p.set('plat', '0');
-  const pp = document.getElementById('platPad').value;
-  const pf = document.getElementById('platFillet').value;
-  if (pp !== '10') p.set('pp', pp);
-  if (pf !== '4') p.set('pf', pf);
+  const baseOn = document.getElementById('baseOn').checked;
+  const backOn = document.getElementById('backOn').checked;
+  if (!baseOn) p.set('base', '0');
+  if (!backOn) p.set('back', '0');
   const lg = document.getElementById('letterGap').value;
   if (lg !== '15') p.set('lg', lg);
   if (S.CELL !== 64) p.set('res', S.CELL);
@@ -49,11 +48,8 @@ function loadFromUrl() {
       b.classList.toggle('active', b.dataset.pad === S.padChar);
     });
   }
-  if (p.has('plat')) {
-    document.getElementById('platformOn').checked = p.get('plat') !== '0';
-  }
-  if (p.has('pp')) document.getElementById('platPad').value = p.get('pp');
-  if (p.has('pf')) document.getElementById('platFillet').value = p.get('pf');
+  if (p.has('base')) document.getElementById('baseOn').checked = p.get('base') !== '0';
+  if (p.has('back')) document.getElementById('backOn').checked = p.get('back') !== '0';
   if (p.has('lg')) document.getElementById('letterGap').value = p.get('lg');
   if (p.has('res')) {
     S.CELL = parseInt(p.get('res'));
@@ -71,10 +67,9 @@ function debouncedUrlUpdate() {
 export function wireUi({ redraw1, redraw2 }) {
   const bmsg = document.getElementById('bmsg');
 
-  // Load state from URL on startup
   loadFromUrl();
 
-  // Apply letter gap from slider
+  // Letter gap
   const lgSlider = document.getElementById('letterGap');
   if (lgSlider) {
     setLetterGap(parseInt(lgSlider.value));
@@ -84,6 +79,30 @@ export function wireUi({ redraw1, redraw2 }) {
       scheduleUpdate();
     });
   }
+
+  // Fine-tuning overlap value labels
+  const baseOverlapSlider = document.getElementById('baseOverlap');
+  const backOverlapSlider = document.getElementById('backOverlap');
+  if (baseOverlapSlider) {
+    baseOverlapSlider.addEventListener('input', () => {
+      document.getElementById('baseOverlapVal').textContent = baseOverlapSlider.value + '%';
+    });
+  }
+  if (backOverlapSlider) {
+    backOverlapSlider.addEventListener('input', () => {
+      document.getElementById('backOverlapVal').textContent = backOverlapSlider.value + '%';
+    });
+  }
+
+  // Structure toggles trigger URL update
+  ['baseOn', 'backOn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => { updateStructureUI(); debouncedUrlUpdate(); });
+  });
+  ['basePad', 'baseFillet', 'baseOverlap', 'backPad', 'backOverlap'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', debouncedUrlUpdate);
+  });
 
   document.getElementById('generateBtn').addEventListener('click', async function() {
     const r1 = document.getElementById('name1').value || 'BUSY';
@@ -95,7 +114,6 @@ export function wireUi({ redraw1, redraw2 }) {
     debouncedUrlUpdate();
   });
 
-  // Live preview update as user types
   ['name1', 'name2'].forEach(id => {
     const el = document.getElementById(id);
     el.addEventListener('input', () => { updatePreview(); debouncedUrlUpdate(); });
@@ -106,7 +124,7 @@ export function wireUi({ redraw1, redraw2 }) {
 
   document.getElementById('applyEdits').addEventListener('click', () => scheduleUpdate());
 
-  // Custom font upload — button triggers file input
+  // Custom font upload
   document.getElementById('uploadBtn').addEventListener('click', () => {
     document.getElementById('fontFile').click();
   });
@@ -163,10 +181,6 @@ export function wireUi({ redraw1, redraw2 }) {
       debouncedUrlUpdate();
     }
   });
-
-  // Platform controls trigger URL update
-  ['platformOn'].forEach(id => document.getElementById(id).addEventListener('change', debouncedUrlUpdate));
-  ['platPad', 'platFillet'].forEach(id => document.getElementById(id).addEventListener('input', debouncedUrlUpdate));
 
   document.getElementById('exportBtn').addEventListener('click', () => exportSTL());
 

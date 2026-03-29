@@ -2,6 +2,29 @@
 import S, { allocArrays } from './state.js';
 import { stampName } from './raster.js';
 import { buildModuleMeshes } from './mesh.js';
+import { getStructureSettings } from './scene.js';
+
+function addBoxTriangles(allTriangles, cx, cy, cz, hx, hy, hz) {
+  // 8 corners of an axis-aligned box centered at (cx,cy,cz) with half-extents (hx,hy,hz)
+  const v = [
+    [cx-hx, cy-hy, cz-hz], [cx+hx, cy-hy, cz-hz],
+    [cx+hx, cy+hy, cz-hz], [cx-hx, cy+hy, cz-hz],
+    [cx-hx, cy-hy, cz+hz], [cx+hx, cy-hy, cz+hz],
+    [cx+hx, cy+hy, cz+hz], [cx-hx, cy+hy, cz+hz],
+  ];
+  const faces = [
+    [0,2,1],[0,3,2], [4,5,6],[4,6,7],
+    [0,1,5],[0,5,4], [2,3,7],[2,7,6],
+    [0,4,7],[0,7,3], [1,2,6],[1,6,5],
+  ];
+  for (const [a,b,c] of faces) {
+    allTriangles.push([
+      v[a][0],v[a][1],v[a][2],
+      v[b][0],v[b][1],v[b][2],
+      v[c][0],v[c][1],v[c][2],
+    ]);
+  }
+}
 
 export async function exportSTL() {
   const bmsg = document.getElementById('bmsg');
@@ -14,9 +37,8 @@ export async function exportSTL() {
   const sigma = 0.6 + factor * 0.1;
   const ESCALE = 0.5 / factor;
 
-  const platformOn = document.getElementById('platformOn').checked;
+  const ss = getStructureSettings();
 
-  // Show progress
   exportBtn.disabled = true;
   exportBtn.textContent = 'Exporting\u2026';
   progressEl.hidden = false;
@@ -66,7 +88,6 @@ export async function exportSTL() {
   setProgress(70, 'Building STL binary\u2026');
   await new Promise(r => setTimeout(r, 20));
 
-  // Collect all triangles (letters + optional platform)
   const allTriangles = [];
   const pos = geo.getAttribute('position');
   const idx = geo.index;
@@ -81,51 +102,36 @@ export async function exportSTL() {
     ]);
   }
 
-  // Add platform geometry if enabled
-  if (platformOn) {
-    // Build a simple platform matching the mesh bounding box
-    const box = new THREE.Box3();
-    // Compute bounding box from positions
-    for (let i = 0; i < pos.count; i++) {
-      box.expandByPoint(new THREE.Vector3(
-        pos.getX(i) * ESCALE,
-        pos.getY(i) * ESCALE,
-        pos.getZ(i) * ESCALE
-      ));
-    }
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
-    const padFrac = parseInt(document.getElementById('platPad').value) / 100;
+  // Compute bounding box of letter mesh
+  const box = new THREE.Box3();
+  for (let i = 0; i < pos.count; i++) {
+    box.expandByPoint(new THREE.Vector3(
+      pos.getX(i) * ESCALE, pos.getY(i) * ESCALE, pos.getZ(i) * ESCALE
+    ));
+  }
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  // Add base plate if enabled
+  if (ss.baseEnabled) {
+    const padFrac = ss.basePadPct / 100;
     const pw = size.x * (1 + padFrac * 2) + 0.5;
     const pd = size.z * (1 + padFrac * 2) + 0.5;
     const ph = Math.max(size.y * 0.10, 0.3);
+    const overlapY = size.y * ss.baseOverlapPct / 100;
+    const baseTopY = box.min.y + overlapY;
+    addBoxTriangles(allTriangles, center.x, baseTopY - ph / 2, center.z, pw / 2, ph / 2, pd / 2);
+  }
 
-    // Simple box platform (6 faces = 12 triangles)
-    const hx = pw / 2, hy = ph, hz = pd / 2;
-    const py = box.min.y; // flush with bottom of letters
-    const cx = center.x, cz = center.z;
-    // Box corners
-    const v = [
-      [cx-hx, py-hy, cz-hz], [cx+hx, py-hy, cz-hz],
-      [cx+hx, py,    cz-hz], [cx-hx, py,    cz-hz],
-      [cx-hx, py-hy, cz+hz], [cx+hx, py-hy, cz+hz],
-      [cx+hx, py,    cz+hz], [cx-hx, py,    cz+hz],
-    ];
-    const faces = [
-      [0,2,1],[0,3,2], // front
-      [4,5,6],[4,6,7], // back
-      [0,1,5],[0,5,4], // bottom
-      [2,3,7],[2,7,6], // top
-      [0,4,7],[0,7,3], // left
-      [1,2,6],[1,6,5], // right
-    ];
-    for (const [a,b,c] of faces) {
-      allTriangles.push([
-        v[a][0], v[a][1], v[a][2],
-        v[b][0], v[b][1], v[b][2],
-        v[c][0], v[c][1], v[c][2],
-      ]);
-    }
+  // Add back panel if enabled
+  if (ss.backEnabled) {
+    const padFrac = ss.backPadPct / 100;
+    const bpW = size.z * (1 + padFrac * 2) + 0.5;
+    const bpH = size.y * (1 + padFrac * 2) + 0.5;
+    const bpThick = Math.max(size.x * 0.04, 0.15);
+    const overlapX = size.x * ss.backOverlapPct / 100;
+    const panelFrontX = box.min.x + overlapX;
+    addBoxTriangles(allTriangles, panelFrontX - bpThick / 2, center.y, center.z, bpThick / 2, bpH / 2, bpW / 2);
   }
 
   setProgress(85, 'Writing file\u2026');
