@@ -15,18 +15,52 @@ initDebugOverlay();
 
 let mainMesh = null;
 
-const bmsg = document.getElementById('bmsg');
-let pending = false;
-
-export function scheduleUpdate() {
-  if (pending) return; pending = true;
-  bmsg.textContent = 'Computing\u2026';
-  setTimeout(doUpdate, 30);
+function setBmsg(t) {
+  const el = document.getElementById('bmsg');
+  if (el) el.textContent = t;
 }
 
-function doUpdate() {
-  pending = false;
-  if (mainMesh) { scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh = null; }
+/** Another update was requested while flushing; never drop it (old pending gate caused missed rebuilds). */
+let meshDirty = false;
+/** True while a debounced flush is scheduled or running. */
+let meshFlushActive = false;
+
+export function scheduleUpdate() {
+  meshDirty = true;
+  setBmsg('Computing\u2026');
+  if (meshFlushActive) return;
+  meshFlushActive = true;
+  setTimeout(flushMeshUpdates, 30);
+}
+
+function flushMeshUpdates() {
+  let ok = true;
+  try {
+    while (meshDirty) {
+      meshDirty = false;
+      runMeshRebuild();
+    }
+  } catch (e) {
+    ok = false;
+    console.error(e);
+    setBmsg('Mesh error: ' + (e && e.message ? e.message : String(e)));
+    meshDirty = false;
+  } finally {
+    meshFlushActive = false;
+    if (meshDirty) {
+      scheduleUpdate();
+    } else if (ok) {
+      setBmsg('');
+    }
+  }
+}
+
+function runMeshRebuild() {
+  if (mainMesh) {
+    scene.remove(mainMesh);
+    mainMesh.geometry.dispose();
+    mainMesh = null;
+  }
 
   const GRID = Math.min(S.CELL, 96);
   const geo = buildModuleMeshes(S.sil1, S.sil2, S.CELL, GRID, 1.25);
@@ -58,5 +92,4 @@ function doUpdate() {
     S.moduleTx = null;
     syncDebugOverlay();
   }
-  bmsg.textContent = '';
 }
