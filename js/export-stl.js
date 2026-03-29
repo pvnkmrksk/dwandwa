@@ -74,7 +74,11 @@ export async function exportSTL() {
   setProgress(45, 'Generating voxel mesh\u2026');
   await new Promise(r => setTimeout(r, 20));
 
-  const geo = buildModuleMeshes(esil1, esil2, ECELL, SNET, 0);
+  const geo = buildModuleMeshes(esil1, esil2, ECELL, SNET, 1.25);
+  const snapModuleTx = S.moduleTx ? new Float32Array(S.moduleTx) : null;
+  const snapStrutTips = S.autoStrutTips && S.autoStrutTips.length
+    ? S.autoStrutTips.map(t => ({ x: t.x, y: t.y, z: t.z }))
+    : [];
 
   S.CELL = snapCell;
   S.colCellW = snapColW;
@@ -160,38 +164,27 @@ export async function exportSTL() {
   const L = computePlateLayout(box, ss);
   const { plate, zWallFront } = L;
 
-  if (ss.backStrut && S.moduleTx && (ss.baseEnabled || ss.backEnabled)) {
-    const strutZAdj = size.z * (ss.strutZPct / 100);
+  if (ss.backStrut && snapModuleTx && (ss.baseEnabled || ss.backEnabled)) {
+    const sizeScale = Math.max(0.35, (ss.strutSizePct ?? 14) / 14);
+    const strutW = Math.max(0.55, plate * 0.38 * sizeScale);
     const y0 = baseTopY + backH * 0.12;
     const y1 = baseTopY + backH * 0.88;
     const yMid = (y0 + y1) / 2;
     const hY = y1 - y0;
-    let useMask = S.strutUseMask && S.strutMask && S.strutMaskW > 0 && S.strutMaskD > 0;
-    let maskAny = false;
-    if (useMask) {
-      for (let i = 0; i < S.strutMask.length; i++) {
-        if (S.strutMask[i]) { maskAny = true; break; }
-      }
-    }
-    useMask = useMask && maskAny;
-    if (useMask) {
-      const NX = S.strutMaskW;
-      const D = S.strutMaskD;
-      const hx = (size.x / NX) * 0.46;
-      const hz = (size.z / D) * 0.46;
-      for (let iz = 0; iz < D; iz++) {
-        for (let ix = 0; ix < NX; ix++) {
-          if (!S.strutMask[ix + iz * NX]) continue;
-          const xC = box.min.x + (ix + 0.5) / NX * size.x;
-          const zC = box.min.z + (iz + 0.5) / D * size.z + strutZAdj;
-          addBoxTriangles(allTriangles, xC, yMid, zC, hx, hY / 2, hz);
-        }
+    if (snapStrutTips.length > 0) {
+      for (const tip of snapStrutTips) {
+        const zLo = Math.min(zWallFront, tip.z * ESCALE);
+        const zHi = Math.max(zWallFront, tip.z * ESCALE);
+        const dzz = zHi - zLo;
+        if (dzz < 0.35) continue;
+        addBoxTriangles(allTriangles,
+          tip.x * ESCALE, yMid, (zLo + zHi) / 2,
+          strutW / 2, hY / 2, dzz / 2);
       }
     } else {
-      const strutW = Math.max(1.2, plate * 0.45);
       for (let i = 0; i < S.nCols; i++) {
-        const cx = S.moduleTx[i] * ESCALE;
-        const zStart = box.min.z + strutZAdj;
+        const cx = snapModuleTx[i] * ESCALE;
+        const zStart = box.min.z;
         const zLo = Math.min(zWallFront, zStart);
         const zHi = Math.max(zWallFront, zStart);
         const dz = zHi - zLo;

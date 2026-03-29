@@ -167,7 +167,7 @@
         <div class="ft-row" style="flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <label class="ctrl-toggle" title="Align each letter’s rearmost (min Z) plane"><input type="checkbox" id="alignBack"> Align backs</label>
           <label class="ctrl-toggle" title="Equal horizontal gaps between module bounding boxes (uses Gap % as gap size)"><input type="checkbox" id="equalGap"> Equal gaps</label>
-          <label class="ctrl-toggle" title="Thin plates from each module’s back to the inner wall face"><input type="checkbox" id="backStrut"> Wall struts</label>
+          <label class="ctrl-toggle" title="Auto struts from hanging silhouette regions to the back panel"><input type="checkbox" id="backStrut"> Wall struts</label>
           <label class="ctrl-toggle" title="Off: fixed cell width per column (Latin). On: per-glyph width (Indic scripts)."><input type="checkbox" id="variableColWidth" checked> Variable width</label>
         </div>
         <div class="ft-section">
@@ -210,27 +210,10 @@
               <span class="ft-val" id="backOverlapVal">+4%</span>
             </div>
             <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Strut depth vs letter backs (% of mesh depth). Auto struts use column centers; tune if misaligned.">Strut Z</span>
-              <input type="range" id="strutZ" min="-35" max="35" value="0" style="width:56px">
-              <span class="ft-val" id="strutZVal">+0%</span>
+              <span class="ctrl-label" data-tip="Cross-section of auto wall struts (from hanging dual-silhouette regions to the back panel).">Strut size</span>
+              <input type="range" id="strutThick" min="6" max="42" value="14" style="width:56px">
+              <span class="ft-val" id="strutThickVal">14%</span>
             </div>
-          </div>
-        </div>
-        <div class="ft-section strut-plan-section">
-          <div class="ft-heading">Struts — paint supports (plan → back wall)</div>
-          <p class="ft-hint">Brush where you want a strut from the <b>letter tops</b> (bottom of view) to the <b>back wall</b> (cyan line, top). Like slicer supports: paint blobs, then <b>Apply to 3D</b>. Shift+drag erases.</p>
-          <div class="ctrl-group" style="margin-bottom:8px">
-            <span class="ctrl-label">Brush</span>
-            <input type="range" id="strutBrush" min="1" max="12" value="4" style="width:100px">
-            <span id="strutBrushVal">4</span> cells
-          </div>
-          <div class="strut-plan-wrap">
-            <canvas id="strutCanvas" class="strut-canvas"></canvas>
-          </div>
-          <div class="ft-row" style="margin-top:8px;flex-wrap:wrap;gap:8px">
-            <button type="button" class="btn" id="strutClear">Clear mask</button>
-            <button type="button" class="btn" id="strutFillCol">Fill all</button>
-            <button type="button" class="btn btn-primary" id="strutApply3d">Apply to 3D</button>
           </div>
         </div>
       </div>
@@ -246,7 +229,7 @@
       <div id="exportProgress" class="export-progress" hidden>
         <div class="export-progress-bar" id="exportBar"></div>
       </div>
-      <span class="export-note">Preview and export use the same voxel surface mesher</span>
+      <span class="export-note">Smoothed dual-view cuboids; auto struts from silhouette hang analysis</span>
     </div>
     <div id="bmsg"></div>
   </div>

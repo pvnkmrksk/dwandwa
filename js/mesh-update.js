@@ -29,7 +29,7 @@ function doUpdate() {
   if (mainMesh) { scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh = null; }
 
   const GRID = Math.min(S.CELL, 96);
-  const geo = buildModuleMeshes(S.sil1, S.sil2, S.CELL, GRID, 0.9);
+  const geo = buildModuleMeshes(S.sil1, S.sil2, S.CELL, GRID, 1.25);
 
   if (geo) {
     mainMesh = new THREE.Mesh(geo, matSmooth);
@@ -38,7 +38,7 @@ function doUpdate() {
     scene.add(mainMesh);
 
     const triCount = geo.index ? geo.index.count / 3 : 0;
-    document.getElementById('vc').textContent = triCount > 0 ? triCount.toLocaleString() + ' triangles' : 'No intersection';
+    document.getElementById('vc').textContent = triCount > 0 ? triCount.toLocaleString() + ' triangles' : 'No geometry';
 
     const box = new THREE.Box3().setFromObject(mainMesh);
     setLastMeshBox(box.clone());
@@ -50,8 +50,9 @@ function doUpdate() {
     resizeRenderer();
     syncDebugOverlay();
   } else {
-    document.getElementById('vc').textContent = 'No intersection';
+    document.getElementById('vc').textContent = 'No geometry';
     setLastMeshBox(null);
+    S.autoStrutTips = null;
     S.moduleCenterX = null;
     S.moduleZBack = null;
     S.moduleTx = null;

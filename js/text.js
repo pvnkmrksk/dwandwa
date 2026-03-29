@@ -2,8 +2,6 @@ import S, { allocArrays } from './state.js';
 import { rebuildScene } from './scene.js';
 import { updateCanvasSize } from './layout.js';
 import { measureColumnCells } from './raster.js';
-import { redrawStrutPlan } from './strut-plan.js';
-
 // Virama/halant characters for Indic scripts that join consonants
 const VIRAMAS = new Set([
   '\u094D', // Devanagari
@@ -85,6 +83,5 @@ export async function applyNames(raw1, raw2, f1, f2) {
   await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2);
   allocArrays();
   updateCanvasSize();
-  redrawStrutPlan();
   rebuildScene();
 }

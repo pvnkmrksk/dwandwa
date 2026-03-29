@@ -10,7 +10,7 @@ let lastMeshBox = null;
 let baseEnabled = true;
 let basePadXPct = 10, basePadZPct = 10, plateThickPct = 14, baseFilletPct = 4, baseOverlapPct = 4;
 let backEnabled = true, backPadPct = 10, backOverlapPct = 4;
-let strutZPct = 0;
+let strutSizePct = 14;
 const showBackdrops = false;
 
 export function setLastMeshBox(box) {
@@ -26,7 +26,7 @@ export function getStructureSettings() {
     baseEnabled, basePadXPct, basePadZPct, plateThickPct, baseFilletPct, baseOverlapPct,
     backEnabled, backPadPct, backOverlapPct,
     alignBackEdges: S.alignBackEdges, equalGapPack: S.equalGapPack, backStrut: S.backStrut,
-    strutZPct,
+    strutSizePct,
   };
 }
 
@@ -118,50 +118,37 @@ function buildLProfile(box) {
 
 function buildBackStruts(box) {
   if (!S.backStrut || !S.moduleTx) return;
-  const L = computePlateLayout(box, getStructureSettings());
-  const { size, baseTopY, zWallFront, plate, backH } = L;
-  const zStrutNudge = size.z * (strutZPct / 100);
+  const ss = getStructureSettings();
+  const L = computePlateLayout(box, ss);
+  const { baseTopY, zWallFront, plate, backH } = L;
+  const sizeScale = Math.max(0.35, ss.strutSizePct / 14);
+  const strutW = Math.max(0.55, plate * 0.38 * sizeScale);
 
   const y0 = baseTopY + backH * 0.12;
   const y1 = baseTopY + backH * 0.88;
   const yMid = (y0 + y1) / 2;
   const hY = y1 - y0;
 
-  let useMask = S.strutUseMask && S.strutMask && S.strutMaskW > 0 && S.strutMaskD > 0;
-  let maskAny = false;
-  if (useMask) {
-    for (let i = 0; i < S.strutMask.length; i++) {
-      if (S.strutMask[i]) { maskAny = true; break; }
-    }
-  }
-  useMask = useMask && maskAny;
-
-  if (useMask) {
-    const NX = S.strutMaskW;
-    const D = S.strutMaskD;
-    const hx = (size.x / NX) * 0.92;
-    const hz = (size.z / D) * 0.92;
-    for (let iz = 0; iz < D; iz++) {
-      for (let ix = 0; ix < NX; ix++) {
-        if (!S.strutMask[ix + iz * NX]) continue;
-        const xC = box.min.x + (ix + 0.5) / NX * size.x;
-        const zC = box.min.z + (iz + 0.5) / D * size.z + zStrutNudge;
-        const g = new THREE.BoxGeometry(hx, hY, hz);
-        const mesh = new THREE.Mesh(g, matBase);
-        mesh.position.set(xC, yMid, zC);
-        mesh.receiveShadow = true;
-        mesh.castShadow = true;
-        scene.add(mesh);
-        structureObjects.push(mesh);
-      }
+  if (S.autoStrutTips && S.autoStrutTips.length > 0) {
+    for (const tip of S.autoStrutTips) {
+      const zLo = Math.min(zWallFront, tip.z);
+      const zHi = Math.max(zWallFront, tip.z);
+      const dzz = zHi - zLo;
+      if (dzz < 0.35) continue;
+      const g = new THREE.BoxGeometry(strutW, hY, dzz);
+      const mesh = new THREE.Mesh(g, matBase);
+      mesh.position.set(tip.x, yMid, (zLo + zHi) / 2);
+      mesh.receiveShadow = true;
+      mesh.castShadow = true;
+      scene.add(mesh);
+      structureObjects.push(mesh);
     }
     return;
   }
 
-  const strutW = Math.max(1.2, plate * 0.45);
   for (let i = 0; i < S.nCols; i++) {
     const cx = S.moduleTx[i];
-    const zStart = box.min.z + zStrutNudge;
+    const zStart = box.min.z;
     const zLo = Math.min(zWallFront, zStart);
     const zHi = Math.max(zWallFront, zStart);
     const dz = zHi - zLo;
@@ -229,8 +216,8 @@ export function updateStructureUI() {
   backEnabled = document.getElementById('backOn').checked;
   backPadPct = parseInt(document.getElementById('backPad').value);
   backOverlapPct = parseInt(document.getElementById('backOverlap').value);
-  const strutZEl = document.getElementById('strutZ');
-  strutZPct = strutZEl ? parseInt(strutZEl.value) : 0;
+  const strutSzEl = document.getElementById('strutThick');
+  strutSizePct = strutSzEl ? parseInt(strutSzEl.value, 10) : 14;
   const ab = document.getElementById('alignBack');
   const eg = document.getElementById('equalGap');
   const bs = document.getElementById('backStrut');
@@ -243,15 +230,15 @@ export function updateStructureUI() {
   if (boEl) boEl.textContent = (baseOverlapPct >= 0 ? '+' : '') + baseOverlapPct + '%';
   const bovEl = document.getElementById('backOverlapVal');
   if (bovEl) bovEl.textContent = (backOverlapPct >= 0 ? '+' : '') + backOverlapPct + '%';
-  const szEl = document.getElementById('strutZVal');
-  if (szEl) szEl.textContent = (strutZPct >= 0 ? '+' : '') + strutZPct + '%';
+  const szEl = document.getElementById('strutThickVal');
+  if (szEl) szEl.textContent = strutSizePct + '%';
   document.getElementById('baseControls').classList.toggle('disabled', !baseEnabled);
   document.getElementById('backControls').classList.toggle('disabled', !backEnabled);
   rebuildStructure();
 }
 
 (function wireStructureControls() {
-  ['baseOn', 'basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap', 'strutZ'].forEach(id => {
+  ['baseOn', 'basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap', 'strutThick'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', updateStructureUI);

@@ -1,28 +1,71 @@
 /* global THREE */
 import S from './state.js';
 import {
-  columnSpans,
   computeDzAlignBack,
   computeTxEqualGap,
   computeTxSpanPack,
 } from './module-layout.js';
 import { meshFromBinaryCells } from './mesher/voxel-surface.js';
+import { hangTipsFromIntersection } from './strut-auto.js';
+
+function gaussKernel(sigma) {
+  const r = Math.ceil(sigma * 3);
+  const k = new Float32Array(2 * r + 1);
+  let s = 0;
+  for (let i = 0; i <= 2 * r; i++) {
+    k[i] = Math.exp(-0.5 * ((i - r) / sigma) ** 2);
+    s += k[i];
+  }
+  for (let i = 0; i < k.length; i++) k[i] /= s;
+  return { k, r };
+}
+
+function blurSlice(data, w, h, sigma) {
+  const { k, r } = gaussKernel(sigma);
+  const tmp = new Float32Array(w * h);
+  for (let z = 0; z < h; z++) {
+    for (let x = 0; x < w; x++) {
+      let acc = 0;
+      for (let d = -r; d <= r; d++) {
+        acc += data[Math.max(0, Math.min(w - 1, x + d)) * h + z] * k[d + r];
+      }
+      tmp[x * h + z] = acc;
+    }
+  }
+  const out = new Float32Array(w * h);
+  for (let x = 0; x < w; x++) {
+    for (let z = 0; z < h; z++) {
+      let acc = 0;
+      for (let d = -r; d <= r; d++) {
+        acc += tmp[x * h + Math.max(0, Math.min(h - 1, z + d))] * k[d + r];
+      }
+      out[x * h + z] = acc;
+    }
+  }
+  return out;
+}
 
 function sampleSlice(data, w, h, x, z) {
   x = Math.max(0, Math.min(w - 1, x));
   z = Math.max(0, Math.min(h - 1, z));
-  const x0 = Math.floor(x), z0 = Math.floor(z);
-  const x1 = Math.min(w - 1, x0 + 1), z1 = Math.min(h - 1, z0 + 1);
-  const fx = x - x0, fz = z - z0;
+  const x0 = Math.floor(x);
+  const z0 = Math.floor(z);
+  const x1 = Math.min(w - 1, x0 + 1);
+  const z1 = Math.min(h - 1, z0 + 1);
+  const fx = x - x0;
+  const fz = z - z0;
   return data[x0 * h + z0] * (1 - fx) * (1 - fz) +
-         data[x1 * h + z0] * fx * (1 - fz) +
-         data[x0 * h + z1] * (1 - fx) * fz +
-         data[x1 * h + z1] * fx * fz;
+    data[x1 * h + z0] * fx * (1 - fz) +
+    data[x0 * h + z1] * (1 - fx) * fz +
+    data[x1 * h + z1] * fx * fz;
 }
 
-/** Non-zero ink bounding box in silhouette space (x = column, z = vertical). */
+/** Non-zero ink bounding box on smoothed raster (threshold 0.5). */
 function inkBBox(slice, w, h) {
-  let minX = w, maxX = -1, minZ = h, maxZ = -1;
+  let minX = w;
+  let maxX = -1;
+  let minZ = h;
+  let maxZ = -1;
   for (let x = 0; x < w; x++) {
     for (let z = 0; z < h; z++) {
       if (slice[x * h + z] >= 0.5) {
@@ -38,10 +81,11 @@ function inkBBox(slice, w, h) {
 }
 
 /**
- * Dual silhouette: X = front horizontal, Y = depth (side horizontal), Z = vertical.
- * Voxel hull uses separate bboxes — front (Wf×Hf) and side (Wd×Hs) — so plan is Wf×Wd, not square.
+ * Dual silhouette → one solid cuboid per column (independent front width × side width × shared height).
+ * Intersection of the two views is used only to place auto struts (hanging bits).
+ * @param {number} sigma Gaussian blur on raster before bbox / intersection (reduces jaggy stair-steps).
  */
-export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) {
+export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
   const allPos = [];
   const allIdx = [];
   const allCol = [];
@@ -49,11 +93,12 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
 
   const cos45 = Math.SQRT1_2;
   const sin45 = Math.SQRT1_2;
-
-  const { spans, spanTotalW } = columnSpans(S.nCols, S.colCellW, S.rowCellH, S.letterGapPct);
+  const blurSigma = Math.max(0.6, sigma || 1.1);
+  const gapFrac = 1 + S.letterGapPct / 100;
 
   /** @type {Array<null | { positions: number[], colors: number[], indices: Uint32Array, cw: number, ch: number, Mx: number, My: number, Mz: number }>} */
   const perMod = new Array(S.nCols).fill(null);
+  const packSpans = new Array(S.nCols).fill(0);
 
   for (let mod = 0; mod < S.nCols; mod++) {
     const cw = S.colCellW[mod];
@@ -68,14 +113,19 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       }
     }
 
-    const bf = inkBBox(fSlice, cw, ch);
-    const bs = inkBBox(sSlice, cw, ch);
+    const bfU = blurSlice(fSlice, cw, ch, blurSigma);
+    const bsU = blurSlice(sSlice, cw, ch, blurSigma);
+
+    const bf = inkBBox(bfU, cw, ch);
+    const bs = inkBBox(bsU, cw, ch);
     const full = { minX: 0, maxX: cw - 1, minZ: 0, maxZ: ch - 1 };
     const F = bf || full;
     const sideInk = bs || full;
 
-    const xf0 = F.minX, xf1 = F.maxX;
-    const yd0 = sideInk.minX, yd1 = sideInk.maxX;
+    const xf0 = F.minX;
+    const xf1 = F.maxX;
+    const yd0 = sideInk.minX;
+    const yd1 = sideInk.maxX;
     let z0 = Math.max(F.minZ, sideInk.minZ);
     let z1 = Math.min(F.maxZ, sideInk.maxZ);
     if (z0 > z1) {
@@ -87,6 +137,8 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
     const dy = Math.max(1, yd1 - yd0 + 1);
     const dz = Math.max(1, z1 - z0 + 1);
 
+    packSpans[mod] = (dx + dy) * Math.SQRT1_2 * gapFrac;
+
     const Nx = Math.min(gridRes, Math.max(8, dx));
     const Ny = Math.min(gridRes, Math.max(8, dy));
     const Nz = Math.min(gridRes, Math.max(8, dz));
@@ -97,6 +149,7 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
     const strideY = Mx;
     const strideZ = Mx * My;
     const cellSolid = new Uint8Array(Mx * My * Mz);
+    const interSolid = new Uint8Array(Mx * My * Mz);
 
     const spanX = Math.max(1e-6, xf1 - xf0);
     const spanY = Math.max(1e-6, yd1 - yd0);
@@ -108,9 +161,11 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
           const sxf = xf0 + (i + 0.5) / Mx * spanX;
           const syf = yd0 + (j + 0.5) / My * spanY;
           const szf = z0 + (k + 0.5) / Mz * spanZ;
-          const fv = sampleSlice(fSlice, cw, ch, sxf, szf);
-          const sv = sampleSlice(sSlice, cw, ch, syf, szf);
-          cellSolid[i + j * strideY + k * strideZ] = Math.min(fv, sv) >= 0.5 ? 1 : 0;
+          const fv = sampleSlice(bfU, cw, ch, sxf, szf);
+          const sv = sampleSlice(bsU, cw, ch, syf, szf);
+          const ix = i + j * strideY + k * strideZ;
+          cellSolid[ix] = 1;
+          interSolid[ix] = Math.min(fv, sv) >= 0.5 ? 1 : 0;
         }
       }
     }
@@ -118,12 +173,25 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
     const mesh = meshFromBinaryCells(cellSolid, Mx, My, Mz);
     if (mesh.positions.length === 0) continue;
 
-    const wsX = spanX / Mx;
-    const wsY = spanY / My;
-    const wsZ = spanZ / Mz;
     const midX = (xf0 + xf1) / 2;
     const midY = (yd0 + yd1) / 2;
     const midZ = (z0 + z1) / 2;
+
+    function toWorld(i, j, k) {
+      const sxf = xf0 + (i + 0.5) / Mx * spanX;
+      const syf = yd0 + (j + 0.5) / My * spanY;
+      const szf = z0 + (k + 0.5) / Mz * spanZ;
+      const lx = sxf - midX;
+      const lz = syf - midY;
+      const ly = szf - midZ;
+      return {
+        x: lx * cos45 + lz * sin45,
+        y: ly,
+        z: -lx * sin45 + lz * cos45,
+      };
+    }
+
+    const modTips = hangTipsFromIntersection(interSolid, Mx, My, Mz, toWorld);
 
     const positions = [];
     const colors = [];
@@ -139,15 +207,14 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       const lx = sxf - midX;
       const lz = syf - midY;
       const ly = szf - midZ;
-      // World XZ: −45° mix of front (lx) and side (lz) — same convention as main mesh.js.
       const xw = lx * cos45 + lz * sin45;
       const yw = ly;
       const zw = -lx * sin45 + lz * cos45;
 
       positions.push(xw, yw, zw);
 
-      const fv = sampleSlice(fSlice, cw, ch, sxf, szf);
-      const sv = sampleSlice(sSlice, cw, ch, syf, szf);
+      const fv = sampleSlice(bfU, cw, ch, sxf, szf);
+      const sv = sampleSlice(bsU, cw, ch, syf, szf);
       if (fv <= sv) {
         colors.push(0.94, 0.63, 0.19);
       } else {
@@ -159,7 +226,14 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       positions,
       colors,
       indices: mesh.indices,
-      cw, ch, Mx, My, Mz,
+      cw,
+      ch,
+      Mx,
+      My,
+      Mz,
+      modTips,
+      fv0,
+      sv0,
     };
   }
 
@@ -174,15 +248,18 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
   }
 
   let tx;
+  const spanTotalW = packSpans.reduce((a, b) => a + b, 0);
   if (active.length && S.equalGapPack) {
     tx = computeTxEqualGap(perMod, active, S.letterGapPct, S.nCols);
   } else {
-    tx = computeTxSpanPack(S.nCols, spans, spanTotalW, perMod);
+    tx = computeTxSpanPack(S.nCols, packSpans, spanTotalW, perMod);
   }
 
   S.moduleCenterX = new Float32Array(S.nCols);
   S.moduleZBack = new Float32Array(S.nCols);
   S.moduleTx = new Float32Array(S.nCols);
+  S.autoStrutTips = [];
+
   for (let mod = 0; mod < S.nCols; mod++) {
     S.moduleCenterX[mod] = 0;
     S.moduleZBack[mod] = 0;
@@ -206,6 +283,14 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
     S.moduleCenterX[mod] = (xMin + xMax) / 2;
     S.moduleZBack[mod] = zMin;
 
+    for (const tip of M.modTips) {
+      S.autoStrutTips.push({
+        x: tip.x + tx[mod],
+        y: tip.y,
+        z: tip.z + dz[mod],
+      });
+    }
+
     for (let i = 0; i < M.positions.length; i += 3) {
       allPos.push(
         M.positions[i] + tx[mod],
@@ -225,6 +310,7 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
     S.moduleCenterX = null;
     S.moduleZBack = null;
     S.moduleTx = null;
+    S.autoStrutTips = [];
     return null;
   }
 
@@ -234,6 +320,9 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
   }
   if (yMin !== Infinity && Number.isFinite(yMin)) {
     for (let i = 1; i < allPos.length; i += 3) allPos[i] -= yMin;
+    for (let k = 0; k < S.autoStrutTips.length; k++) {
+      S.autoStrutTips[k].y -= yMin;
+    }
   }
 
   const geo = new THREE.BufferGeometry();

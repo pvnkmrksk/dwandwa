@@ -34,12 +34,8 @@ const S = {
   moduleZBack: null,
   /** World X offset of each module’s column origin (strut anchors; matches mesh layout). */
   moduleTx: null,
-  /** Top-down strut mask: width × depth in silhouette cells. */
-  strutMask: null,
-  strutMaskW: 0,
-  strutMaskD: 0,
-  /** If true, 3D struts come from strutMask pixels (after Apply). */
-  strutUseMask: false,
+  /** Auto strut anchor points in world space (after layout + Y normalize). */
+  autoStrutTips: null,
 };
 
 export default S;

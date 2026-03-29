@@ -11,7 +11,6 @@ import {
   updateStructureUI,
 } from './scene.js';
 import { exportSTL } from './export-stl.js';
-import { initStrutPlanCanvas } from './strut-plan.js';
 
 // ── URL state ──
 function stateToUrl() {
@@ -142,7 +141,7 @@ export function wireUi({ redraw1, redraw2 }) {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => { updateStructureUI(); debouncedUrlUpdate(); });
   });
-  ['basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backPad', 'backOverlap'].forEach(id => {
+  ['basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backPad', 'backOverlap', 'strutThick'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', debouncedUrlUpdate);
   });
@@ -232,5 +231,4 @@ export function wireUi({ redraw1, redraw2 }) {
   document.getElementById('si').onclick = () => setCameraIso();
   document.getElementById('ar').onclick = () => toggleSpin();
 
-  initStrutPlanCanvas({ scheduleUpdate });
 }
