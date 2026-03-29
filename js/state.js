@@ -21,7 +21,7 @@ const S = {
   /** Sum of colCellW — total raster width in cells. */
   rasterWidth: 64,
   /** When true, every column uses the full resolution cell width (Latin-friendly). Off = per-glyph widths (Indic). */
-  uniformColumns: true,
+  uniformColumns: false,
   /** Align each module’s rearmost (min Z) plane after layout. */
   alignBackEdges: false,
   /** Pack modules with equal gaps between bounding boxes (uses Gap % as gap scale). */

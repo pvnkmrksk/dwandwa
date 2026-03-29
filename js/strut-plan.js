@@ -35,9 +35,9 @@ export function initStrutPlanCanvas(deps) {
     const w = NX();
     const d = S.strutMaskD;
     const bx = Math.max(0, Math.min(w - 1, Math.floor((e.clientX - r.left) / Math.max(r.width, 1) * w)));
-    // Match draw(): cell iz is drawn at screen Y = (d-1-iz)*RS — top of canvas = iz d-1, bottom = iz 0
-    const syNorm = (e.clientY - r.top) / Math.max(r.height, 1);
-    const bz = Math.max(0, Math.min(d - 1, d - 1 - Math.floor(Math.min(1 - 1e-9, Math.max(0, syNorm)) * d)));
+    const syNorm = Math.min(1, Math.max(0, (e.clientY - r.top) / Math.max(r.height, 1)));
+    // draw(): row iz at y = (d-1-iz)*RS — top of canvas = iz d-1 (back), bottom = iz 0 (front)
+    const bz = Math.min(d - 1, Math.max(0, Math.floor((1 - syNorm) * d)));
     return { bx, bz };
   }
 

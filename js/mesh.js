@@ -21,11 +21,10 @@ function sampleSlice(data, w, h, x, z) {
 }
 
 /**
- * @param {Uint8Array} silA
- * @param {Uint8Array} silB
- * @param _cellSizeLegacy unused (CELL lives in S)
- * @param {number} gridRes max voxel grid size per module axis
- * @param _sigma unused — mesh uses binary min(silhouettes); kept for export-stl API
+ * Dual-silhouette solid: axis X = front horizontal, Y = depth (side horizontal), Z = vertical.
+ * Voxel grid is anisotropic: cw × cw × ch in silhouette space (cuboid bbox per letter), not a cube.
+ *
+ * @param _sigma unused — kept for export-stl API
  */
 export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) {
   const allPos = [];
@@ -38,7 +37,7 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
 
   const { spans, spanTotalW } = columnSpans(S.nCols, S.colCellW, S.rowCellH, S.letterGapPct);
 
-  /** @type {Array<null | { positions: number[], colors: number[], indices: Uint32Array, cw: number, ch: number, N: number, nm: number, wsX: number, wsY: number, wsZ: number, oy: number }>} */
+  /** @type {Array<null | { positions: number[], colors: number[], indices: Uint32Array, cw: number, ch: number, Mx: number, My: number, Mz: number }>} */
   const perMod = new Array(S.nCols).fill(null);
 
   for (let mod = 0; mod < S.nCols; mod++) {
@@ -54,33 +53,40 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       }
     }
 
-    const maxDim = Math.max(cw, ch);
-    const N = Math.min(gridRes, Math.max(12, maxDim));
-    const scale = (N - 1) > 0 ? 1 / (N - 1) : 1;
-    const M = N - 1;
-    const cellSolid = new Uint8Array(M * M * M);
-    for (let k = 0; k < M; k++) {
-      for (let j = 0; j < M; j++) {
-        for (let i = 0; i < M; i++) {
-          const cx = i + 0.5, cy = j + 0.5, cz = k + 0.5;
-          const sx = cx * scale * (cw - 1);
-          const sy = cy * scale * (cw - 1);
-          const sz = cz * scale * (ch - 1);
-          const fv = sampleSlice(fSlice, cw, ch, sx, sz);
-          const sv = sampleSlice(sSlice, cw, ch, sy, sz);
-          cellSolid[i + j * M + k * M * M] = Math.min(fv, sv) >= 0.5 ? 1 : 0;
+    const Nx = Math.min(gridRes, Math.max(8, cw));
+    const Ny = Math.min(gridRes, Math.max(8, cw));
+    const Nz = Math.min(gridRes, Math.max(8, ch));
+    const Mx = Math.max(1, Nx - 1);
+    const My = Math.max(1, Ny - 1);
+    const Mz = Math.max(1, Nz - 1);
+
+    const strideY = Mx;
+    const strideZ = Mx * My;
+    const cellSolid = new Uint8Array(Mx * My * Mz);
+
+    for (let k = 0; k < Mz; k++) {
+      for (let j = 0; j < My; j++) {
+        for (let i = 0; i < Mx; i++) {
+          const fx = (i + 0.5) / Mx;
+          const fy = (j + 0.5) / My;
+          const fz = (k + 0.5) / Mz;
+          const sxf = fx * Math.max(1e-6, cw - 1);
+          const syf = fy * Math.max(1e-6, cw - 1);
+          const szf = fz * Math.max(1e-6, ch - 1);
+          const fv = sampleSlice(fSlice, cw, ch, sxf, szf);
+          const sv = sampleSlice(sSlice, cw, ch, syf, szf);
+          cellSolid[i + j * strideY + k * strideZ] = Math.min(fv, sv) >= 0.5 ? 1 : 0;
         }
       }
     }
 
-    const mesh = meshFromBinaryCells(cellSolid, M);
+    const mesh = meshFromBinaryCells(cellSolid, Mx, My, Mz);
     if (mesh.positions.length === 0) continue;
 
-    const wsX = cw / N;
-    const wsY = cw / N;
-    const wsZ = ch / N;
+    const wsX = cw / Nx;
+    const wsY = cw / Ny;
+    const wsZ = ch / Nz;
     const oy = -ch / 2;
-    const nm = Math.max(N - 1, 1);
 
     const positions = [];
     const colors = [];
@@ -94,14 +100,16 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       const lz = py * wsY - cw / 2;
       const xw = lx * cos45 + lz * sin45;
       const yw = ly;
-      const zw = -lx * sin45 + lz * cos45;
+      let zw = -lx * sin45 + lz * cos45;
+      zw = -zw;
+
       positions.push(xw, yw, zw);
 
-      const sx = (px / nm) * (cw - 1);
-      const sy = (py / nm) * (cw - 1);
-      const sz = (pz / nm) * (ch - 1);
-      const fv = sampleSlice(fSlice, cw, ch, sx, sz);
-      const sv = sampleSlice(sSlice, cw, ch, sy, sz);
+      const sxc = Mx > 0 ? (px / Mx) * (cw - 1) : 0;
+      const syc = My > 0 ? (py / My) * (cw - 1) : 0;
+      const szc = Mz > 0 ? (pz / Mz) * (ch - 1) : 0;
+      const fv = sampleSlice(fSlice, cw, ch, sxc, szc);
+      const sv = sampleSlice(sSlice, cw, ch, syc, szc);
       if (fv <= sv) {
         colors.push(0.94, 0.63, 0.19);
       } else {
@@ -113,7 +121,7 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       positions,
       colors,
       indices: mesh.indices,
-      cw, ch, N, nm, wsX, wsY, wsZ, oy,
+      cw, ch, Mx, My, Mz,
     };
   }
 

@@ -28,7 +28,7 @@ export function computeDzAlignBack(perMod, active, nCols) {
   }
   for (const mod of active) {
     let zMin = Infinity;
-    const p = perModPositions[mod];
+    const p = perMod[mod].positions;
     for (let i = 2; i < p.length; i += 3) {
       if (p[i] < zMin) zMin = p[i];
     }
