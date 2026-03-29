@@ -1,5 +1,20 @@
 /* global THREE */
 /**
+ * Reflect mesh bounds in Z through the box center (same X/Y/size; swaps min/max Z).
+ * L-profile uses this so base/back attach to the opposite Z face of the letters without changing mesh.
+ */
+export function mirrorStructureBoxZ(box) {
+  const c = new THREE.Vector3();
+  box.getCenter(c);
+  const out = box.clone();
+  const minZ = box.min.z;
+  const maxZ = box.max.z;
+  out.min.z = 2 * c.z - maxZ;
+  out.max.z = 2 * c.z - minZ;
+  return out;
+}
+
+/**
  * Shared L-profile dimensions from letter mesh AABB (preview + STL export).
  * @param {THREE.Box3} box
  * @param {{ baseEnabled: boolean, basePadXPct: number, basePadZPct: number, plateThickPct: number, backEnabled: boolean, backPadPct: number, baseOverlapPct: number, backOverlapPct: number }} ss

@@ -1,7 +1,7 @@
 /* global THREE */
 import S from './state.js';
 import { scene, matBase, matBackdrop } from './renderer-setup.js';
-import { computePlateLayout } from './structure-layout.js';
+import { computePlateLayout, mirrorStructureBoxZ } from './structure-layout.js';
 
 let structureObjects = [];
 /** Last axis-aligned bounds of the letter mesh (world space, after Y normalization). */
@@ -159,9 +159,10 @@ function buildBackdrops(box) {
 export function rebuildStructure() {
   clearStructureObjects();
   if (lastMeshBox) {
-    if (baseEnabled || backEnabled) buildLProfile(lastMeshBox);
-    if (S.backStrut && (baseEnabled || backEnabled)) buildBackStruts(lastMeshBox);
-    if (showBackdrops) buildBackdrops(lastMeshBox);
+    const plateBox = mirrorStructureBoxZ(lastMeshBox);
+    if (baseEnabled || backEnabled) buildLProfile(plateBox);
+    if (S.backStrut && (baseEnabled || backEnabled)) buildBackStruts(plateBox);
+    if (showBackdrops) buildBackdrops(plateBox);
   }
 }
 

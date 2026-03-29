@@ -3,7 +3,7 @@ import S, { allocArrays } from './state.js';
 import { measureColumnCells, stampName } from './raster.js';
 import { buildModuleMeshes } from './mesh.js';
 import { getStructureSettings } from './scene.js';
-import { computePlateLayout } from './structure-layout.js';
+import { computePlateLayout, mirrorStructureBoxZ } from './structure-layout.js';
 
 function addBoxTriangles(allTriangles, cx, cy, cz, hx, hy, hz) {
   const v = [
@@ -128,12 +128,13 @@ export async function exportSTL() {
       pos.getX(i) * ESCALE, pos.getY(i) * ESCALE, pos.getZ(i) * ESCALE
     ));
   }
-  const L = computePlateLayout(box, ss);
+  const plateBox = mirrorStructureBoxZ(box);
+  const L = computePlateLayout(plateBox, ss);
   const { size, center, baseW, baseD, plate, baseH, backT, backH, baseTopY, zWallFront } = L;
 
   if (ss.baseEnabled) {
     addBoxTriangles(allTriangles,
-      center.x, baseTopY - baseH / 2, box.min.z - baseD / 2,
+      center.x, baseTopY - baseH / 2, plateBox.min.z - baseD / 2,
       baseW / 2, baseH / 2, baseD / 2);
   }
 
@@ -166,8 +167,8 @@ export async function exportSTL() {
       for (let iz = 0; iz < D; iz++) {
         for (let ix = 0; ix < NX; ix++) {
           if (!S.strutMask[ix + iz * NX]) continue;
-          const xC = box.min.x + (ix + 0.5) / NX * size.x;
-          const zC = box.max.z - (iz + 0.5) / D * size.z + strutZAdj;
+          const xC = plateBox.min.x + (ix + 0.5) / NX * size.x;
+          const zC = plateBox.max.z - (iz + 0.5) / D * size.z + strutZAdj;
           addBoxTriangles(allTriangles, xC, yMid, zC, hx, hY / 2, hz);
         }
       }
@@ -175,7 +176,7 @@ export async function exportSTL() {
       const strutW = Math.max(1.2, plate * 0.45);
       for (let i = 0; i < S.nCols; i++) {
         const cx = S.moduleTx[i] * ESCALE;
-        const zStart = box.min.z + strutZAdj;
+        const zStart = plateBox.min.z + strutZAdj;
         const zLo = Math.min(zWallFront, zStart);
         const zHi = Math.max(zWallFront, zStart);
         const dz = zHi - zLo;
