@@ -52,21 +52,16 @@ let structureObjects = [];
 let lastMeshBox = null;
 
 // ── Structure settings (L-profile) ──
-// These are read from UI in updateStructureUI()
 let baseEnabled = true, basePadPct = 10, baseFilletPct = 4, baseOverlapPct = 4;
 let backEnabled = true, backPadPct = 10, backOverlapPct = 4;
+/** Semi-transparent shadow-reference planes (off by default). */
+const showBackdrops = false;
 
-// ── Letter gap ──
-export function setLetterGap(pct) {
-  S.letterGapPct = pct;
-}
+export function setLetterGap(pct) { S.letterGapPct = pct; }
 
-// ── Exported for export-stl.js ──
 export function getStructureSettings() {
-  return {
-    baseEnabled, basePadPct, baseFilletPct, baseOverlapPct,
-    backEnabled, backPadPct, backOverlapPct,
-  };
+  return { baseEnabled, basePadPct, baseFilletPct, baseOverlapPct,
+           backEnabled, backPadPct, backOverlapPct };
 }
 
 function clearStructureObjects() {
@@ -77,69 +72,84 @@ function clearStructureObjects() {
   structureObjects = [];
 }
 
-function buildBase(box) {
-  if (!baseEnabled || !box) return;
+// L-profile in world space: module centers run along +X (see mesh.js). Extrude along shape Z,
+// then rotateY(π/2) so extrusion maps to +X — base edges align with the letter row, not a 45°
+// diagonal on the plate. Cross-section +X → world −Z (back panel behind letters at low Z).
+function buildLProfile(box) {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
-  const padFrac = basePadPct / 100;
-  const pw = size.x * (1 + padFrac * 2) + 4;
-  const pd = size.z * (1 + padFrac * 2) + 4;
-  const ph = Math.max(size.y * 0.10, 2.5);
-  const maxR = Math.min(pw, pd) * 0.25;
-  const filletR = maxR * baseFilletPct / 20;
+  const basePadF = basePadPct / 100;
+  const backPadF = backPadPct / 100;
 
-  // Overlap: base top penetrates into letters by overlapPct% of letter height
-  const overlapY = size.y * baseOverlapPct / 100;
-  const baseTopY = box.min.y + overlapY;
+  // Axis-aligned footprint: row length along X, depth along Z (matches mesh AABB)
+  const profileW = size.x * (1 + basePadF * 2) + 4;
+  const baseD = size.z * (1 + basePadF * 2) + 4;
+  const baseH = Math.max(size.y * 0.08, 2.0);
 
-  let geo;
-  if (filletR > 0.3) {
-    const shape = new THREE.Shape();
-    const hw = pw / 2, hd = pd / 2, r = filletR;
-    shape.moveTo(-hw + r, -hd);
-    shape.lineTo(hw - r, -hd);
-    shape.quadraticCurveTo(hw, -hd, hw, -hd + r);
-    shape.lineTo(hw, hd - r);
-    shape.quadraticCurveTo(hw, hd, hw - r, hd);
-    shape.lineTo(-hw + r, hd);
-    shape.quadraticCurveTo(-hw, hd, -hw, hd - r);
-    shape.lineTo(-hw, -hd + r);
-    shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
-    geo = new THREE.ExtrudeGeometry(shape, {
-      depth: ph, bevelEnabled: false
-    });
-    geo.rotateX(-Math.PI / 2);
+  const backH = size.y * (1 + backPadF * 2) + 4;
+  const backT = Math.max(size.z * 0.06, 1.5);
+
+  const maxFillet = Math.min(baseH, backT) * 0.8;
+  const filletR = maxFillet * baseFilletPct / 20;
+
+  const baseOverlapY = size.y * baseOverlapPct / 100;
+  const backOverlapZ = size.z * backOverlapPct / 100;
+
+  const baseTopY = box.min.y + baseOverlapY;
+
+  // Build L cross-section in shape XY plane
+  // Inner corner at origin: back panel front face x=0, base top y=0
+  // Back panel extends +X (behind), base extends -X (toward viewer)
+  const shape = new THREE.Shape();
+
+  if (baseEnabled && backEnabled) {
+    const r = filletR > 0.3 ? Math.min(filletR, backH * 0.3, baseD * 0.3) : 0;
+    shape.moveTo(backT, -baseH);
+    shape.lineTo(-baseD, -baseH);
+    shape.lineTo(-baseD, 0);
+    if (r > 0.3) {
+      shape.lineTo(-r, 0);
+      const segs = 8;
+      for (let i = 1; i <= segs; i++) {
+        const a = -(Math.PI / 2) * (i / segs);
+        shape.lineTo(-r + r * Math.cos(a), r + r * Math.sin(a));
+      }
+    } else {
+      shape.lineTo(0, 0);
+    }
+    shape.lineTo(0, backH);
+    shape.lineTo(backT, backH);
+    shape.lineTo(backT, -baseH);
+  } else if (baseEnabled) {
+    shape.moveTo(backT, -baseH);
+    shape.lineTo(-baseD, -baseH);
+    shape.lineTo(-baseD, 0);
+    shape.lineTo(backT, 0);
+    shape.lineTo(backT, -baseH);
+  } else if (backEnabled) {
+    shape.moveTo(0, 0);
+    shape.lineTo(0, backH);
+    shape.lineTo(backT, backH);
+    shape.lineTo(backT, 0);
+    shape.lineTo(0, 0);
   } else {
-    geo = new THREE.BoxGeometry(pw, ph, pd);
+    return;
   }
+
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: profileW,
+    bevelEnabled: false,
+  });
+
+  // shape +Z (extrusion) → world +X; shape +X (back thickness) → world −Z
+  geo.rotateY(Math.PI / 2);
+
   const mesh = new THREE.Mesh(geo, matBase);
-  mesh.position.set(center.x, baseTopY - ph / 2, center.z);
-  mesh.receiveShadow = true;
-  mesh.castShadow = true;
-  scene.add(mesh);
-  structureObjects.push(mesh);
-}
 
-function buildBackPanel(box) {
-  if (!backEnabled || !box) return;
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-
-  const padFrac = backPadPct / 100;
-  // Back panel faces +X, at min-X of letters
-  // Width = extent along Z (depth of modules), height = extent along Y
-  const bpW = size.z * (1 + padFrac * 2) + 4;
-  const bpH = size.y * (1 + padFrac * 2) + 4;
-  const bpThick = Math.max(size.x * 0.04, 1.5);
-
-  // Overlap: panel front face penetrates into letters by overlapPct% of letter X extent
-  const overlapX = size.x * backOverlapPct / 100;
-  const panelFrontX = box.min.x + overlapX;
-
-  const geo = new THREE.BoxGeometry(bpThick, bpH, bpW);
-  const mesh = new THREE.Mesh(geo, matBase);
-  mesh.position.set(panelFrontX - bpThick / 2, center.y, center.z);
+  const backFrontZ = box.min.z + backOverlapZ;
+  // Inner corner (0,0,0): centered on X along the row; z at back face of letter volume
+  mesh.position.set(center.x - profileW / 2, baseTopY, backFrontZ);
   mesh.receiveShadow = true;
   mesh.castShadow = true;
   scene.add(mesh);
@@ -150,30 +160,34 @@ function buildBackdrops(box) {
   if (!box) return;
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
+  const S2 = Math.SQRT1_2;
 
-  // Subtle L-shaped backdrop walls for shadow reference
-  // Positioned at the midplane of the bounding box
   const wallH = size.y * 1.8;
-  const wallW = Math.max(size.x, size.z) * 1.8;
-  const baseY = box.min.y - (baseEnabled ? size.y * 0.1 : 0);
-
-  // The back panel is at min-X. Backdrop walls go at min-Z and max-X
-  // to catch shadows from both word directions.
+  const wallW = Math.max(size.x, size.z) * 2.5;
+  const baseY = box.min.y - (baseEnabled ? size.y * 0.08 : 0);
   const gap = Math.max(Math.min(size.x, size.z) * 0.4, 2);
 
-  // Back wall (catches front-word shadow): at min-Z, centered on midplane
+  // Back wall: rotated 45° to match L-profile, behind the letters
+  // Normal faces toward camera at diagonal view: (-S2, 0, S2)
   const backGeo = new THREE.PlaneGeometry(wallW, wallH);
   const backWall = new THREE.Mesh(backGeo, matBackdrop);
-  backWall.position.set(center.x, baseY + wallH / 2, center.z - size.z / 2 - gap);
+  // Place at max-d projection + gap, along diagonal behind direction
+  const maxD = S2 * (box.max.x - box.min.z);
+  const bdX = center.x + (gap + 2) * S2;
+  const bdZ = center.z - (gap + 2) * S2;
+  backWall.position.set(bdX, baseY + wallH / 2, bdZ);
+  backWall.rotation.y = Math.PI / 4;
   backWall.receiveShadow = true;
   scene.add(backWall);
   structureObjects.push(backWall);
 
-  // Side wall (catches side-word shadow): at max-X
+  // Side wall: rotated -45° to catch side-word shadow
   const sideGeo = new THREE.PlaneGeometry(wallW, wallH);
   const sideWall = new THREE.Mesh(sideGeo, matBackdrop);
-  sideWall.position.set(center.x + size.x / 2 + gap, baseY + wallH / 2, center.z);
-  sideWall.rotation.y = -Math.PI / 2;
+  const sdX = center.x + (gap + 2) * S2;
+  const sdZ = center.z + (gap + 2) * S2;
+  sideWall.position.set(sdX, baseY + wallH / 2, sdZ);
+  sideWall.rotation.y = -Math.PI / 4;
   sideWall.receiveShadow = true;
   scene.add(sideWall);
   structureObjects.push(sideWall);
@@ -191,7 +205,6 @@ function updateLighting(box) {
   sc.far = extent * 8;
   sc.updateProjectionMatrix();
 
-  // Key light from upper diagonal — casts shadows onto both backdrop walls
   keyLight.position.set(
     center.x - extent * 0.8,
     center.y + extent * 1.5,
@@ -199,44 +212,33 @@ function updateLighting(box) {
   );
   keyLight.target.position.copy(center);
 
-  fillLight.position.set(
-    center.x + extent * 0.6,
-    center.y + extent * 0.4,
-    center.z - extent * 0.5
-  );
-  rimLight.position.set(
-    center.x + extent * 0.3,
-    center.y - extent * 0.2,
-    center.z + extent * 0.8
-  );
+  fillLight.position.set(center.x + extent * 0.6, center.y + extent * 0.4, center.z - extent * 0.5);
+  rimLight.position.set(center.x + extent * 0.3, center.y - extent * 0.2, center.z + extent * 0.8);
 }
 
-export function rebuildScene() {
-  rebuildStructure();
-}
+export function rebuildScene() { rebuildStructure(); }
 
 export function rebuildStructure() {
   clearStructureObjects();
   if (lastMeshBox) {
-    buildBase(lastMeshBox);
-    buildBackPanel(lastMeshBox);
-    buildBackdrops(lastMeshBox);
+    if (baseEnabled || backEnabled) buildLProfile(lastMeshBox);
+    if (showBackdrops) buildBackdrops(lastMeshBox);
   }
 }
 
 // ── Camera ──
-// Module rotation is 45° around Y. After rotation:
-//   Front word view: θ = π/4 (camera at +X·sin45, y, +Z·cos45)
-//   Side word view: θ = 3π/4 (camera at +X·sin45, y, -Z·cos45)
-//   Diagonal (both): θ = π/2 (camera at +X, y, 0) — head-on to back panel
-// Orbit: center at π/2, sweep ±π/2 for 180° total
-let theta = Math.PI / 2, phi = Math.PI / 2.3, camDist = 600, orthoFrustum = 80;
+// Modules are along X, each rotated 45° around Y.
+// Diagonal view (both words equally visible): θ = -π/4
+// Front word more visible: θ → 0 (looking along -Z)
+// Side word more visible: θ → -π/2 (looking along +X)
+// 180° orbit: center -π/4, amplitude π/2
+let theta = -Math.PI / 4, phi = Math.PI / 2.3, camDist = 600, orthoFrustum = 80;
 let autoRot = true, oscTime = 0;
-const OSC_CENTER = Math.PI / 2;      // diagonal = head-on to back panel
-const OSC_AMP    = Math.PI / 2 * 1.04; // 180° sweep with 4% overshoot
-const OSC_SPD    = 0.004;
-const PHI_CENTER = Math.PI / 2.3;
-const PHI_AMP    = 0.03;
+const OSC_CENTER = -Math.PI / 4;
+const OSC_AMP    =  Math.PI / 2;  // 180° total sweep
+const OSC_SPD    =  0.004;
+const PHI_CENTER =  Math.PI / 2.3;
+const PHI_AMP    =  0.03;
 
 export function updCam() {
   camera.position.set(
@@ -260,7 +262,6 @@ new ResizeObserver(resizeRenderer).observe(v3w);
 setTimeout(resizeRenderer, 60);
 window.addEventListener('resize', () => { updateCanvasSize(); resizeRenderer(); });
 
-// ── Scroll zoom ──
 v3w.addEventListener('wheel', e => {
   e.preventDefault();
   const factor = 1 + e.deltaY * 0.001;
@@ -268,7 +269,6 @@ v3w.addEventListener('wheel', e => {
   resizeRenderer();
 }, { passive: false });
 
-// ── Pointer drag ──
 let drag = false, pp = null;
 v3w.addEventListener('pointerdown', e => {
   drag = true; pp = { x: e.clientX, y: e.clientY };
@@ -290,20 +290,15 @@ function setAutoRot(v) {
 }
 
 export function setCameraFront() {
-  // Head-on to front word (silhouette A): θ = π/4 (45°)
-  setAutoRot(false); theta = Math.PI / 4; phi = PHI_CENTER; updCam();
+  setAutoRot(false); theta = 0; phi = PHI_CENTER; updCam();
 }
 export function setCameraSide() {
-  // Head-on to side word (silhouette B): θ = 3π/4 (135°)
-  setAutoRot(false); theta = 3 * Math.PI / 4; phi = PHI_CENTER; updCam();
+  setAutoRot(false); theta = -Math.PI / 2; phi = PHI_CENTER; updCam();
 }
 export function setCameraIso() {
-  // Head-on to back panel (diagonal, both words equally): θ = π/2 (90°)
-  setAutoRot(false); theta = Math.PI / 2; phi = PHI_CENTER; updCam();
+  setAutoRot(false); theta = -Math.PI / 4; phi = PHI_CENTER; updCam();
 }
-export function toggleSpin() {
-  setAutoRot(!autoRot);
-}
+export function toggleSpin() { setAutoRot(!autoRot); }
 
 (function loop() {
   requestAnimationFrame(loop);
@@ -325,23 +320,18 @@ export function updateStructureUI() {
   backEnabled = document.getElementById('backOn').checked;
   backPadPct = parseInt(document.getElementById('backPad').value);
   backOverlapPct = parseInt(document.getElementById('backOverlap').value);
-
   document.getElementById('baseControls').classList.toggle('disabled', !baseEnabled);
   document.getElementById('backControls').classList.toggle('disabled', !backEnabled);
-
   rebuildStructure();
 }
 
-// Wire up structure controls once DOM is ready
-function wireStructureControls() {
-  const ids = ['baseOn', 'basePad', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap'];
-  ids.forEach(id => {
+(function wireStructureControls() {
+  ['baseOn', 'basePad', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', updateStructureUI);
   });
-}
-wireStructureControls();
+})();
 
 // ── Mesh update ──
 const bmsg = document.getElementById('bmsg');
@@ -355,7 +345,6 @@ export function scheduleUpdate() {
 
 function doUpdate() {
   pending = false;
-
   if (mainMesh) { scene.remove(mainMesh); mainMesh.geometry.dispose(); mainMesh = null; }
 
   const GRID = Math.min(S.CELL, 96);
@@ -389,5 +378,4 @@ function doUpdate() {
   bmsg.textContent = '';
 }
 
-// Initial setup
 updCam();

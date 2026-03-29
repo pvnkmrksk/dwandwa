@@ -5,7 +5,6 @@ import { buildModuleMeshes } from './mesh.js';
 import { getStructureSettings } from './scene.js';
 
 function addBoxTriangles(allTriangles, cx, cy, cz, hx, hy, hz) {
-  // 8 corners of an axis-aligned box centered at (cx,cy,cz) with half-extents (hx,hy,hz)
   const v = [
     [cx-hx, cy-hy, cz-hz], [cx+hx, cy-hy, cz-hz],
     [cx+hx, cy+hy, cz-hz], [cx-hx, cy+hy, cz-hz],
@@ -102,7 +101,7 @@ export async function exportSTL() {
     ]);
   }
 
-  // Compute bounding box of letter mesh
+  // Compute bounding box
   const box = new THREE.Box3();
   for (let i = 0; i < pos.count; i++) {
     box.expandByPoint(new THREE.Vector3(
@@ -112,26 +111,34 @@ export async function exportSTL() {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
-  // Add base plate if enabled
+  // Add L-profile structure: base at bottom (min.y), back panel at back (min.z)
+  const basePadF = ss.basePadPct / 100;
+  const backPadF = ss.backPadPct / 100;
+  const baseOverlapY = size.y * ss.baseOverlapPct / 100;
+  const backOverlapZ = size.z * ss.backOverlapPct / 100;
+
+  const baseW = size.x * (1 + basePadF * 2) + 0.5;
+  const baseD = size.z * (1 + basePadF * 2) + 0.5;
+  const baseH = Math.max(size.y * 0.08, 0.2);
+  const baseTopY = box.min.y + baseOverlapY;
+
+  const backH = size.y * (1 + backPadF * 2) + 0.5;
+  const backT = Math.max(size.z * 0.06, 0.15);
+  const backFrontZ = box.min.z + backOverlapZ;
+
   if (ss.baseEnabled) {
-    const padFrac = ss.basePadPct / 100;
-    const pw = size.x * (1 + padFrac * 2) + 0.5;
-    const pd = size.z * (1 + padFrac * 2) + 0.5;
-    const ph = Math.max(size.y * 0.10, 0.3);
-    const overlapY = size.y * ss.baseOverlapPct / 100;
-    const baseTopY = box.min.y + overlapY;
-    addBoxTriangles(allTriangles, center.x, baseTopY - ph / 2, center.z, pw / 2, ph / 2, pd / 2);
+    // Base plate: centered on X and Z, at baseTopY
+    addBoxTriangles(allTriangles,
+      center.x, baseTopY - baseH / 2, backFrontZ + baseD / 2 - backT,
+      baseW / 2, baseH / 2, baseD / 2);
   }
 
-  // Add back panel if enabled
   if (ss.backEnabled) {
-    const padFrac = ss.backPadPct / 100;
-    const bpW = size.z * (1 + padFrac * 2) + 0.5;
-    const bpH = size.y * (1 + padFrac * 2) + 0.5;
-    const bpThick = Math.max(size.x * 0.04, 0.15);
-    const overlapX = size.x * ss.backOverlapPct / 100;
-    const panelFrontX = box.min.x + overlapX;
-    addBoxTriangles(allTriangles, panelFrontX - bpThick / 2, center.y, center.z, bpThick / 2, bpH / 2, bpW / 2);
+    // Back panel: centered on X and Y, at backFrontZ
+    const panelCenterY = baseTopY + backH / 2;
+    addBoxTriangles(allTriangles,
+      center.x, panelCenterY, backFrontZ - backT / 2,
+      baseW / 2, backH / 2, backT / 2);
   }
 
   setProgress(85, 'Writing file\u2026');
