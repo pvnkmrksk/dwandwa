@@ -156,7 +156,7 @@
       <label class="ctrl-toggle"><input type="checkbox" id="backOn" checked> Back panel</label>
       <div class="ctrl-group">
         <span class="ctrl-label" data-tip="Spacing: default mode scales each module span; with Equal gaps (Advanced), Gap % scales the gap between letter blocks">Gap</span>
-        <input type="range" id="letterGap" min="-40" max="120" value="15" style="width:56px">
+        <input type="range" id="letterGap" min="-40" max="120" value="30" style="width:56px">
       </div>
     </div>
     <!-- Fine Tuning (collapsible) -->
@@ -217,8 +217,13 @@
           </div>
         </div>
         <div class="ft-section strut-plan-section">
-          <div class="ft-heading">Struts — top view (X × depth)</div>
-          <p class="ft-hint">Paint struts in plan view (column outlines = letter modules). Shift+drag erases. <b>Apply to 3D</b> uses this drawing instead of auto column struts.</p>
+          <div class="ft-heading">Struts — paint supports (plan → back wall)</div>
+          <p class="ft-hint">Brush where you want a strut from the <b>letter tops</b> (bottom of view) to the <b>back wall</b> (cyan line, top). Like slicer supports: paint blobs, then <b>Apply to 3D</b>. Shift+drag erases.</p>
+          <div class="ctrl-group" style="margin-bottom:8px">
+            <span class="ctrl-label">Brush</span>
+            <input type="range" id="strutBrush" min="1" max="12" value="4" style="width:100px">
+            <span id="strutBrushVal">4</span> cells
+          </div>
           <div class="strut-plan-wrap">
             <canvas id="strutCanvas" class="strut-canvas"></canvas>
           </div>

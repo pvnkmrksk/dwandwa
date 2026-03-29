@@ -30,7 +30,7 @@ function stateToUrl() {
   if (!baseOn) p.set('base', '0');
   if (!backOn) p.set('back', '0');
   const lg = document.getElementById('letterGap').value;
-  if (lg !== '15') p.set('lg', lg);
+  if (lg !== '30') p.set('lg', lg);
   if (S.CELL !== 64) p.set('res', S.CELL);
   const vcw = document.getElementById('variableColWidth');
   if (vcw && vcw.checked) p.set('var', '1');

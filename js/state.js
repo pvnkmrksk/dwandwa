@@ -7,7 +7,7 @@ const S = {
   font2: 'sans-serif',
   uploadedFontFamily: null,
   padChar: '\u2665',
-  letterGapPct: 15,
+  letterGapPct: 30,
   sil1: null,
   sil2: null,
   /** Per-column width in silhouette cells (variable). */

@@ -20,11 +20,26 @@ function sampleSlice(data, w, h, x, z) {
          data[x1 * h + z1] * fx * fz;
 }
 
+/** Non-zero ink bounding box in silhouette space (x = column, z = vertical). */
+function inkBBox(slice, w, h) {
+  let minX = w, maxX = -1, minZ = h, maxZ = -1;
+  for (let x = 0; x < w; x++) {
+    for (let z = 0; z < h; z++) {
+      if (slice[x * h + z] >= 0.5) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (z < minZ) minZ = z;
+        if (z > maxZ) maxZ = z;
+      }
+    }
+  }
+  if (maxX < minX) return null;
+  return { minX, maxX, minZ, maxZ };
+}
+
 /**
- * Dual-silhouette solid: axis X = front horizontal, Y = depth (side horizontal), Z = vertical.
- * Voxel grid is anisotropic: cw × cw × ch in silhouette space (cuboid bbox per letter), not a cube.
- *
- * @param _sigma unused — kept for export-stl API
+ * Dual silhouette: X = front horizontal, Y = depth (side horizontal), Z = vertical.
+ * Voxel hull uses separate bboxes — front (Wf×Hf) and side (Wd×Hs) — so plan is Wf×Wd, not square.
  */
 export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) {
   const allPos = [];
@@ -53,9 +68,28 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       }
     }
 
-    const Nx = Math.min(gridRes, Math.max(8, cw));
-    const Ny = Math.min(gridRes, Math.max(8, cw));
-    const Nz = Math.min(gridRes, Math.max(8, ch));
+    const bf = inkBBox(fSlice, cw, ch);
+    const bs = inkBBox(sSlice, cw, ch);
+    const full = { minX: 0, maxX: cw - 1, minZ: 0, maxZ: ch - 1 };
+    const F = bf || full;
+    const sideInk = bs || full;
+
+    const xf0 = F.minX, xf1 = F.maxX;
+    const yd0 = sideInk.minX, yd1 = sideInk.maxX;
+    let z0 = Math.max(F.minZ, Sd.minZ);
+    let z1 = Math.min(F.maxZ, Sd.maxZ);
+    if (z0 > z1) {
+      z0 = full.minZ;
+      z1 = full.maxZ;
+    }
+
+    const dx = Math.max(1, xf1 - xf0 + 1);
+    const dy = Math.max(1, yd1 - yd0 + 1);
+    const dz = Math.max(1, z1 - z0 + 1);
+
+    const Nx = Math.min(gridRes, Math.max(8, dx));
+    const Ny = Math.min(gridRes, Math.max(8, dy));
+    const Nz = Math.min(gridRes, Math.max(8, dz));
     const Mx = Math.max(1, Nx - 1);
     const My = Math.max(1, Ny - 1);
     const Mz = Math.max(1, Nz - 1);
@@ -64,15 +98,16 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
     const strideZ = Mx * My;
     const cellSolid = new Uint8Array(Mx * My * Mz);
 
+    const spanX = Math.max(1e-6, xf1 - xf0);
+    const spanY = Math.max(1e-6, yd1 - yd0);
+    const spanZ = Math.max(1e-6, z1 - z0);
+
     for (let k = 0; k < Mz; k++) {
       for (let j = 0; j < My; j++) {
         for (let i = 0; i < Mx; i++) {
-          const fx = (i + 0.5) / Mx;
-          const fy = (j + 0.5) / My;
-          const fz = (k + 0.5) / Mz;
-          const sxf = fx * Math.max(1e-6, cw - 1);
-          const syf = fy * Math.max(1e-6, cw - 1);
-          const szf = fz * Math.max(1e-6, ch - 1);
+          const sxf = xf0 + (i + 0.5) / Mx * spanX;
+          const syf = yd0 + (j + 0.5) / My * spanY;
+          const szf = z0 + (k + 0.5) / Mz * spanZ;
           const fv = sampleSlice(fSlice, cw, ch, sxf, szf);
           const sv = sampleSlice(sSlice, cw, ch, syf, szf);
           cellSolid[i + j * strideY + k * strideZ] = Math.min(fv, sv) >= 0.5 ? 1 : 0;
@@ -83,10 +118,12 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
     const mesh = meshFromBinaryCells(cellSolid, Mx, My, Mz);
     if (mesh.positions.length === 0) continue;
 
-    const wsX = cw / Nx;
-    const wsY = cw / Ny;
-    const wsZ = ch / Nz;
-    const oy = -ch / 2;
+    const wsX = spanX / Mx;
+    const wsY = spanY / My;
+    const wsZ = spanZ / Mz;
+    const midX = (xf0 + xf1) / 2;
+    const midY = (yd0 + yd1) / 2;
+    const midZ = (z0 + z1) / 2;
 
     const positions = [];
     const colors = [];
@@ -95,21 +132,21 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) 
       const px = mesh.positions[i];
       const py = mesh.positions[i + 1];
       const pz = mesh.positions[i + 2];
-      const lx = px * wsX - cw / 2;
-      const ly = pz * wsZ + oy;
-      const lz = py * wsY - cw / 2;
+      const sxf = xf0 + (px / Mx) * spanX;
+      const syf = yd0 + (py / My) * spanY;
+      const szf = z0 + (pz / Mz) * spanZ;
+
+      const lx = sxf - midX;
+      const lz = syf - midY;
+      const ly = szf - midZ;
       const xw = lx * cos45 + lz * sin45;
       const yw = ly;
-      let zw = -lx * sin45 + lz * cos45;
-      zw = -zw;
+      const zw = -lx * sin45 + lz * cos45;
 
       positions.push(xw, yw, zw);
 
-      const sxc = Mx > 0 ? (px / Mx) * (cw - 1) : 0;
-      const syc = My > 0 ? (py / My) * (cw - 1) : 0;
-      const szc = Mz > 0 ? (pz / Mz) * (ch - 1) : 0;
-      const fv = sampleSlice(fSlice, cw, ch, sxc, szc);
-      const sv = sampleSlice(sSlice, cw, ch, syc, szc);
+      const fv = sampleSlice(fSlice, cw, ch, sxf, szf);
+      const sv = sampleSlice(sSlice, cw, ch, syf, szf);
       if (fv <= sv) {
         colors.push(0.94, 0.63, 0.19);
       } else {

@@ -22,6 +22,63 @@ function ensureMask() {
   }
 }
 
+function getBrushRadius() {
+  const el = document.getElementById('strutBrush');
+  const r = el ? parseInt(el.value, 10) : 4;
+  return Math.max(1, Math.min(16, r || 4));
+}
+
+/** Stamp a disk on the mask (Manhattan raster for speed, optional circle). */
+function stampDisk(cx, cz, rad, val) {
+  const w = NX();
+  const d = S.strutMaskD;
+  const r2 = rad * rad;
+  for (let dz = -rad; dz <= rad; dz++) {
+    for (let dx = -rad; dx <= rad; dx++) {
+      if (dx * dx + dz * dz > r2 + 0.25) continue;
+      const x = cx + dx;
+      const z = cz + dz;
+      if (x < 0 || x >= w || z < 0 || z >= d) continue;
+      S.strutMask[x + z * w] = val;
+    }
+  }
+}
+
+function drawStrutCanvas(ctx, BW, BH, w, d) {
+  ctx.fillStyle = '#0a0a12';
+  ctx.fillRect(0, 0, BW, BH);
+  for (let iz = 0; iz < d; iz++) {
+    for (let ix = 0; ix < w; ix++) {
+      const on = S.strutMask[ix + iz * w];
+      ctx.fillStyle = on ? 'rgba(210,215,235,.95)' : '#15152a';
+      ctx.fillRect(ix * RS + 0.5, (d - 1 - iz) * RS + 0.5, RS - 1, RS - 1);
+    }
+  }
+  ctx.strokeStyle = '#3a3a55';
+  ctx.lineWidth = 1;
+  let cx = 0;
+  for (let c = 0; c < S.nCols; c++) {
+    const cw = S.colCellW[c] * RS;
+    ctx.strokeRect(cx + 0.5, 0.5, cw - 1, BH - 1);
+    cx += cw;
+  }
+  ctx.strokeStyle = '#5b6af5';
+  ctx.strokeRect(0.5, 0.5, BW - 1, BH - 1);
+  ctx.strokeStyle = 'rgba(72, 189, 255, 0.9)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, RS * 0.5);
+  ctx.lineTo(BW, RS * 0.5);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#6ec8ff';
+  ctx.font = '10px Inter, sans-serif';
+  ctx.fillText('Back wall (struts bridge here)', 6, 11);
+  ctx.fillStyle = '#8888a0';
+  ctx.fillText('Front / letters →', 6, BH - 4);
+}
+
 export function initStrutPlanCanvas(deps) {
   const scheduleUpdate = deps && deps.scheduleUpdate;
   const canvas = document.getElementById('strutCanvas');
@@ -36,15 +93,15 @@ export function initStrutPlanCanvas(deps) {
     const d = S.strutMaskD;
     const bx = Math.max(0, Math.min(w - 1, Math.floor((e.clientX - r.left) / Math.max(r.width, 1) * w)));
     const syNorm = Math.min(1, Math.max(0, (e.clientY - r.top) / Math.max(r.height, 1)));
-    // draw(): row iz at y = (d-1-iz)*RS — top of canvas = iz d-1 (back), bottom = iz 0 (front)
     const bz = Math.min(d - 1, Math.max(0, Math.floor((1 - syNorm) * d)));
     return { bx, bz };
   }
 
   function paintAt(e) {
     const { bx, bz } = cellFromEvent(e);
-    const w = NX();
-    S.strutMask[bx + bz * w] = erase ? 0 : 1;
+    const rad = getBrushRadius();
+    const v = erase ? 0 : 1;
+    stampDisk(bx, bz, rad, v);
     draw();
   }
 
@@ -58,29 +115,7 @@ export function initStrutPlanCanvas(deps) {
     canvas.width = BW;
     canvas.height = BH;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#0a0a12';
-    ctx.fillRect(0, 0, BW, BH);
-    for (let iz = 0; iz < d; iz++) {
-      for (let ix = 0; ix < w; ix++) {
-        const on = S.strutMask[ix + iz * w];
-        ctx.fillStyle = on ? 'rgba(200,200,210,.95)' : '#15152a';
-        ctx.fillRect(ix * RS + 0.5, (d - 1 - iz) * RS + 0.5, RS - 1, RS - 1);
-      }
-    }
-    ctx.strokeStyle = '#3a3a55';
-    ctx.lineWidth = 1;
-    let cx = 0;
-    for (let c = 0; c < S.nCols; c++) {
-      const cw = S.colCellW[c] * RS;
-      ctx.strokeRect(cx + 0.5, 0.5, cw - 1, BH - 1);
-      cx += cw;
-    }
-    ctx.strokeStyle = '#5b6af5';
-    ctx.strokeRect(0.5, 0.5, BW - 1, BH - 1);
-    ctx.fillStyle = '#8888a0';
-    ctx.font = '10px Inter, sans-serif';
-    ctx.fillText('X → letter row', 4, 12);
-    ctx.fillText('Z → back', 4, BH - 4);
+    drawStrutCanvas(ctx, BW, BH, w, d);
   }
 
   canvas.addEventListener('pointerdown', e => {
@@ -92,6 +127,11 @@ export function initStrutPlanCanvas(deps) {
   canvas.addEventListener('pointermove', e => { if (painting) paintAt(e); });
   canvas.addEventListener('pointerup', () => { painting = false; });
   canvas.addEventListener('pointercancel', () => { painting = false; });
+
+  document.getElementById('strutBrush')?.addEventListener('input', function() {
+    const el = document.getElementById('strutBrushVal');
+    if (el) el.textContent = this.value;
+  });
 
   document.getElementById('strutClear')?.addEventListener('click', () => {
     ensureMask();
@@ -130,25 +170,5 @@ export function redrawStrutPlan() {
   canvas.width = BW;
   canvas.height = BH;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#0a0a12';
-  ctx.fillRect(0, 0, BW, BH);
-  for (let iz = 0; iz < d; iz++) {
-    for (let ix = 0; ix < w; ix++) {
-      const on = S.strutMask[ix + iz * w];
-      ctx.fillStyle = on ? 'rgba(200,200,210,.95)' : '#15152a';
-      ctx.fillRect(ix * RS + 0.5, (d - 1 - iz) * RS + 0.5, RS - 1, RS - 1);
-    }
-  }
-  ctx.strokeStyle = '#3a3a55';
-  let cx = 0;
-  for (let c = 0; c < S.nCols; c++) {
-    const cw = S.colCellW[c] * RS;
-    ctx.strokeRect(cx + 0.5, 0.5, cw - 1, BH - 1);
-    cx += cw;
-  }
-  ctx.strokeStyle = '#5b6af5';
-  ctx.strokeRect(0.5, 0.5, BW - 1, BH - 1);
-  ctx.fillStyle = '#8888a0';
-  ctx.font = '10px Inter, sans-serif';
-  ctx.fillText('X → letter row · bottom = back (min Z)', 4, 12);
+  drawStrutCanvas(ctx, BW, BH, w, d);
 }
