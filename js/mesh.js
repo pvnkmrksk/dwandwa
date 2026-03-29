@@ -232,8 +232,6 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
       My,
       Mz,
       modTips,
-      fv0,
-      sv0,
     };
   }
 

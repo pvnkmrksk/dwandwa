@@ -4,9 +4,13 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
+    "preview": "vite preview --host",
     "smoke": "node scripts/smoke-check.mjs"
   },
   "devDependencies": {
     "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
   }
 }

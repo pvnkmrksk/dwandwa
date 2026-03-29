@@ -1,3 +1,4 @@
+import './three-globals.js';
 import S from './state.js';
 import {
   updCam,
