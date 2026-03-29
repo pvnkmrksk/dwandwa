@@ -49,6 +49,41 @@ export async function measureColumnCells(chars1, chars2, font1, font2, cellMax) 
   const cv = document.createElement('canvas');
   cv.width = cv.height = BUF;
 
+  if (S.uniformColumns) {
+    const minC = 8;
+    let rowH = minC;
+    for (let col = 0; col < S.nCols; col++) {
+      const ch1 = chars1[col] || S.padChar;
+      const ch2 = chars2[col] || S.padChar;
+      let maxTh = 1;
+      for (const { ch, fam } of [{ ch: ch1, fam: fam1 }, { ch: ch2, fam: fam2 }]) {
+        const ctx = canvas2dReadback(cv);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, BUF, BUF);
+        let fs = Math.round(BUF * 0.7);
+        ctx.font = `bold ${fs}px ${fam}`;
+        const wm = ctx.measureText(ch).width;
+        if (wm > BUF * 0.84) fs = Math.round(fs * BUF * 0.84 / wm);
+        ctx.font = `bold ${fs}px ${fam}`;
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(ch, BUF / 2, baseline);
+        const px = ctx.getImageData(0, 0, BUF, BUF).data;
+        const b = inkBBoxRGBA(px, BUF, BUF);
+        if (b.w * b.h > 1) {
+          if (b.h > maxTh) maxTh = b.h;
+        }
+      }
+      const ch = Math.min(cellMax, Math.max(minC, Math.ceil(maxTh * cellMax / BUF)));
+      if (ch > rowH) rowH = ch;
+      colW[col] = cellMax;
+    }
+    S.colCellW = colW;
+    S.rowCellH = rowH;
+    return;
+  }
+
   for (let col = 0; col < S.nCols; col++) {
     const ch1 = chars1[col] || S.padChar;
     const ch2 = chars2[col] || S.padChar;

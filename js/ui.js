@@ -32,6 +32,8 @@ function stateToUrl() {
   const lg = document.getElementById('letterGap').value;
   if (lg !== '15') p.set('lg', lg);
   if (S.CELL !== 64) p.set('res', S.CELL);
+  const vcw = document.getElementById('variableColWidth');
+  if (vcw && vcw.checked) p.set('var', '1');
   const qs = p.toString();
   const url = window.location.pathname + (qs ? '?' + qs : '');
   history.replaceState(null, '', url);
@@ -57,6 +59,15 @@ function loadFromUrl() {
     document.getElementById('resSlider').value = S.CELL;
     document.getElementById('resVal').textContent = S.CELL;
   }
+  if (p.has('var')) {
+    const el = document.getElementById('variableColWidth');
+    if (el) el.checked = p.get('var') === '1';
+  }
+}
+
+function syncUniformColumns() {
+  const el = document.getElementById('variableColWidth');
+  S.uniformColumns = !(el && el.checked);
 }
 
 let urlTimer = null;
@@ -69,6 +80,7 @@ export function wireUi({ redraw1, redraw2 }) {
   const bmsg = document.getElementById('bmsg');
 
   loadFromUrl();
+  syncUniformColumns();
 
   // Letter gap
   const lgSlider = document.getElementById('letterGap');
@@ -98,6 +110,21 @@ export function wireUi({ redraw1, redraw2 }) {
     backOverlapSlider.addEventListener('input', () => {
       const el = document.getElementById('backOverlapVal');
       if (el) el.textContent = fmtOverlapPct(backOverlapSlider.value);
+    });
+  }
+
+  const variableColEl = document.getElementById('variableColWidth');
+  if (variableColEl) {
+    variableColEl.addEventListener('change', async () => {
+      syncUniformColumns();
+      const r1 = document.getElementById('name1').value || 'BUSY';
+      const r2 = document.getElementById('name2').value || 'FREE';
+      bmsg.textContent = 'Recomputing layout\u2026';
+      await applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
+      await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
+      redraw1(); redraw2(); scheduleUpdate();
+      debouncedUrlUpdate();
+      bmsg.textContent = '';
     });
   }
 

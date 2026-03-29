@@ -1,37 +1,12 @@
 /* global THREE */
 import S from './state.js';
-
-function gaussKernel(sigma) {
-  const r = Math.ceil(sigma * 3);
-  const k = new Float32Array(2 * r + 1);
-  let s = 0;
-  for (let i = 0; i <= 2 * r; i++) { k[i] = Math.exp(-0.5 * ((i - r) / sigma) ** 2); s += k[i]; }
-  for (let i = 0; i < k.length; i++) k[i] /= s;
-  return { k, r };
-}
-
-function blurSlice(data, w, h, sigma) {
-  const { k, r } = gaussKernel(sigma);
-  const tmp = new Float32Array(w * h);
-  for (let z = 0; z < h; z++) {
-    for (let x = 0; x < w; x++) {
-      let acc = 0;
-      for (let d = -r; d <= r; d++)
-        acc += data[Math.max(0, Math.min(w - 1, x + d)) * h + z] * k[d + r];
-      tmp[x * h + z] = acc;
-    }
-  }
-  const out = new Float32Array(w * h);
-  for (let x = 0; x < w; x++) {
-    for (let z = 0; z < h; z++) {
-      let acc = 0;
-      for (let d = -r; d <= r; d++)
-        acc += tmp[x * h + Math.max(0, Math.min(h - 1, z + d))] * k[d + r];
-      out[x * h + z] = acc;
-    }
-  }
-  return out;
-}
+import {
+  columnSpans,
+  computeDzAlignBack,
+  computeTxEqualGap,
+  computeTxSpanPack,
+} from './module-layout.js';
+import { meshFromBinaryCells } from './mesher/voxel-surface.js';
 
 function sampleSlice(data, w, h, x, z) {
   x = Math.max(0, Math.min(w - 1, x));
@@ -45,109 +20,25 @@ function sampleSlice(data, w, h, x, z) {
          data[x1 * h + z1] * fx * fz;
 }
 
-const SN_CORNERS_X = [0,1,0,1,0,1,0,1];
-const SN_CORNERS_Y = [0,0,1,1,0,0,1,1];
-const SN_CORNERS_Z = [0,0,0,0,1,1,1,1];
-const SN_EDGES = [[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];
-
-function surfaceNets(sampleDensity, N) {
-  const positions = [];
-  const indices = [];
-  const vertMap = new Int32Array(N * N * N).fill(-1);
-
-  for (let gz = 0; gz < N - 1; gz++) {
-    for (let gy = 0; gy < N - 1; gy++) {
-      for (let gx = 0; gx < N - 1; gx++) {
-        const c = [];
-        let mask = 0;
-        for (let i = 0; i < 8; i++) {
-          const v = sampleDensity(gx + SN_CORNERS_X[i], gy + SN_CORNERS_Y[i], gz + SN_CORNERS_Z[i]);
-          c.push(v);
-          if (v >= 0.5) mask |= 1 << i;
-        }
-        if (mask === 0 || mask === 255) continue;
-
-        let vx = 0, vy = 0, vz = 0, cnt = 0;
-        for (const [a, b] of SN_EDGES) {
-          if ((c[a] >= 0.5) !== (c[b] >= 0.5)) {
-            const t = Math.max(0, Math.min(1, (0.5 - c[a]) / (c[b] - c[a])));
-            vx += gx + SN_CORNERS_X[a] + t * (SN_CORNERS_X[b] - SN_CORNERS_X[a]);
-            vy += gy + SN_CORNERS_Y[a] + t * (SN_CORNERS_Y[b] - SN_CORNERS_Y[a]);
-            vz += gz + SN_CORNERS_Z[a] + t * (SN_CORNERS_Z[b] - SN_CORNERS_Z[a]);
-            cnt++;
-          }
-        }
-        vertMap[gx + gy * N + gz * N * N] = positions.length / 3;
-        positions.push(vx / cnt, vy / cnt, vz / cnt);
-      }
-    }
-  }
-
-  for (let gz = 0; gz < N - 1; gz++) {
-    for (let gy = 0; gy < N - 1; gy++) {
-      for (let gx = 0; gx < N - 1; gx++) {
-        const vi = vertMap[gx + gy * N + gz * N * N];
-        if (vi < 0) continue;
-        const d0 = sampleDensity(gx, gy, gz);
-
-        if (gy > 0 && gz > 0 && (d0 >= 0.5) !== (sampleDensity(gx + 1, gy, gz) >= 0.5)) {
-          const a = vi;
-          const b = vertMap[gx + (gy - 1) * N + gz * N * N];
-          const c = vertMap[gx + (gy - 1) * N + (gz - 1) * N * N];
-          const d = vertMap[gx + gy * N + (gz - 1) * N * N];
-          if (a >= 0 && b >= 0 && c >= 0 && d >= 0) {
-            if (d0 >= 0.5) { indices.push(a, d, c, a, c, b); }
-            else           { indices.push(a, b, c, a, c, d); }
-          }
-        }
-
-        if (gx > 0 && gz > 0 && (d0 >= 0.5) !== (sampleDensity(gx, gy + 1, gz) >= 0.5)) {
-          const a = vi;
-          const b = vertMap[gx + gy * N + (gz - 1) * N * N];
-          const c = vertMap[(gx - 1) + gy * N + (gz - 1) * N * N];
-          const d = vertMap[(gx - 1) + gy * N + gz * N * N];
-          if (a >= 0 && b >= 0 && c >= 0 && d >= 0) {
-            if (d0 >= 0.5) { indices.push(a, d, c, a, c, b); }
-            else           { indices.push(a, b, c, a, c, d); }
-          }
-        }
-
-        if (gx > 0 && gy > 0 && (d0 >= 0.5) !== (sampleDensity(gx, gy, gz + 1) >= 0.5)) {
-          const a = vi;
-          const b = vertMap[(gx - 1) + gy * N + gz * N * N];
-          const c = vertMap[(gx - 1) + (gy - 1) * N + gz * N * N];
-          const d = vertMap[gx + (gy - 1) * N + gz * N * N];
-          if (a >= 0 && b >= 0 && c >= 0 && d >= 0) {
-            if (d0 >= 0.5) { indices.push(a, d, c, a, c, b); }
-            else           { indices.push(a, b, c, a, c, d); }
-          }
-        }
-      }
-    }
-  }
-
-  return { positions: new Float32Array(positions), indices: new Uint32Array(indices) };
-}
-
-export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
+/**
+ * @param {Uint8Array} silA
+ * @param {Uint8Array} silB
+ * @param _cellSizeLegacy unused (CELL lives in S)
+ * @param {number} gridRes max voxel grid size per module axis
+ * @param _sigma unused — mesh uses binary min(silhouettes); kept for export-stl API
+ */
+export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, _sigma) {
   const allPos = [];
   const allIdx = [];
   const allCol = [];
   let baseVert = 0;
 
-  const gapFrac = 1 + S.letterGapPct / 100;
   const cos45 = Math.SQRT1_2;
   const sin45 = Math.SQRT1_2;
 
-  const spans = [];
-  for (let mod = 0; mod < S.nCols; mod++) {
-    const cw = S.colCellW[mod];
-    const ch = S.rowCellH;
-    spans.push(Math.max(cw, ch) * Math.SQRT1_2 * gapFrac);
-  }
-  const spanTotalW = spans.reduce((a, b) => a + b, 0);
+  const { spans, spanTotalW } = columnSpans(S.nCols, S.colCellW, S.rowCellH, S.letterGapPct);
 
-  /** @type {Array<null | { positions: number[], colors: number[], indices: Uint32Array, bf: Float32Array, bs: Float32Array, cw: number, ch: number, N: number, nm: number, wsX: number, wsY: number, wsZ: number, oy: number }>} */
+  /** @type {Array<null | { positions: number[], colors: number[], indices: Uint32Array, cw: number, ch: number, N: number, nm: number, wsX: number, wsY: number, wsZ: number, oy: number }>} */
   const perMod = new Array(S.nCols).fill(null);
 
   for (let mod = 0; mod < S.nCols; mod++) {
@@ -162,33 +53,27 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
         sSlice[ix] = silB[S.colOffset[mod] + ix];
       }
     }
-    const bf = blurSlice(fSlice, cw, ch, sigma);
-    const bs = blurSlice(sSlice, cw, ch, sigma);
 
     const maxDim = Math.max(cw, ch);
     const N = Math.min(gridRes, Math.max(12, maxDim));
     const scale = (N - 1) > 0 ? 1 / (N - 1) : 1;
-
-    const field = new Float32Array(N * N * N);
-    for (let gz = 0; gz < N; gz++) {
-      for (let gy = 0; gy < N; gy++) {
-        for (let gx = 0; gx < N; gx++) {
-          const sx = gx * scale * (cw - 1);
-          const sy = gy * scale * (cw - 1);
-          const sz = gz * scale * (ch - 1);
-          const fv = sampleSlice(bf, cw, ch, sx, sz);
-          const sv = sampleSlice(bs, cw, ch, sy, sz);
-          field[gx + gy * N + gz * N * N] = Math.min(fv, sv);
+    const M = N - 1;
+    const cellSolid = new Uint8Array(M * M * M);
+    for (let k = 0; k < M; k++) {
+      for (let j = 0; j < M; j++) {
+        for (let i = 0; i < M; i++) {
+          const cx = i + 0.5, cy = j + 0.5, cz = k + 0.5;
+          const sx = cx * scale * (cw - 1);
+          const sy = cy * scale * (cw - 1);
+          const sz = cz * scale * (ch - 1);
+          const fv = sampleSlice(fSlice, cw, ch, sx, sz);
+          const sv = sampleSlice(sSlice, cw, ch, sy, sz);
+          cellSolid[i + j * M + k * M * M] = Math.min(fv, sv) >= 0.5 ? 1 : 0;
         }
       }
     }
 
-    const density = (x, y, z) => {
-      if (x < 0 || x >= N || y < 0 || y >= N || z < 0 || z >= N) return 0;
-      return field[x + y * N + z * N * N];
-    };
-
-    const mesh = surfaceNets(density, N);
+    const mesh = meshFromBinaryCells(cellSolid, M);
     if (mesh.positions.length === 0) continue;
 
     const wsX = cw / N;
@@ -215,8 +100,8 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
       const sx = (px / nm) * (cw - 1);
       const sy = (py / nm) * (cw - 1);
       const sz = (pz / nm) * (ch - 1);
-      const fv = sampleSlice(bf, cw, ch, sx, sz);
-      const sv = sampleSlice(bs, cw, ch, sy, sz);
+      const fv = sampleSlice(fSlice, cw, ch, sx, sz);
+      const sv = sampleSlice(sSlice, cw, ch, sy, sz);
       if (fv <= sv) {
         colors.push(0.94, 0.63, 0.19);
       } else {
@@ -228,68 +113,25 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
       positions,
       colors,
       indices: mesh.indices,
-      bf, bs, cw, ch, N, nm, wsX, wsY, wsZ, oy,
+      cw, ch, N, nm, wsX, wsY, wsZ, oy,
     };
   }
-
-  const dz = new Array(S.nCols).fill(0);
-  const tx = new Array(S.nCols).fill(0);
 
   const active = [];
   for (let mod = 0; mod < S.nCols; mod++) {
     if (perMod[mod]) active.push(mod);
   }
 
+  let dz = new Array(S.nCols).fill(0);
   if (active.length && S.alignBackEdges) {
-    let zT = Infinity;
-    for (const mod of active) {
-      const p = perMod[mod].positions;
-      for (let i = 2; i < p.length; i += 3) {
-        if (p[i] < zT) zT = p[i];
-      }
-    }
-    for (const mod of active) {
-      let zMin = Infinity;
-      const p = perMod[mod].positions;
-      for (let i = 2; i < p.length; i += 3) {
-        if (p[i] < zMin) zMin = p[i];
-      }
-      dz[mod] = zT - zMin;
-    }
+    dz = computeDzAlignBack(perMod, active, S.nCols);
   }
 
+  let tx;
   if (active.length && S.equalGapPack) {
-    const bounds = {};
-    for (const mod of active) {
-      const p = perMod[mod].positions;
-      let xMin = Infinity;
-      let xMax = -Infinity;
-      for (let i = 0; i < p.length; i += 3) {
-        const x = p[i];
-        if (x < xMin) xMin = x;
-        if (x > xMax) xMax = x;
-      }
-      bounds[mod] = { xMin, xMax, w: Math.max(1e-6, xMax - xMin) };
-    }
-    let meanW = 0;
-    for (const mod of active) meanW += bounds[mod].w;
-    meanW /= active.length;
-    const g = (S.letterGapPct / 100) * meanW;
-    let sumW = 0;
-    for (const mod of active) sumW += bounds[mod].w;
-    const totalW = Math.max(1e-4, sumW + g * (active.length - 1));
-    let left = -totalW / 2;
-    for (const mod of active) {
-      tx[mod] = left - bounds[mod].xMin;
-      left += bounds[mod].w + g;
-    }
+    tx = computeTxEqualGap(perMod, active, S.letterGapPct, S.nCols);
   } else {
-    for (let mod = 0; mod < S.nCols; mod++) {
-      if (!perMod[mod]) continue;
-      let acc = 0;
-      for (let j = 0; j < mod; j++) acc += spans[j];
-      tx[mod] = acc + spans[mod] / 2 - spanTotalW / 2;
-    }
+    tx = computeTxSpanPack(S.nCols, spans, spanTotalW, perMod);
   }
 
   S.moduleCenterX = new Float32Array(S.nCols);
@@ -322,7 +164,7 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
       allPos.push(
         M.positions[i] + tx[mod],
         M.positions[i + 1],
-        M.positions[i + 2] + dz[mod]
+        M.positions[i + 2] + dz[mod],
       );
       allCol.push(M.colors[i], M.colors[i + 1], M.colors[i + 2]);
     }

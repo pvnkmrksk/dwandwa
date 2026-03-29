@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="fg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F0A030"/>
+      <stop offset="100%" stop-color="#3090F0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded background -->
+  <rect x="0" y="0" width="32" height="32" rx="6" ry="6" fill="#1a1a2e"/>
+
+  <!-- Blue shadow layer -->
+  <text
+    x="14.5" y="19"
+    font-family="'Noto Sans Kannada', 'Tunga', sans-serif"
+    font-size="20"
+    font-weight="700"
+    fill="#3090F0"
+    opacity="0.8"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >ದ್ವ</text>
+
+  <!-- Amber front layer - offset to create anaglyph duality -->
+  <text
+    x="17.5" y="15"
+    font-family="'Noto Sans Kannada', 'Tunga', sans-serif"
+    font-size="20"
+    font-weight="700"
+    fill="#F0A030"
+    opacity="0.8"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >ದ್ವ</text>
+</svg>

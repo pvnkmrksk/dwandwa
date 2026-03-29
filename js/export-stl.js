@@ -3,6 +3,7 @@ import S, { allocArrays } from './state.js';
 import { measureColumnCells, stampName } from './raster.js';
 import { buildModuleMeshes } from './mesh.js';
 import { getStructureSettings } from './scene.js';
+import { computePlateLayout } from './structure-layout.js';
 
 function addBoxTriangles(allTriangles, cx, cy, cz, hx, hy, hz) {
   const v = [
@@ -33,7 +34,6 @@ export async function exportSTL() {
   const factor = parseInt(document.getElementById('exportQ').value) || 2;
   const ECELL = S.CELL * factor;
   const SNET = Math.min(ECELL, 192);
-  const sigma = 0.6 + factor * 0.1;
   const ESCALE = 0.5 / factor;
 
   const ss = getStructureSettings();
@@ -71,10 +71,10 @@ export async function exportSTL() {
   await new Promise(r => setTimeout(r, 20));
   await stampName(S.chars2, S.font2, esil2, ECELL);
 
-  setProgress(45, 'Generating smooth mesh\u2026');
+  setProgress(45, 'Generating voxel mesh\u2026');
   await new Promise(r => setTimeout(r, 20));
 
-  const geo = buildModuleMeshes(esil1, esil2, ECELL, SNET, sigma);
+  const geo = buildModuleMeshes(esil1, esil2, ECELL, SNET, 0);
 
   S.CELL = snapCell;
   S.colCellW = snapColW;
@@ -128,25 +128,8 @@ export async function exportSTL() {
       pos.getX(i) * ESCALE, pos.getY(i) * ESCALE, pos.getZ(i) * ESCALE
     ));
   }
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-
-  // Add L-profile structure: base at bottom (min.y), back panel at back (min.z)
-  const basePadXF = ss.basePadXPct / 100;
-  const basePadZF = ss.basePadZPct / 100;
-  const backPadF = ss.backPadPct / 100;
-  const t = ss.plateThickPct / 100;
-
-  const baseW = size.x * (1 + basePadXF * 2) + 4;
-  const baseD = size.z * (1 + basePadZF * 2) + 4;
-  const plate = Math.max(size.y * t, 3 + ss.plateThickPct * 0.06);
-  const baseH = plate;
-  const backT = plate;
-  const baseTopY = box.min.y + size.y * (ss.baseOverlapPct / 100);
-  const backZDelta = size.z * (ss.backOverlapPct / 100);
-  const zWallFront = box.min.z + backZDelta;
-
-  const backH = size.y * (1 + backPadF * 2) + 4;
+  const L = computePlateLayout(box, ss);
+  const { size, center, baseW, baseD, plate, baseH, backT, backH, baseTopY, zWallFront } = L;
 
   if (ss.baseEnabled) {
     addBoxTriangles(allTriangles,
@@ -210,7 +193,7 @@ export async function exportSTL() {
   const totalTris = allTriangles.length;
   const buf = new ArrayBuffer(84 + totalTris * 50);
   const dv = new DataView(buf);
-  const hdr = `Dwandwa n=${S.nCols} snet=${SNET} sigma=${sigma.toFixed(1)} s=${ESCALE.toFixed(3)}mm`;
+  const hdr = `Dwandwa n=${S.nCols} grid=${SNET} voxel s=${ESCALE.toFixed(3)}mm`;
   for (let i = 0; i < 80; i++) dv.setUint8(i, i < hdr.length ? hdr.charCodeAt(i) : 0);
   dv.setUint32(80, totalTris, true);
 
