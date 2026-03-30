@@ -26,14 +26,25 @@ function inkBBoxRGBA(px, bufW, bufH) {
   return { minX, minY, maxX, maxY, w: maxX - minX + 1, h: maxY - minY + 1 };
 }
 
-function measureGlyph(cv, BUF, baseline, ch, fam) {
-  const ctx = canvas2dReadback(cv);
+/** One bold px size for the whole word so no glyph is scaled down individually. */
+function resolveBoldFontSize(ctx, BUF, fam, chars) {
+  const fs0 = Math.round(BUF * 0.7);
+  let factor = 1;
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i] || S.padChar;
+    ctx.font = `bold ${fs0}px ${fam}`;
+    const wm = ctx.measureText(ch).width;
+    if (wm > BUF * 0.84) {
+      const f = (BUF * 0.84) / wm;
+      if (f < factor) factor = f;
+    }
+  }
+  return Math.max(8, Math.round(fs0 * factor));
+}
+
+function measureGlyph(ctx, BUF, baseline, ch, fam, fs) {
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, BUF, BUF);
-  let fs = Math.round(BUF * 0.7);
-  ctx.font = `bold ${fs}px ${fam}`;
-  const wm = ctx.measureText(ch).width;
-  if (wm > BUF * 0.84) fs = Math.round(fs * BUF * 0.84 / wm);
   ctx.font = `bold ${fs}px ${fam}`;
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
@@ -60,6 +71,9 @@ export async function measureColumnCells(chars1, chars2, font1, font2, cellMax) 
 
   const cv = document.createElement('canvas');
   cv.width = cv.height = BUF;
+  const ctx = canvas2dReadback(cv);
+  const fs1 = resolveBoldFontSize(ctx, BUF, fam1, chars1);
+  const fs2 = resolveBoldFontSize(ctx, BUF, fam2, chars2);
 
   const colW1 = new Int32Array(S.nCols);
   const colW2 = new Int32Array(S.nCols);
@@ -67,11 +81,11 @@ export async function measureColumnCells(chars1, chars2, font1, font2, cellMax) 
 
   if (S.uniformColumns) {
     for (let col = 0; col < S.nCols; col++) {
-      for (const { ch, fam } of [
-        { ch: chars1[col] || S.padChar, fam: fam1 },
-        { ch: chars2[col] || S.padChar, fam: fam2 },
+      for (const { ch, fam, fs } of [
+        { ch: chars1[col] || S.padChar, fam: fam1, fs: fs1 },
+        { ch: chars2[col] || S.padChar, fam: fam2, fs: fs2 },
       ]) {
-        const b = measureGlyph(cv, BUF, baseline, ch, fam);
+        const b = measureGlyph(ctx, BUF, baseline, ch, fam, fs);
         if (b.w * b.h > 1) {
           const ch2 = Math.min(cellMax, Math.max(minC, Math.ceil(b.h * cellMax / BUF)));
           if (ch2 > rowH) rowH = ch2;
@@ -87,8 +101,8 @@ export async function measureColumnCells(chars1, chars2, font1, font2, cellMax) 
   }
 
   for (let col = 0; col < S.nCols; col++) {
-    const b1 = measureGlyph(cv, BUF, baseline, chars1[col] || S.padChar, fam1);
-    const b2 = measureGlyph(cv, BUF, baseline, chars2[col] || S.padChar, fam2);
+    const b1 = measureGlyph(ctx, BUF, baseline, chars1[col] || S.padChar, fam1, fs1);
+    const b2 = measureGlyph(ctx, BUF, baseline, chars2[col] || S.padChar, fam2, fs2);
 
     const maxH = Math.max(b1.h, b2.h);
     const ch = Math.min(cellMax, Math.max(minC, Math.ceil(maxH * cellMax / BUF)));
@@ -121,6 +135,7 @@ export async function stampName(chars, fontStr, targetSil, cellSize, which) {
   const cv = document.createElement('canvas');
   cv.width = cv.height = BUF;
   const ctx = canvas2dReadback(cv);
+  const fs = resolveBoldFontSize(ctx, BUF, fam, chars);
 
   for (let col = 0; col < S.nCols; col++) {
     const ch = chars[col] || S.padChar;
@@ -128,10 +143,6 @@ export async function stampName(chars, fontStr, targetSil, cellSize, which) {
     const chRow = S.rowCellH;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, BUF, BUF);
-    let fs = Math.round(BUF * 0.7);
-    ctx.font = `bold ${fs}px ${fam}`;
-    const wm = ctx.measureText(ch).width;
-    if (wm > BUF * 0.84) fs = Math.round(fs * BUF * 0.84 / wm);
     ctx.font = `bold ${fs}px ${fam}`;
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
