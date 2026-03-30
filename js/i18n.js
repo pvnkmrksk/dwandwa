@@ -3,19 +3,19 @@ import { syncWordInputFonts } from './text.js';
 const dict = {
   en: {
     tagline: '3D Shadow Illusion Sculptor',
-    ph_front: 'Front word',
-    ph_side: 'Side word',
+    ph_front: 'Right-view word',
+    ph_side: 'Left-view word',
     pad: 'Pad',
     generate: 'Generate sculpture',
     upload_font: '+ Font',
     pixel_editor: 'Pixel Editor',
     pixel_editor_desc: 'join islands · manual edits',
-    view_left: 'Left view',
-    view_right: 'Right view',
+    view_left: 'Right view',
+    view_right: 'Left view',
     upload_mid: 'Font',
     upload_font_title: 'Upload custom TTF, OTF, or WOFF font',
-    front_sil: 'Left silhouette',
-    side_sil: 'Right silhouette',
+    front_sil: 'Right silhouette',
+    side_sil: 'Left silhouette',
     erase: 'Erase',
     clear: 'Clear',
     fill: 'Fill',
@@ -61,7 +61,7 @@ const dict = {
     ft_hint: 'Gap scales per-column span in default layout. Turn on Equal gaps to space by measured width; Gap\u00a0% then scales the gap between blocks. Align backs flushes each letter\u2019s rear to one plane.',
     help_title: 'How to Use',
     help_s1t: 'Enter Your Words',
-    help_s1: 'Type two words \u2014 front silhouette and side silhouette. Each letter pair becomes one 3D module. Shorter words are auto-padded.',
+    help_s1: 'Type two words \u2014 one in each column. The screen-left column is read from one oblique view, the screen-right from the other (labels match how you read them, not camera left/right). Each letter pair becomes one 3D module. Shorter words are auto-padded.',
     help_s2t: 'Choose Fonts',
     help_s2: 'Pick from Kannada, Devanagari, Tamil, Telugu and more. Upload any custom TTF/OTF/WOFF with \u201c+ Font\u201d.',
     help_s3t: 'Generate',
@@ -69,7 +69,7 @@ const dict = {
     help_s4t: 'Pixel Editor',
     help_s4: 'Expand to paint or erase silhouette pixels. Connect floating islands for printability. Feather softens edges.',
     help_s5t: '3D Preview',
-    help_s5: 'Drag to orbit; scroll or pinch to zoom. Front is straight-on. The two angled buttons match the color strips by each word field. Spin slowly rocks between those two views.',
+    help_s5: 'Drag to orbit; scroll or pinch to zoom. Front is straight-on. The two angled camera buttons match the two word colors (blue vs orange). Spin slowly rocks between those views.',
     help_s6t: 'Paint Struts',
     help_s6: 'Click on the model to place support pins \u2014 struts connect to the back wall. Drag to reposition, Shift+click to remove.',
     help_s7t: 'Structure',
@@ -95,6 +95,8 @@ const dict = {
     section_help: 'How to use',
     tip_switch_en: 'Switch to English',
     tip_switch_kn: 'Switch to Kannada',
+    lang_btn_english: 'English',
+    lang_btn_kannada: '\u0C95\u0CA8\u0CCD\u0CA8\u0CA1',
     font_col_front: 'Font — front word',
     font_col_side: 'Font — side word',
     pad_custom_option: 'Custom\u2026',
@@ -106,19 +108,19 @@ const dict = {
   },
   kn: {
     tagline: '3D \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1 \u0CAD\u0CCD\u0CB0\u0CAE\u0CC6 \u0CB6\u0CBF\u0CB2\u0CCD\u0CAA\u0CBF',
-    ph_front: '\u0CAE\u0CC1\u0C82\u0CAD\u0CBE\u0C97\u0CA6 \u0CAA\u0CA6',
-    ph_side: '\u0CAA\u0C95\u0CCD\u0C95\u0CA6 \u0CAA\u0CA6',
+    ph_front: '\u0CAC\u0CB2 \u0CA8\u0CCB\u0C9F\u0CA6 \u0CAA\u0CA6',
+    ph_side: '\u0C8E\u0CA1 \u0CA8\u0CCB\u0C9F\u0CA6 \u0CAA\u0CA6',
     pad: '\u0CAD\u0CB0\u0CCD\u0CA4\u0CBF',
     generate: '\u0CB0\u0C9A\u0CBF\u0CB8\u0CBF',
     upload_font: '+ \u0CAB\u0CBE\u0C82\u0C9F\u0CCD',
     pixel_editor: '\u0C9A\u0CBF\u0CA4\u0CCD\u0CB0 \u0CB8\u0C82\u0CAA\u0CBE\u0CA6\u0C95',
     pixel_editor_desc: '\u0CA6\u0CCD\u0CB5\u0CC0\u0CAA\u0C97\u0CB3\u0CA8\u0CCD\u0CA8\u0CC1 \u0CB8\u0CC7\u0CB0\u0CBF\u0CB8\u0CBF · \u0C95\u0CC8\u0CAF\u0CBF\u0C82\u0CA6 \u0CB8\u0C82\u0CAA\u0CBE\u0CA6\u0CA8\u0CC6',
-    view_left: '\u0C8E\u0CA1 \u0CA8\u0CCB\u0C9F',
-    view_right: '\u0CAC\u0CB2 \u0CA8\u0CCB\u0C9F',
+    view_left: '\u0CAC\u0CB2 \u0CA8\u0CCB\u0C9F',
+    view_right: '\u0C8E\u0CA1 \u0CA8\u0CCB\u0C9F',
     upload_mid: '\u0CAB\u0CBE\u0C82\u0C9F\u0CCD',
     upload_font_title: '\u0C95\u0CB8\u0CCD\u0C9F\u0CAE\u0CCD \u0CAB\u0CBE\u0C82\u0C9F\u0CCD \u0C85\u0CAA\u0CCD\u200C\u0CB2\u0CCB\u0CA1\u0CCD (TTF/OTF/WOFF)',
-    front_sil: '\u0C8E\u0CA1 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1',
-    side_sil: '\u0CAC\u0CB2 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1',
+    front_sil: '\u0CAC\u0CB2 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1',
+    side_sil: '\u0C8E\u0CA1 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1',
     erase: '\u0C85\u0CB3\u0CBF\u0CB8\u0CC1',
     clear: '\u0CA4\u0CC6\u0C97\u0CC6',
     fill: '\u0CA4\u0CC1\u0C82\u0CAC\u0CC1',
@@ -164,7 +166,7 @@ const dict = {
     ft_hint: '\u0CA1\u0CC0\u0CAB\u0CBE\u0CB2\u0CCD\u0C9F\u0CCD \u0CB5\u0CBF\u0CA8\u0CCD\u0CAF\u0CBE\u0CB8\u0CA6\u0CB2\u0CCD\u0CB2\u0CBF \u0C85\u0C82\u0CA4\u0CB0 \u0CAA\u0CCD\u0CB0\u0CA4\u0CBF-\u0C95\u0CBE\u0CB2\u0CAE\u0CCD \u0CB5\u0CCD\u0CAF\u0CBE\u0CAA\u0CCD\u0CA4\u0CBF\u0CAF\u0CA8\u0CCD\u0CA8\u0CC1 \u0C85\u0CB3\u0CC6\u0CAF\u0CC1\u0CA4\u0CCD\u0CA4\u0CA6\u0CC6. \u0CB8\u0CAE \u0C85\u0C82\u0CA4\u0CB0 \u0C86\u0CA8\u0CCD \u0CAE\u0CBE\u0CA1\u0CBF \u0C85\u0CB3\u0CA4\u0CC6 \u0C85\u0C97\u0CB2\u0CA6\u0CBF\u0C82\u0CA6 \u0C98\u0C9F\u0C95\u0C97\u0CB3\u0CA8\u0CCD\u0CA8\u0CC1 \u0C9C\u0CCB\u0CA1\u0CBF\u0CB8\u0CB2\u0CC1. \u0CB9\u0CBF\u0C82\u0CAD\u0CBE\u0C97 \u0C9C\u0CCB\u0CA1\u0CBF\u0CB8\u0CBF \u0CAA\u0CCD\u0CB0\u0CA4\u0CBF \u0C85\u0C95\u0CCD\u0CB7\u0CB0\u0CA6 \u0CB9\u0CBF\u0C82\u0CAD\u0CBE\u0C97\u0CB5\u0CA8\u0CCD\u0CA8\u0CC1 \u0C92\u0C82\u0CA6\u0CC7 \u0CB8\u0CAE\u0CA4\u0CB2\u0C95\u0CCD\u0C95\u0CC6 \u0C9C\u0CCB\u0CA1\u0CBF\u0CB8\u0CC1\u0CA4\u0CCD\u0CA4\u0CA6\u0CC6.',
     help_title: '\u0CAC\u0CB3\u0CB8\u0CC1\u0CB5 \u0CB5\u0CBF\u0CA7\u0CBE\u0CA8',
     help_s1t: '\u0CAA\u0CA6\u0C97\u0CB3\u0CA8\u0CCD\u0CA8\u0CC1 \u0CA8\u0CAE\u0CC2\u0CA6\u0CBF\u0CB8\u0CBF',
-    help_s1: '\u0C8E\u0CB0\u0CA1\u0CC1 \u0CAA\u0CA6\u0C97\u0CB3\u0CA8\u0CCD\u0CA8\u0CC1 \u0C9F\u0CC8\u0CAA\u0CCD \u0CAE\u0CBE\u0CA1\u0CBF \u2014 \u0CAE\u0CC1\u0C82\u0CAD\u0CBE\u0C97\u0CA6 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1 \u0CAE\u0CA4\u0CCD\u0CA4\u0CC1 \u0CAA\u0C95\u0CCD\u0C95\u0CA6 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1. \u0CAA\u0CCD\u0CB0\u0CA4\u0CBF \u0C85\u0C95\u0CCD\u0CB7\u0CB0 \u0C9C\u0CCB\u0CA1\u0CBF \u0C92\u0C82\u0CA6\u0CC1 3D \u0C98\u0C9F\u0C95\u0CB5\u0CBE\u0C97\u0CC1\u0CA4\u0CCD\u0CA4\u0CA6\u0CC6.',
+    help_s1: '\u0C8E\u0CB0\u0CA1\u0CC1 \u0CAA\u0CA6\u0C97\u0CB3\u0CA8\u0CCD\u0CA8\u0CC1 \u0C92\u0C82\u0CA6\u0CC1 \u0C92\u0C82\u0CA6\u0CC1 \u0C95\u0CBE\u0CB2\u0CAE\u0CCD\u0CA8\u0CB2\u0CCD\u0CB2\u0CBF \u0C9F\u0CC8\u0CAA\u0CCD \u0CAE\u0CBE\u0CA1\u0CBF. \u0C8E\u0CA1 \u0C95\u0CBE\u0CB2\u0CAE\u0CCD \u0C92\u0C82\u0CA6\u0CC1 \u0C93\u0CB2\u0CC0\u0C95\u0CCD \u0CA8\u0CCB\u0C9F\u0CA6\u0CB2\u0CCD\u0CB2\u0CBF, \u0CAC\u0CB2 \u0C95\u0CBE\u0CB2\u0CAE\u0CCD \u0C87\u0CA8\u0CCD\u0CA8\u0CCB\u0CA6\u0CB0\u0CBF\u0C82\u0CA6 \u0C93\u0CA6\u0CC1\u0CA4\u0CCD\u0CA4\u0CC0\u0CB0\u0CBF (\u0CB2\u0CC7\u0CAC\u0CB2\u0CCD\u200C\u0C97\u0CB3\u0CC1 \u0C93\u0CA6\u0CC1\u0CB5 \u0CB5\u0CBF\u0CA7\u0CBE\u0CA8\u0CB5\u0CA8\u0CCD\u0CA8\u0CC1 \u0CB8\u0CC2\u0C9A\u0CBF\u0CB8\u0CC1\u0CA4\u0CCD\u0CA4\u0CB5\u0CC7, \u0C95\u0CCD\u0CAE\u0CC6\u0CB0\u0CBE \u0C8E\u0CA1/\u0CAC\u0CB2 \u0C85\u0CB2\u0CCD\u0CB2). \u0CAA\u0CCD\u0CB0\u0CA4\u0CBF \u0C85\u0C95\u0CCD\u0CB7\u0CB0 \u0C9C\u0CCB\u0CA1\u0CBF\u0C95\u0CCD\u0C95\u0CC6 \u0C92\u0C82\u0CA6\u0CC1 3D \u0C98\u0C9F\u0C95. \u0C95\u0CA1\u0CBF\u0CAE \u0CAA\u0CA6\u0C97\u0CB3\u0CC1 \u0CB8\u0CCD\u0CB5\u0CAF\u0C82\u0C95\u0CCD\u0CAF\u0CB5\u0CBE\u0C97\u0CBF \u0CAD\u0CB0\u0CCD\u0CA4\u0CBF\u0CAF\u0CBE\u0C97\u0CC1\u0CA4\u0CCD\u0CA4\u0CB5\u0CC6.',
     help_s2t: '\u0CAB\u0CBE\u0C82\u0C9F\u0CCD \u0C86\u0CAF\u0CCD\u0C95\u0CC6',
     help_s2: '\u0C95\u0CA8\u0CCD\u0CA8\u0CA1, \u0CA6\u0CC7\u0CB5\u0CA8\u0CBE\u0C97\u0CB0\u0CBF, \u0CA4\u0CAE\u0CBF\u0CB3\u0CC1, \u0CA4\u0CC6\u0CB2\u0CC1\u0C97\u0CC1 \u0C87\u0CA4\u0CCD\u0CAF\u0CBE\u0CA6\u0CBF \u0CB2\u0CBF\u0CAA\u0CBF\u0C97\u0CB3\u0CBF\u0C82\u0CA6 \u0C86\u0CAF\u0CCD\u0C95\u0CC6. \u201c+ \u0CAB\u0CBE\u0C82\u0C9F\u0CCD\u201d \u0C92\u0CA4\u0CCD\u0CA4\u0CBF \u0C95\u0CB8\u0CCD\u0C9F\u0CAE\u0CCD \u0CAB\u0CBE\u0C82\u0C9F\u0CCD \u0C85\u0CAA\u0CCD\u200C\u0CB2\u0CCB\u0CA1\u0CCD.',
     help_s3t: '\u0CB0\u0C9A\u0CBF\u0CB8\u0CBF',
@@ -198,6 +200,8 @@ const dict = {
     section_help: '\u0CB8\u0CB9\u0CBE\u0CAF',
     tip_switch_en: 'English \u0C95\u0CCD\u0C95\u0CC6 \u0CAC\u0CA6\u0CB2\u0CBE\u0CAF\u0CBF\u0CB8\u0CBF',
     tip_switch_kn: '\u0C95\u0CA8\u0CCD\u0CA8\u0CA1\u0C95\u0CCD\u0C95\u0CC6 \u0CAC\u0CA6\u0CB2\u0CBE\u0CAF\u0CBF\u0CB8\u0CBF',
+    lang_btn_english: 'English',
+    lang_btn_kannada: '\u0C95\u0CA8\u0CCD\u0CA8\u0CA1',
     font_col_front: '\u0CAB\u0CBE\u0C82\u0C9F\u0CCD \u2014 \u0CAE\u0CC1\u0C82\u0CAD\u0CBE\u0C97 \u0CAA\u0CA6',
     font_col_side: '\u0CAB\u0CBE\u0C82\u0C9F\u0CCD \u2014 \u0CAA\u0C95\u0CCD\u0C95 \u0CAA\u0CA6',
     pad_custom_option: '\u0C87\u0CA4\u0CB0\u2026',
@@ -246,7 +250,9 @@ export function applyLang(lang) {
 
   const flip = document.getElementById('langFlip');
   if (flip) {
-    flip.textContent = currentLang === 'kn' ? 'EN' : '\u0C95';
+    const toEn = d.lang_btn_english ?? 'English';
+    const toKn = d.lang_btn_kannada ?? '\u0C95\u0CA8\u0CCD\u0CA8\u0CA1';
+    flip.textContent = currentLang === 'kn' ? toEn : toKn;
     const tip = currentLang === 'kn' ? d.tip_switch_en : d.tip_switch_kn;
     flip.setAttribute('aria-label', tip);
     flip.setAttribute('title', tip);
@@ -255,12 +261,6 @@ export function applyLang(lang) {
       flipBtn.setAttribute('aria-label', tip);
       flipBtn.setAttribute('title', tip);
     }
-  }
-
-  const themeLbl = document.querySelector('#themeToggle .theme-lbl');
-  if (themeLbl) {
-    const dark = document.documentElement.dataset.theme === 'dark';
-    themeLbl.textContent = dark ? d.theme_light : d.theme_dark;
   }
 }
 

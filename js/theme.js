@@ -16,10 +16,11 @@ export function applyTheme(theme) {
   const btn = document.getElementById('themeToggle');
   if (btn) {
     const toDark = theme !== 'dark';
-    btn.setAttribute('aria-label', `${t('toolbar_theme')}: ${toDark ? t('theme_dark') : t('theme_light')}`);
+    btn.setAttribute(
+      'aria-label',
+      toDark ? `${t('toolbar_theme')}: ${t('theme_dark')}` : `${t('toolbar_theme')}: ${t('theme_light')}`,
+    );
     btn.setAttribute('title', toDark ? t('theme_dark') : t('theme_light'));
-    const lbl = btn.querySelector('.theme-lbl');
-    if (lbl) lbl.textContent = toDark ? t('theme_dark') : t('theme_light');
   }
 }
 

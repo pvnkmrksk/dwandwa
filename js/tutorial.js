@@ -1,8 +1,8 @@
 import { t } from './i18n.js';
 
 const STEPS = [
-  { sel: '.pair-grid--words', title: 'help_s1t', desc: 'help_s1' },
-  { sel: '.pair-grid--fonts', title: 'help_s2t', desc: 'help_s2' },
+  { sel: '#composer', title: 'help_s1t', desc: 'help_s1' },
+  { sel: '#fnt1', title: 'help_s2t', desc: 'help_s2' },
   { sel: '#generateBtn', title: 'help_s3t', desc: 'help_s3' },
   {
     sel: '#rasterDetails summary',

@@ -516,6 +516,7 @@ html[data-theme="dark"] .tutorial-backdrop{background:rgba(0,0,0,.62)}
 }
 .dv-hbtn:hover{background:var(--panel);color:var(--text);border-color:var(--border2)}
 .dv-hbtn__ico{flex-shrink:0;opacity:.85}
+.dv-hbtn--icononly{padding:0 9px;min-width:30px;justify-content:center;gap:0}
 .icon-btn--lang{font-family:var(--indic),var(--sys);font-size:12px;font-weight:700}
 
 .composer{

@@ -28,15 +28,14 @@
         <svg class="dv-hbtn__ico" width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 3h12M1 7h7"/><path d="M10 7l3 5M10 12l3-5"/></svg>
         <span id="langFlip">EN</span>
       </button>
-      <button type="button" class="dv-hbtn icon-btn icon-btn--theme" id="themeToggle" aria-label="Dark mode">
+      <button type="button" class="dv-hbtn icon-btn icon-btn--theme dv-hbtn--icononly" id="themeToggle" aria-label="Dark mode">
         <svg class="dv-ico-sun" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.8"/><line x1="8" y1="1" x2="8" y2="2.8"/><line x1="8" y1="13.2" x2="8" y2="15"/><line x1="1" y1="8" x2="2.8" y2="8"/><line x1="13.2" y1="8" x2="15" y2="8"/><line x1="3.1" y1="3.1" x2="4.4" y2="4.4"/><line x1="11.6" y1="11.6" x2="12.9" y2="12.9"/><line x1="12.9" y1="3.1" x2="11.6" y2="4.4"/><line x1="4.4" y1="11.6" x2="3.1" y2="12.9"/></svg>
         <svg class="dv-ico-moon" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M13.5 10A6 6 0 1 1 6 2.5a4.5 4.5 0 0 0 7.5 7.5z"/></svg>
-        <span class="theme-lbl"></span>
       </button>
     </div>
   </header>
 
-  <div class="composer">
+    <div class="composer" id="composer">
     <div class="word-card lc">
       <div class="wview" data-i18n="view_left">Left view</div>
       <input type="text" id="name1" class="winput word-input" value="ಬೆಳಕು" maxlength="16" data-i18n-ph="ph_front" placeholder="Front word">
@@ -45,8 +44,8 @@
           <option value="sans-serif">Sans</option>
           <option value="serif">Serif</option>
           <optgroup label="Kannada">
-            <option value="'Noto Serif Kannada',serif" selected>Noto Serif Kannada</option>
-            <option value="'Noto Sans Kannada',sans-serif">Noto Sans Kannada</option>
+            <option value="'Noto Sans Kannada',sans-serif" selected>Noto Sans Kannada</option>
+            <option value="'Noto Serif Kannada',serif">Noto Serif Kannada</option>
             <option value="'Anek Kannada',sans-serif">Anek Kannada</option>
             <option value="'Akshar',sans-serif">Akshar</option>
             <option value="'Tiro Kannada',serif">Tiro Kannada</option>
@@ -204,10 +203,10 @@
       </div>
       <div class="cam-btns">
         <span class="cam-group cam-group--orbit" role="group" aria-label="Camera">
-          <button type="button" class="btn" id="sl" title="Left silhouette view" data-i18n="cam_right">ಬಲ</button>
+          <button type="button" class="btn" id="sl" title="Right silhouette view (first word column)" data-i18n="cam_right">ಬಲ</button>
           <button type="button" class="btn" id="sf" title="View front word straight on" data-i18n="cam_front">ಮುಂದೆ</button>
-          <button type="button" class="btn" id="sr" title="Right silhouette view" data-i18n="cam_left">ಎಡ</button>
-          <button type="button" class="btn active" id="ar" title="Orbit between left and right views" data-i18n="cam_spin">ತಿರುಗು</button>
+          <button type="button" class="btn" id="sr" title="Left silhouette view (second word column)" data-i18n="cam_left">ಎಡ</button>
+          <button type="button" class="btn active" id="ar" title="Orbit between the two silhouette views" data-i18n="cam_spin">ತಿರುಗು</button>
         </span>
         <span class="cam-divider" aria-hidden="true"></span>
         <span class="cam-group cam-group--struts" role="group" aria-label="Struts">
@@ -256,7 +255,7 @@
             <div class="ctrl-group"><span class="ctrl-label" data-i18n="pad_height">ಎತ್ತರ ಹೆಚ್ಚುವರಿ</span><input type="range" id="backPad" min="-24" max="40" value="10" style="width:56px"></div>
             <div class="ctrl-group"><span class="ctrl-label" data-i18n="overlap_back">ಹಿಂಬದಿ ಅತಿಕ್ರಮ</span><input type="range" id="backOverlap" min="-35" max="40" value="4" style="width:56px"><span class="ft-val" id="backOverlapVal">+4%</span></div>
             <div class="ctrl-group"><span class="ctrl-label" data-i18n="strut_size">ಆಧಾರ ಗಾತ್ರ</span><input type="range" id="strutThick" min="6" max="42" value="14" style="width:56px"><span class="ft-val" id="strutThickVal">14%</span></div>
-            <div class="ctrl-group"><span class="ctrl-label" data-tip="How far struts embed into the mesh (lower = shallower)" data-i18n="strut_embed">Strut embed</span><input type="range" id="strutEmbed" min="14" max="52" value="30" style="width:64px"><span class="ft-val" id="strutEmbedVal">30%</span></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-tip="How far struts embed into the mesh (lower = shallower)" data-i18n="strut_embed">Strut embed</span><input type="range" id="strutEmbed" min="4" max="32" value="10" style="width:64px"><span class="ft-val" id="strutEmbedVal">10%</span></div>
           </div>
         </div>
       </div>
