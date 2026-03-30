@@ -4,7 +4,7 @@ import { scheduleUpdate } from './scene.js';
 let meshTimer = null;
 function debouncedMeshUpdate() {
   clearTimeout(meshTimer);
-  meshTimer = setTimeout(() => scheduleUpdate(), 800);
+  meshTimer = setTimeout(() => scheduleUpdate(), 1100);
 }
 
 export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, which }) {
@@ -52,8 +52,8 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
   if (undoBtn) undoBtn.addEventListener('click', undo);
 
   document.getElementById(erId).addEventListener('click', function() { erasing = !erasing; this.classList.toggle('active', erasing); });
-  document.getElementById(clId).addEventListener('click', () => { saveSnapshot(); getSil().fill(0); redraw(true); scheduleUpdate(); });
-  document.getElementById(fiId).addEventListener('click', () => { saveSnapshot(); getSil().fill(1); redraw(true); scheduleUpdate(); });
+  document.getElementById(clId).addEventListener('click', () => { saveSnapshot(); getSil().fill(0); redraw(true); debouncedMeshUpdate(); });
+  document.getElementById(fiId).addEventListener('click', () => { saveSnapshot(); getSil().fill(1); redraw(true); debouncedMeshUpdate(); });
   document.getElementById(brId).addEventListener('input', function() { brushSize = parseInt(this.value); });
 
   function ptrToGrid(e) {
@@ -67,7 +67,7 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
   let featherTimer = null;
   function scheduleFeather() {
     clearTimeout(featherTimer);
-    featherTimer = setTimeout(() => redraw(true), 200);
+    featherTimer = setTimeout(() => redraw(true), 480);
   }
 
   function paintAt(gx, gz) {

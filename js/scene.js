@@ -3,7 +3,19 @@
  */
 import S from './state.js';
 
-export { updCam, setCameraFront, setCameraSide, setCameraIso, toggleSpin, resizeRenderer } from './renderer-setup.js';
+export {
+  updCam,
+  setCameraFront,
+  setCameraSide,
+  setCameraLeft,
+  setCameraRight,
+  setCameraIso,
+  toggleSpin,
+  resizeRenderer,
+  getCameraPose,
+  setCameraPose,
+  animateCameraPose,
+} from './renderer-setup.js';
 export {
   rebuildStructure,
   rebuildScene,

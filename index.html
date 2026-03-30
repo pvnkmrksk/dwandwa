@@ -1,256 +1,280 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kn" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Dwandwa · 3D Shadow Illusion Sculptor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ದ್ವಂದ್ವ Dwandwa · 3D Shadow Illusion Sculptor</title>
+<meta name="theme-color" content="#5b6af5" id="metaThemeColor">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Kannada:wght@700&family=Noto+Serif+Kannada:wght@700&family=Noto+Sans+Devanagari:wght@700&family=Noto+Nastaliq+Urdu:wght@700&family=Noto+Sans+Tamil:wght@700&family=Noto+Sans+Telugu:wght@700&family=Noto+Sans+Malayalam:wght@700&family=Noto+Sans+Bengali:wght@700&family=Noto+Sans+Gujarati:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Kannada:wght@400;500;600;700&family=Noto+Serif+Kannada:wght@400;700&family=Anek+Kannada:wght@400;500;600;700&family=Akshar:wght@400;500;600;700&family=Tiro+Kannada&family=Baloo+Tamma+2:wght@400;600;700&family=Noto+Sans+Devanagari:wght@700&family=Noto+Nastaliq+Urdu:wght@700&family=Noto+Sans+Tamil:wght@700&family=Noto+Sans+Telugu:wght@700&family=Noto+Sans+Malayalam:wght@700&family=Noto+Sans+Bengali:wght@700&family=Noto+Sans+Gujarati:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
+<script>!function(){var d=document.documentElement,t=localStorage.getItem('theme'),l=localStorage.getItem('lang');d.dataset.theme=t||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');d.lang=l||'kn'}()</script>
 </head>
 <body>
 
-<header>
-  <img src="logo.svg" alt="ದ್ವಂದ್ವ Dwandwa" class="logo-img">
-  <div class="logo-sep"></div>
-  <div class="tagline">3D Shadow Illusion Sculptor</div>
+<header class="site-header">
+  <div class="site-header__brand">
+    <img src="logo.svg" alt="ದ್ವಂದ್ವ Dwandwa" class="logo-img" width="120" height="36" decoding="async">
+    <p class="tagline" data-i18n="tagline">3D ನೆರಳು ಭ್ರಮೆ ಶಿಲ್ಪಿ</p>
+  </div>
+  <div class="site-header__actions">
+    <button type="button" class="icon-btn icon-btn--lang" id="langFlip" aria-label="English">EN</button>
+    <button type="button" class="icon-btn icon-btn--theme" id="themeToggle" aria-label="Dark mode">
+      <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+  </div>
 </header>
 
-<div class="main">
+<main class="app-shell">
 
-  <!-- Input card -->
-  <div class="card">
+  <section class="card" aria-labelledby="words-heading">
+    <h2 id="words-heading" class="sr-only" data-i18n="section_words">Words & fonts</h2>
     <div class="input-section">
-      <!-- Two words side by side -->
-      <div class="word-pair">
-        <div class="word-col">
-          <span class="color-bar bar-f"></span>
-          <input type="text" id="name1" value="BUSY" maxlength="16" placeholder="Front word">
-        </div>
-        <div class="word-col">
+      <div class="pair-grid pair-grid--words word-pair">
+        <div class="pcol pcol--w pcol--f">
           <span class="color-bar bar-s"></span>
-          <input type="text" id="name2" value="FREE" maxlength="16" placeholder="Side word">
+          <input type="text" id="name1" class="word-input" value="ಬೆಳಕು" maxlength="16" data-i18n-ph="ph_front" placeholder="ಮುಂಭಾಗದ ಪದ">
+        </div>
+        <div class="pcol pcol--w pcol--s">
+          <span class="color-bar bar-f"></span>
+          <input type="text" id="name2" class="word-input" value="ನೆರಳು" maxlength="16" data-i18n-ph="ph_side" placeholder="ಪಕ್ಕದ ಪದ">
         </div>
       </div>
 
-      <!-- Font selectors + custom upload -->
-      <div class="font-row">
-        <select id="fnt1" title="Front font">
-          <option value="sans-serif">Sans</option>
-          <option value="serif">Serif</option>
-          <optgroup label="Indic">
-            <option value="'Noto Sans Kannada',sans-serif">Kannada</option>
-            <option value="'Noto Serif Kannada',serif">Kannada Serif</option>
-            <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
-            <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
-            <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
-            <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
-            <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
-            <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
-            <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
-          </optgroup>
-          <option value="__up__" id="f1up" disabled>Custom</option>
-        </select>
-        <select id="fnt2" title="Side font">
-          <option value="sans-serif">Sans</option>
-          <option value="serif">Serif</option>
-          <optgroup label="Indic">
-            <option value="'Noto Sans Kannada',sans-serif">Kannada</option>
-            <option value="'Noto Serif Kannada',serif">Kannada Serif</option>
-            <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
-            <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
-            <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
-            <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
-            <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
-            <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
-            <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
-          </optgroup>
-          <option value="__up__" id="f2up" disabled>Custom</option>
-        </select>
-        <button class="btn btn-upload" id="uploadBtn" title="Upload custom TTF/OTF/WOFF font">+ Font</button>
-        <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" hidden>
-        <span id="uploadedFontName"></span>
+      <div class="pair-grid pair-grid--fonts">
+        <div class="pcol pcol--s font-stack">
+          <label class="field-label" for="fnt1"><span data-i18n="font_col_front">ಮುಂಪದ ಫಾಂಟ್</span></label>
+          <select id="fnt1" title="Front font">
+            <option value="sans-serif">Sans</option>
+            <option value="serif">Serif</option>
+            <optgroup label="Kannada">
+              <option value="'Noto Sans Kannada',sans-serif" selected>Noto Sans Kannada</option>
+              <option value="'Noto Serif Kannada',serif">Noto Serif Kannada</option>
+              <option value="'Anek Kannada',sans-serif">Anek Kannada</option>
+              <option value="'Akshar',sans-serif">Akshar</option>
+              <option value="'Tiro Kannada',serif">Tiro Kannada</option>
+              <option value="'Baloo Tamma 2',sans-serif">Baloo Tamma 2</option>
+            </optgroup>
+            <optgroup label="Indic">
+              <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
+              <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
+              <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
+              <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
+              <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
+              <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
+              <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
+            </optgroup>
+            <option value="__up__" id="f1up" disabled>Custom</option>
+          </select>
+          <div class="font-upload-row">
+            <button type="button" class="btn btn-upload" id="uploadBtn" data-i18n="upload_font" title="Upload custom TTF/OTF/WOFF font">+ ಫಾಂಟ್</button>
+            <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" hidden>
+            <span id="uploadedFontName"></span>
+          </div>
+        </div>
+        <div class="pcol pcol--pad">
+          <label class="field-label" for="padSelect" data-tip="Fill character when one word is shorter" data-i18n="pad">ಭರ್ತಿ</label>
+          <select id="padSelect" aria-label="Pad character">
+            <option value="♥">♥</option>
+            <option value="★">★</option>
+            <option value="■">■</option>
+            <option value="▲">▲</option>
+            <option value="◆">◆</option>
+            <option value="⬟">⬟</option>
+            <option value="⬣">⬣</option>
+            <option value="☾">☾</option>
+            <option value="__custom__" data-i18n="pad_custom_option">Custom…</option>
+          </select>
+          <div id="padCustomWrap" class="pad-custom-wrap" hidden>
+            <input type="text" class="pad-custom" id="padCustom" placeholder="·" maxlength="2" title="Custom pad character">
+          </div>
+        </div>
+        <div class="pcol pcol--f font-stack">
+          <label class="field-label" for="fnt2"><span data-i18n="font_col_side">ಪಕ್ಕದ ಫಾಂಟ್</span></label>
+          <select id="fnt2" title="Side font">
+            <option value="sans-serif">Sans</option>
+            <option value="serif">Serif</option>
+            <optgroup label="Kannada">
+              <option value="'Noto Sans Kannada',sans-serif" selected>Noto Sans Kannada</option>
+              <option value="'Noto Serif Kannada',serif">Noto Serif Kannada</option>
+              <option value="'Anek Kannada',sans-serif">Anek Kannada</option>
+              <option value="'Akshar',sans-serif">Akshar</option>
+              <option value="'Tiro Kannada',serif">Tiro Kannada</option>
+              <option value="'Baloo Tamma 2',sans-serif">Baloo Tamma 2</option>
+            </optgroup>
+            <optgroup label="Indic">
+              <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
+              <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
+              <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
+              <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
+              <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
+              <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
+              <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
+            </optgroup>
+            <option value="__up__" id="f2up" disabled>Custom</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Pad picker -->
-      <div class="pad-row">
-        <span class="pad-label" data-tip="Fill character when one word is shorter — pads to equal length">Pad</span>
-        <button class="pad-opt active" data-pad="♥">♥</button>
-        <button class="pad-opt" data-pad="★">★</button>
-        <button class="pad-opt" data-pad="■">■</button>
-        <button class="pad-opt" data-pad="▲">▲</button>
-        <button class="pad-opt" data-pad="◆">◆</button>
-        <button class="pad-opt" data-pad="⬟">⬟</button>
-        <button class="pad-opt" data-pad="⬣">⬣</button>
-        <button class="pad-opt" data-pad="☾">☾</button>
-        <input type="text" class="pad-custom" id="padCustom" placeholder="?" maxlength="2" title="Type any single character">
-      </div>
-
-      <!-- Generate + preview -->
-      <div class="gen-row">
-        <button class="btn btn-primary" id="generateBtn">Generate</button>
-        <div class="pad-preview" id="padPreview"></div>
+      <div class="gen-row gen-row--solo">
+        <button type="button" class="btn btn-primary btn-generate" id="generateBtn" data-i18n="generate">ರಚಿಸಿ</button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Raster editor (collapsible, between input and 3D) -->
-  <div class="card">
+  <section class="card" aria-labelledby="editor-heading">
+    <h2 id="editor-heading" class="sr-only" data-i18n="section_editor">Pixel editor</h2>
     <details id="rasterDetails">
-      <summary class="raster-summary">Pixel Editor &mdash; join islands &amp; manual edits</summary>
+      <summary class="raster-summary"><span data-i18n="pixel_editor">ಚಿತ್ರ ಸಂಪಾದಕ</span> &mdash; <span data-i18n="pixel_editor_desc">ದ್ವೀಪಗಳನ್ನು ಸೇರಿಸಿ &amp; ಕೈಯಿಂದ ಸಂಪಾದನೆ</span></summary>
       <div class="raster-content">
         <div class="raster-grid">
           <div class="raster-panel">
-            <div class="raster-head"><span class="color-bar bar-f"></span> Front silhouette</div>
+            <div class="raster-head"><span class="color-bar bar-s"></span> <span data-i18n="front_sil">ಮುಂಭಾಗದ ನೆರಳು</span></div>
             <div class="canvas-wrap canvas-wrap-lg" id="w1"><canvas id="c1"></canvas></div>
             <div class="draw-tools">
-              <button class="btn" id="er1">Erase</button>
-              <button class="btn" id="cl1">Clear</button>
-              <button class="btn" id="fi1">Fill</button>
-              <button class="btn" id="undo1" title="Undo last stroke">Undo</button>
-              <label class="btn" title="Feather edges for smoother mesh"><input type="checkbox" id="feath1" checked> Feather</label>
-              <div class="brush-row"><span class="brush-label">Brush</span><input type="range" id="br1" min="1" max="12" value="3"></div>
+              <button class="btn" id="er1" data-i18n="erase">ಅಳಿಸು</button>
+              <button class="btn" id="cl1" data-i18n="clear">ತೆಗೆ</button>
+              <button class="btn" id="fi1" data-i18n="fill">ತುಂಬು</button>
+              <button class="btn" id="undo1" title="Undo last stroke" data-i18n="undo">ಹಿಂದಕ್ಕೆ</button>
+              <label class="btn" title="Feather edges for smoother mesh"><input type="checkbox" id="feath1" checked> <span data-i18n="feather">ಮೃದು</span></label>
+              <div class="brush-row"><span class="brush-label" data-i18n="brush">ಕುಂಚ</span><input type="range" id="br1" min="1" max="12" value="3"></div>
             </div>
           </div>
           <div class="raster-panel">
-            <div class="raster-head"><span class="color-bar bar-s"></span> Side silhouette</div>
+            <div class="raster-head"><span class="color-bar bar-f"></span> <span data-i18n="side_sil">ಪಕ್ಕದ ನೆರಳು</span></div>
             <div class="canvas-wrap canvas-wrap-lg" id="w2"><canvas id="c2"></canvas></div>
             <div class="draw-tools">
-              <button class="btn" id="er2">Erase</button>
-              <button class="btn" id="cl2">Clear</button>
-              <button class="btn" id="fi2">Fill</button>
-              <button class="btn" id="undo2" title="Undo last stroke">Undo</button>
-              <label class="btn" title="Feather edges for smoother mesh"><input type="checkbox" id="feath2" checked> Feather</label>
-              <div class="brush-row"><span class="brush-label">Brush</span><input type="range" id="br2" min="1" max="12" value="3"></div>
+              <button class="btn" id="er2" data-i18n="erase">ಅಳಿಸು</button>
+              <button class="btn" id="cl2" data-i18n="clear">ತೆಗೆ</button>
+              <button class="btn" id="fi2" data-i18n="fill">ತುಂಬು</button>
+              <button class="btn" id="undo2" title="Undo last stroke" data-i18n="undo">ಹಿಂದಕ್ಕೆ</button>
+              <label class="btn" title="Feather edges for smoother mesh"><input type="checkbox" id="feath2" checked> <span data-i18n="feather">ಮೃದು</span></label>
+              <div class="brush-row"><span class="brush-label" data-i18n="brush">ಕುಂಚ</span><input type="range" id="br2" min="1" max="12" value="3"></div>
             </div>
           </div>
         </div>
         <div class="raster-controls">
-          <div class="ctrl-group">
-            <span class="ctrl-label" title="Higher = more detail but slower">Resolution</span>
-            <input type="range" id="resSlider" min="32" max="256" step="16" value="64">
-            <span id="resVal">64</span><span class="ctrl-label">px</span>
+          <div class="ctrl-group ctrl-group--res">
+            <span class="ctrl-label" title="Higher = more detail but slower" data-i18n="resolution">ಸೂಕ್ಷ್ಮತೆ</span>
+            <input type="range" id="resSlider" min="32" max="256" step="16" value="128">
+            <span id="resVal">128</span><span class="ctrl-label">px</span>
           </div>
-          <div style="flex:1"></div>
-          <button class="btn btn-primary" id="applyEdits" style="padding:5px 12px;font-size:11px">Apply Edits</button>
+          <div class="raster-controls__spacer" aria-hidden="true"></div>
         </div>
       </div>
     </details>
-  </div>
+  </section>
 
-  <!-- 3D Preview card -->
-  <div class="card">
+  <section class="card card--preview" aria-labelledby="preview-heading">
+    <h2 id="preview-heading" class="sr-only" data-i18n="section_preview">3D preview</h2>
     <div class="view3d-head">
-      <span class="view3d-title"><span id="modCount">-</span> modules</span>
+      <div class="view3d-head__row">
+        <span class="view3d-title"><span id="modCount">-</span> <span data-i18n="modules">ಘಟಕಗಳು</span></span>
+        <span id="vc" class="view3d-meta">-</span>
+      </div>
       <div class="cam-btns">
-        <button class="btn" id="sf" title="View front word">Front</button>
-        <button class="btn" id="ss" title="View side word">Side</button>
-        <button class="btn" id="si" title="Diagonal view">Iso</button>
-        <button class="btn active" id="ar" title="Orbit between views">Spin</button>
-        <span class="btn-sep"></span>
-        <button class="btn" id="paintStruts" title="Toggle strut painter: click mesh to add support pin, drag to move, shift-click/right-click to remove. Each pin creates a strut to the back wall.">Paint Struts</button>
-        <button class="btn" id="undoPins" title="Undo last pin action" disabled>Undo</button>
-        <button class="btn" id="clearPins" title="Remove all painted strut pins">Clear</button>
-        <span class="pin-count" id="pinCount"></span>
+        <span class="cam-group cam-group--orbit" role="group" aria-label="Camera">
+          <button type="button" class="btn" id="sl" title="Left silhouette view" data-i18n="cam_right">ಬಲ</button>
+          <button type="button" class="btn" id="sf" title="View front word straight on" data-i18n="cam_front">ಮುಂದೆ</button>
+          <button type="button" class="btn" id="sr" title="Right silhouette view" data-i18n="cam_left">ಎಡ</button>
+          <button type="button" class="btn active" id="ar" title="Orbit between left and right views" data-i18n="cam_spin">ತಿರುಗು</button>
+        </span>
+        <span class="cam-divider" aria-hidden="true"></span>
+        <span class="cam-group cam-group--struts" role="group" aria-label="Struts">
+          <button class="btn" id="paintStruts" title="Click mesh to place strut pins, drag to move, Shift+click to remove" data-i18n="paint_struts">ಆಧಾರ ಬಣ್ಣಿಸಿ</button>
+          <button class="btn" id="undoPins" title="Undo last pin action" disabled data-i18n="undo_pins">ಹಿಂದಕ್ಕೆ</button>
+          <button class="btn" id="clearPins" title="Remove all pins" data-i18n="clear_pins">ತೆಗೆ</button>
+          <span class="pin-count" id="pinCount"></span>
+        </span>
       </div>
-      <span id="vc">-</span>
     </div>
-    <div id="v3wrap"></div>
+    <p class="view3d-hint" data-i18n="hint_zoom">ಎಳೆದು ತಿರುಗಿಸಿ · ಸ್ಕ್ರಾಲ್ ಅಥವಾ ಎರಡು ಬೆರಳುಗಳಿಂದ ಜೂಮ್</p>
+    <div id="v3wrap" role="application" aria-label="3D preview"></div>
+    <pre id="camDebug" class="cam-debug" hidden></pre>
+    <p id="camDebugHint" class="cam-debug-hint" hidden data-i18n="cam_debug_hint"></p>
     <div class="scene-controls">
-      <label class="ctrl-toggle"><input type="checkbox" id="baseOn" checked> Base</label>
-      <label class="ctrl-toggle"><input type="checkbox" id="backOn" checked> Back panel</label>
+      <label class="ctrl-toggle"><input type="checkbox" id="baseOn" checked> <span data-i18n="base">ಬುನಾದಿ</span></label>
+      <label class="ctrl-toggle"><input type="checkbox" id="backOn" checked> <span data-i18n="back_panel">ಹಿಂಬದಿ</span></label>
       <div class="ctrl-group">
-        <span class="ctrl-label" data-tip="Spacing: default mode scales each module span; with Equal gaps (Advanced), Gap % scales the gap between letter blocks">Gap</span>
-        <input type="range" id="letterGap" min="-40" max="120" value="30" style="width:56px">
+        <span class="ctrl-label" data-tip="Module spacing" data-i18n="gap">ಅಂತರ</span>
+        <input type="range" id="letterGap" min="-120" max="120" value="30" style="width:56px">
       </div>
     </div>
-    <!-- Fine Tuning (collapsible) -->
     <details class="fine-tune-details">
-      <summary class="fine-tune-summary">Advanced layout &amp; plate</summary>
+      <summary class="fine-tune-summary" data-i18n="advanced">ಸುಧಾರಿತ ವಿನ್ಯಾಸ &amp; ತಟ್ಟೆ</summary>
       <div class="fine-tune-content">
-        <p class="ft-hint" style="margin:0 0 10px 0">Gap scales per-column span in the default layout. Turn on <b>Equal gaps</b> to space modules by measured width instead; Gap % then scales the space between letter blocks. <b>Align backs</b> flushes each letter’s rear (min Z) to one plane.</p>
+        <p class="ft-hint" style="margin:0 0 10px 0" data-i18n="ft_hint"></p>
         <div class="ft-row" style="flex-wrap:wrap;gap:8px;margin-bottom:12px">
-          <label class="ctrl-toggle" title="Align each letter’s rearmost (min Z) plane"><input type="checkbox" id="alignBack"> Align backs</label>
-          <label class="ctrl-toggle" title="Equal horizontal gaps between module bounding boxes (uses Gap % as gap size)"><input type="checkbox" id="equalGap"> Equal gaps</label>
-          <label class="ctrl-toggle" title="Enable painted strut supports from mesh to the back panel"><input type="checkbox" id="backStrut"> Wall struts</label>
-          <label class="ctrl-toggle" title="Off: fixed cell width per column (Latin). On: per-glyph width (Indic scripts)."><input type="checkbox" id="variableColWidth" checked> Variable width</label>
+          <label class="ctrl-toggle"><input type="checkbox" id="alignBack"> <span data-i18n="align_backs">ಹಿಂಭಾಗ ಜೋಡಿಸಿ</span></label>
+          <label class="ctrl-toggle"><input type="checkbox" id="equalGap"> <span data-i18n="equal_gaps">ಸಮ ಅಂತರ</span></label>
+          <label class="ctrl-toggle"><input type="checkbox" id="backStrut"> <span data-i18n="wall_struts">ಗೋಡೆ ಆಧಾರ</span></label>
+          <label class="ctrl-toggle"><input type="checkbox" id="variableColWidth" checked> <span data-i18n="variable_width">ಬದಲಾಗುವ ಅಗಲ</span></label>
         </div>
         <div class="ft-section">
-          <div class="ft-heading">Plate footprint &amp; thickness</div>
+          <div class="ft-heading" data-i18n="plate_section">ತಟ್ಟೆ ಅಳತೆ &amp; ದಪ್ಪ</div>
           <div class="ft-row" id="baseControls">
-            <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Padding along the letter row (X), % of mesh width">Pad X</span>
-              <input type="range" id="basePadX" min="0" max="40" value="10" style="width:56px">
-            </div>
-            <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Padding along depth (Z), % of mesh depth">Pad Z</span>
-              <input type="range" id="basePadZ" min="0" max="40" value="10" style="width:56px">
-            </div>
-            <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Base slab height and back panel thickness (% of letter height / depth). One control for both parts.">Thickness</span>
-              <input type="range" id="plateThick" min="6" max="28" value="14" style="width:56px">
-              <span class="ft-val" id="plateThickVal">14%</span>
-            </div>
-            <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Reserved for future subtractive corner rounding (preview uses sharp boxes)">Round</span>
-              <input type="range" id="baseFillet" min="0" max="20" value="4" style="width:56px">
-            </div>
-            <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Base vs letters: 0 = flush; negative = gap; positive = penetration into letters (% of letter height)">Overlap base</span>
-              <input type="range" id="baseOverlap" min="-25" max="40" value="4" style="width:56px">
-              <span class="ft-val" id="baseOverlapVal">+4%</span>
-            </div>
+            <div class="ctrl-group"><span class="ctrl-label" data-i18n="pad_x">X ಹೆಚ್ಚುವರಿ</span><input type="range" id="basePadX" min="-24" max="40" value="10" style="width:56px"></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-i18n="pad_z">Z ಹೆಚ್ಚುವರಿ</span><input type="range" id="basePadZ" min="-24" max="40" value="10" style="width:56px"></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-i18n="thickness">ದಪ್ಪ</span><input type="range" id="plateThick" min="6" max="28" value="14" style="width:56px"><span class="ft-val" id="plateThickVal">14%</span></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-i18n="round">ದುಂಡು</span><input type="range" id="baseFillet" min="0" max="20" value="4" style="width:56px"></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-i18n="overlap_base">ಬುನಾದಿ ಅತಿಕ್ರಮ</span><input type="range" id="baseOverlap" min="-25" max="40" value="4" style="width:56px"><span class="ft-val" id="baseOverlapVal">+4%</span></div>
           </div>
         </div>
         <div class="ft-section">
-          <div class="ft-heading">Back panel</div>
+          <div class="ft-heading" data-i18n="back_section">ಹಿಂಬದಿ ತಟ್ಟೆ</div>
           <div class="ft-row" id="backControls">
-            <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Extra vertical padding for the back panel (% of letter height)">Pad height</span>
-              <input type="range" id="backPad" min="0" max="40" value="10" style="width:56px">
-            </div>
-            <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Moves only the back wall in Z: 0 = inner face flush with letter backs; negative = wall away from letters; positive = into letters (% of mesh depth). Base slab is unchanged.">Overlap back</span>
-              <input type="range" id="backOverlap" min="-35" max="40" value="4" style="width:56px">
-              <span class="ft-val" id="backOverlapVal">+4%</span>
-            </div>
-            <div class="ctrl-group">
-              <span class="ctrl-label" data-tip="Cross-section of auto wall struts (from hanging dual-silhouette regions to the back panel).">Strut size</span>
-              <input type="range" id="strutThick" min="6" max="42" value="14" style="width:56px">
-              <span class="ft-val" id="strutThickVal">14%</span>
-            </div>
+            <div class="ctrl-group"><span class="ctrl-label" data-i18n="pad_height">ಎತ್ತರ ಹೆಚ್ಚುವರಿ</span><input type="range" id="backPad" min="-24" max="40" value="10" style="width:56px"></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-i18n="overlap_back">ಹಿಂಬದಿ ಅತಿಕ್ರಮ</span><input type="range" id="backOverlap" min="-35" max="40" value="4" style="width:56px"><span class="ft-val" id="backOverlapVal">+4%</span></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-i18n="strut_size">ಆಧಾರ ಗಾತ್ರ</span><input type="range" id="strutThick" min="6" max="42" value="14" style="width:56px"><span class="ft-val" id="strutThickVal">14%</span></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-tip="How far struts embed into the mesh (lower = shallower)" data-i18n="strut_embed">Strut embed</span><input type="range" id="strutEmbed" min="14" max="52" value="30" style="width:64px"><span class="ft-val" id="strutEmbedVal">30%</span></div>
           </div>
         </div>
       </div>
     </details>
     <div class="export-bar">
       <select id="exportQ">
-        <option value="1">1x draft</option>
-        <option value="2" selected>2x good</option>
-        <option value="4">4x fine</option>
-        <option value="8">8x print</option>
+        <option value="1" data-i18n="export_1x">1× ಕರಡು</option>
+        <option value="2" selected data-i18n="export_2x">2× ಉತ್ತಮ</option>
+        <option value="4" data-i18n="export_4x">4× ಸೂಕ್ಷ್ಮ</option>
+        <option value="8" data-i18n="export_8x">8× ಮುದ್ರಣ</option>
       </select>
-      <button class="btn btn-primary" id="exportBtn" style="padding:6px 14px;font-size:12px">Export STL</button>
+      <button class="btn btn-primary" id="exportBtn" style="padding:6px 14px;font-size:12px" data-i18n="export_stl">STL ರಫ್ತು</button>
       <div id="exportProgress" class="export-progress" hidden>
         <div class="export-progress-bar" id="exportBar"></div>
       </div>
-      <span class="export-note">Smoothed dual-view mesh · includes painted struts &amp; pixel edits</span>
+      <span class="export-note" data-i18n="export_note"></span>
     </div>
     <div id="bmsg"></div>
-  </div>
+  </section>
 
-  <div class="help-fab" tabindex="0">
-    <span class="help-icon">?</span>
-    <div class="help-tooltip">
-      <p><b>How it works</b> — Each letter pair (front[1]×side[1], front[2]×side[2]…) becomes one 3D module. Shorter words are padded.</p>
-      <p><b>Fonts</b> — Upload any TTF/OTF/WOFF. Click "+ Font" to browse.</p>
-      <p><b>Editor</b> — Expand the Pixel Editor to paint/erase silhouettes and join floating islands.</p>
-      <p><b>Export</b> — Higher export resolution = finer voxels (same mesher as preview). Open STL in Cura / PrusaSlicer. Base and back export as boxes with the letters.</p>
-      <p><b>Merge bar</b> — Stable English preview, watertight voxel letter mesh, STL loads in common slicers; layout and mesher covered by this checklist.</p>
-    </div>
-  </div>
+  <section class="card" aria-labelledby="help-heading">
+    <h2 id="help-heading" class="sr-only" data-i18n="section_help">Help</h2>
+    <details id="helpDetails">
+      <summary class="help-summary">
+        <span class="help-summary__title" data-i18n="help_title">ಬಳಸುವ ವಿಧಾನ</span>
+        <button type="button" class="btn btn-tour" id="helpTourBtn" data-i18n="help_tour">Quick tour</button>
+      </summary>
+      <div class="help-content">
+        <p class="help-intro" data-i18n="help_intro"></p>
+        <ol class="help-steps">
+          <li><strong data-i18n="help_s1t"></strong><span data-i18n="help_s1"></span></li>
+          <li><strong data-i18n="help_s2t"></strong><span data-i18n="help_s2"></span></li>
+          <li><strong data-i18n="help_s3t"></strong><span data-i18n="help_s3"></span></li>
+          <li><strong data-i18n="help_s4t"></strong><span data-i18n="help_s4"></span></li>
+          <li><strong data-i18n="help_s5t"></strong><span data-i18n="help_s5"></span></li>
+          <li><strong data-i18n="help_s6t"></strong><span data-i18n="help_s6"></span></li>
+          <li><strong data-i18n="help_s7t"></strong><span data-i18n="help_s7"></span></li>
+          <li><strong data-i18n="help_s8t"></strong><span data-i18n="help_s8"></span></li>
+          <li><strong data-i18n="help_s9t"></strong><span data-i18n="help_s9"></span></li>
+          <li><strong data-i18n="help_s10t"></strong><span data-i18n="help_s10"></span></li>
+          <li><strong data-i18n="help_s11t"></strong><span data-i18n="help_s11"></span></li>
+        </ol>
+      </div>
+    </details>
+  </section>
 
-</div><!-- main -->
+</main>
 
 <script type="module" src="js/main.js"></script>
 </body>

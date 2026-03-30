@@ -3,19 +3,53 @@ import S from './state.js';
 import {
   updCam,
   scheduleUpdate,
+  getCameraPose,
+  setCameraPose,
+  animateCameraPose,
 } from './scene.js';
 import { applyNames } from './text.js';
 import { measureColumnCells, stampName } from './raster.js';
 import { makeDrawer } from './editor.js';
 import { wireUi } from './ui.js';
 import { initStrutPainter, togglePaintMode, clearPins, undoPins } from './strut-painter.js';
+import { applyLang, toggleLang } from './i18n.js';
+import { applyTheme, toggleTheme } from './theme.js';
+import { registerSW } from 'virtual:pwa-register';
+import { startTutorial } from './tutorial.js';
+
+registerSW({ immediate: true });
+
+if (new URLSearchParams(location.search).has('debug')) {
+  document.getElementById('camDebug')?.removeAttribute('hidden');
+  document.getElementById('camDebugHint')?.removeAttribute('hidden');
+}
+
+window.dwandwaCamera = {
+  getPose: () => getCameraPose(),
+  setPose: pose => {
+    if (pose == null || pose.theta == null) return;
+    const ph = pose.phi != null ? pose.phi : getCameraPose().phi;
+    setCameraPose(pose.theta, ph, { stopSpin: pose.stopSpin !== false });
+  },
+  animate: (from, to, ms = 1400) => {
+    const a = from || getCameraPose();
+    const b = typeof to === 'string' ? JSON.parse(to) : to;
+    animateCameraPose(
+      { theta: a.theta, phi: a.phi },
+      { theta: b.theta, phi: b.phi != null ? b.phi : a.phi },
+      ms,
+    );
+  },
+};
 
 updCam();
+applyLang();
+applyTheme();
 
 const redraw1 = makeDrawer({
   id: 'c1',
   getSil: () => S.sil1,
-  ink: 'rgba(240,150,40,.9)',
+  ink: 'rgba(239,161,48,.9)',
   erId: 'er1',
   clId: 'cl1',
   fiId: 'fi1',
@@ -26,7 +60,7 @@ const redraw1 = makeDrawer({
 const redraw2 = makeDrawer({
   id: 'c2',
   getSil: () => S.sil2,
-  ink: 'rgba(40,160,240,.9)',
+  ink: 'rgba(48,143,240,.9)',
   erId: 'er2',
   clId: 'cl2',
   fiId: 'fi2',
@@ -36,18 +70,30 @@ const redraw2 = makeDrawer({
 });
 
 wireUi({ redraw1, redraw2 });
+
 initStrutPainter();
 document.getElementById('paintStruts').addEventListener('click', togglePaintMode);
 document.getElementById('undoPins').addEventListener('click', undoPins);
 document.getElementById('clearPins').addEventListener('click', clearPins);
+document.getElementById('langFlip').addEventListener('click', toggleLang);
+document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+const helpTourBtn = document.getElementById('helpTourBtn');
+if (helpTourBtn) {
+  helpTourBtn.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    startTutorial();
+  });
+}
 
 // Auto-generate from whatever's in the form (URL params or defaults)
 (async () => {
   const bmsg = document.getElementById('bmsg');
   bmsg.textContent = 'Loading\u2026';
   try {
-    const r1 = document.getElementById('name1').value || 'BUSY';
-    const r2 = document.getElementById('name2').value || 'FREE';
+    const r1 = document.getElementById('name1').value || '\u0CAC\u0CC6\u0CB3\u0C95\u0CC1';
+    const r2 = document.getElementById('name2').value || '\u0CA8\u0CC6\u0CB0\u0CB3\u0CC1';
     const f1 = document.getElementById('fnt1').value;
     const f2 = document.getElementById('fnt2').value;
     await applyNames(r1, r2, f1, f2);

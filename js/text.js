@@ -58,16 +58,27 @@ function padded(g1, g2, pad) {
   return { p1, p2, len };
 }
 
+export function syncWordInputFonts() {
+  const el1 = document.getElementById('fnt1');
+  const el2 = document.getElementById('fnt2');
+  const n1 = document.getElementById('name1');
+  const n2 = document.getElementById('name2');
+  if (!el1 || !el2 || !n1 || !n2) return;
+  const f1 = el1.value;
+  const f2 = el2.value;
+  const ff = S.uploadedFontFamily;
+  n1.style.fontFamily = f1 === '__up__' && ff ? ff : f1;
+  n2.style.fontFamily = f2 === '__up__' && ff ? ff : f2;
+}
+
 export function updatePreview() {
-  const raw1 = document.getElementById('name1').value || 'BUSY';
-  const raw2 = document.getElementById('name2').value || 'FREE';
-  const g1 = splitGraphemes(raw1.trim()).slice(0, 8);
-  const g2 = splitGraphemes(raw2.trim()).slice(0, 8);
-  const { p1, p2 } = padded(g1, g2, S.padChar);
-  const padHtml = (chars, origGraphemes) =>
-    chars.map((c, i) => `<span class="${i < origGraphemes.length ? 'pc' : 'pp'}">${c}</span>`).join('');
-  document.getElementById('padPreview').innerHTML =
-    padHtml(p1, g1) + ' &middot; ' + padHtml(p2, g2);
+  document.getElementById('modCount').textContent = String(
+    padded(
+      splitGraphemes((document.getElementById('name1').value || 'ಬೆಳಕು').trim()).slice(0, 8),
+      splitGraphemes((document.getElementById('name2').value || 'ನೆರಳು').trim()).slice(0, 8),
+      S.padChar,
+    ).len,
+  );
 }
 
 export async function applyNames(raw1, raw2, f1, f2) {
@@ -75,13 +86,10 @@ export async function applyNames(raw1, raw2, f1, f2) {
   const g2 = splitGraphemes(raw2.trim()).slice(0, 8);
   const { p1, p2, len } = padded(g1, g2, S.padChar);
   S.font1 = f1; S.font2 = f2; S.nCols = len; S.chars1 = p1; S.chars2 = p2;
-  const padHtml = (chars, origGraphemes) =>
-    chars.map((c, i) => `<span class="${i < origGraphemes.length ? 'pc' : 'pp'}">${c}</span>`).join('');
-  document.getElementById('padPreview').innerHTML =
-    padHtml(S.chars1, g1) + ' &middot; ' + padHtml(S.chars2, g2);
   document.getElementById('modCount').textContent = S.nCols;
   await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2);
   allocArrays();
   updateCanvasSize();
   rebuildScene();
+  syncWordInputFonts();
 }
