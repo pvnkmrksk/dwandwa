@@ -498,7 +498,7 @@ html[data-theme="dark"] .tutorial-backdrop{background:rgba(0,0,0,.62)}
   display:flex;align-items:center;justify-content:center;
 }
 .dv-bkan{
-  font-family:'Noto Serif Kannada',var(--indic),serif;
+  font-family:var(--indic),var(--sys);
   font-size:14px;font-weight:700;color:#fff;
 }
 .dv-bname{font-size:15px;font-weight:600;letter-spacing:-.02em;color:var(--text);line-height:1.15}
@@ -517,15 +517,27 @@ html[data-theme="dark"] .tutorial-backdrop{background:rgba(0,0,0,.62)}
 .dv-hbtn:hover{background:var(--panel);color:var(--text);border-color:var(--border2)}
 .dv-hbtn__ico{flex-shrink:0;opacity:.85}
 .dv-hbtn--icononly{padding:0 9px;min-width:30px;justify-content:center;gap:0}
-.icon-btn--lang{font-family:var(--indic),var(--sys);font-size:12px;font-weight:700}
+.dv-hbtn--lang{
+  padding:0 12px 0 14px;
+  font-family:var(--indic),var(--sys);
+  font-size:13px;font-weight:600;letter-spacing:.01em;
+}
+.icon-btn--lang{font-family:var(--indic),var(--sys);font-size:13px;font-weight:600;letter-spacing:.01em}
 
 .composer{
   display:grid;
   grid-template-columns:1fr 54px 1fr;
   gap:0;margin-bottom:12px;
 }
+/* Visual order: second word (rc) left, pad column center, first word (lc) right — IDs unchanged */
+.composer .word-card.rc{order:1}
+.composer .middle{order:2}
+.composer .word-card.lc{order:3}
 @media(max-width:720px){
   .composer{grid-template-columns:1fr;gap:14px}
+  .composer .word-card.rc{order:1}
+  .composer .middle{order:2}
+  .composer .word-card.lc{order:3}
   .middle{flex-direction:row!important;justify-content:center;padding:8px 0!important}
 }
 
@@ -550,7 +562,7 @@ html[data-theme="dark"] .word-card.rc{
 
 .wview{
   font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  margin-bottom:9px;
+  margin-bottom:9px;font-family:var(--sys);
 }
 .word-card.lc .wview{color:var(--lacc)}
 .word-card.rc .wview{color:var(--racc);text-align:right}
@@ -561,7 +573,7 @@ html[data-theme="dark"] .word-card.rc{
   border-radius:13px;
   background:rgba(255,255,255,.95);
   padding:10px 14px;
-  font-family:'Noto Serif Kannada',var(--indic),var(--sys);
+  font-family:var(--indic),var(--sys);
   font-size:clamp(18px,2.8vw,22px);font-weight:600;
   color:var(--text);
   margin-bottom:10px;outline:none;
@@ -729,15 +741,25 @@ details.card.editor{
   box-shadow:0 0 0 3px rgba(107,130,255,.25);
 }
 
-.sil-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:720px){.sil-grid{grid-template-columns:1fr}}
+.sil-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.sil-grid .sil-wrap:has(#w2){order:1}
+.sil-grid .sil-wrap:has(#w1){order:2}
+@media(max-width:720px){
+  .sil-grid{grid-template-columns:1fr}
+  .sil-grid .sil-wrap:has(#w2){order:1}
+  .sil-grid .sil-wrap:has(#w1){order:2}
+}
 
 .sil-view{
   font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
-  margin-bottom:6px;
+  margin-bottom:6px;font-family:var(--sys);
 }
-.sil-wrap:first-child .sil-view{color:var(--lacc)}
-.sil-wrap:last-child .sil-view{color:var(--racc)}
+.sil-grid .sil-wrap:has(#w1) .sil-view{color:var(--lacc)}
+.sil-grid .sil-wrap:has(#w2) .sil-view{color:var(--racc)}
 
 .sil-tools{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
 .stool{

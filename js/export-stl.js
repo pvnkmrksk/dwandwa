@@ -191,7 +191,7 @@ export async function exportSTL() {
     const sizeScale = Math.max(0.35, (ss.strutSizePct ?? 14) / 14);
     const strutW = Math.max(0.62, plate * 0.46 * sizeScale);
     const meshDepth = size.z;
-    const embedPct = ss.strutEmbedPct ?? 10;
+    const embedPct = ss.strutEmbedPct ?? 8;
 
     // preview_pos * 0.5 = export_pos (see derivation in comments below)
     // Preview mesh: cell units at CELL. Export: cell units at ECELL, scaled by ESCALE.

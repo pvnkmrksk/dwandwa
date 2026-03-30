@@ -24,8 +24,7 @@
       </div>
     </div>
     <div class="dv-hbtns">
-      <button type="button" class="dv-hbtn icon-btn icon-btn--lang" id="langFlipBtn" aria-label="English">
-        <svg class="dv-hbtn__ico" width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 3h12M1 7h7"/><path d="M10 7l3 5M10 12l3-5"/></svg>
+      <button type="button" class="dv-hbtn dv-hbtn--lang icon-btn icon-btn--lang" id="langFlipBtn" aria-label="English">
         <span id="langFlip">EN</span>
       </button>
       <button type="button" class="dv-hbtn icon-btn icon-btn--theme dv-hbtn--icononly" id="themeToggle" aria-label="Dark mode">
@@ -203,9 +202,9 @@
       </div>
       <div class="cam-btns">
         <span class="cam-group cam-group--orbit" role="group" aria-label="Camera">
-          <button type="button" class="btn" id="sl" title="Right silhouette view (first word column)" data-i18n="cam_right">ಬಲ</button>
+          <button type="button" class="btn" id="sl" title="Left silhouette view (first word in 3D)" data-i18n="cam_left">ಎಡ</button>
           <button type="button" class="btn" id="sf" title="View front word straight on" data-i18n="cam_front">ಮುಂದೆ</button>
-          <button type="button" class="btn" id="sr" title="Left silhouette view (second word column)" data-i18n="cam_left">ಎಡ</button>
+          <button type="button" class="btn" id="sr" title="Right silhouette view (second word in 3D)" data-i18n="cam_right">ಬಲ</button>
           <button type="button" class="btn active" id="ar" title="Orbit between the two silhouette views" data-i18n="cam_spin">ತಿರುಗು</button>
         </span>
         <span class="cam-divider" aria-hidden="true"></span>
@@ -255,7 +254,7 @@
             <div class="ctrl-group"><span class="ctrl-label" data-i18n="pad_height">ಎತ್ತರ ಹೆಚ್ಚುವರಿ</span><input type="range" id="backPad" min="-24" max="40" value="10" style="width:56px"></div>
             <div class="ctrl-group"><span class="ctrl-label" data-i18n="overlap_back">ಹಿಂಬದಿ ಅತಿಕ್ರಮ</span><input type="range" id="backOverlap" min="-35" max="40" value="4" style="width:56px"><span class="ft-val" id="backOverlapVal">+4%</span></div>
             <div class="ctrl-group"><span class="ctrl-label" data-i18n="strut_size">ಆಧಾರ ಗಾತ್ರ</span><input type="range" id="strutThick" min="6" max="42" value="14" style="width:56px"><span class="ft-val" id="strutThickVal">14%</span></div>
-            <div class="ctrl-group"><span class="ctrl-label" data-tip="How far struts embed into the mesh (lower = shallower)" data-i18n="strut_embed">Strut embed</span><input type="range" id="strutEmbed" min="4" max="32" value="10" style="width:64px"><span class="ft-val" id="strutEmbedVal">10%</span></div>
+            <div class="ctrl-group"><span class="ctrl-label" data-tip="How deep struts reach into the mesh; 0 is shallowest" data-i18n="strut_embed">Strut embed</span><input type="range" id="strutEmbed" min="0" max="40" value="8" style="width:64px"><span class="ft-val" id="strutEmbedVal">8%</span></div>
           </div>
         </div>
       </div>

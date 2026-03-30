@@ -11,7 +11,7 @@ let basePadXPct = 10, basePadZPct = 10, plateThickPct = 14, baseFilletPct = 4, b
 let backEnabled = true, backPadPct = 10, backOverlapPct = 4;
 let strutSizePct = 14;
 /** Max strut embed along Z as % of mesh depth. Lower = shallower, less “exit wound”. */
-let strutEmbedPct = 10;
+let strutEmbedPct = 8;
 const showBackdrops = false;
 
 const matLProfile = matBase.clone();
@@ -47,7 +47,8 @@ export function getStructureSettings() {
 
 export function computeStrutPenetration(strutW, meshDepth, embedPct) {
   const raw = Math.max(strutW * 1.5, meshDepth * 0.3);
-  const cap = meshDepth * Math.max(0.06, Math.min(0.38, embedPct / 100));
+  const p = Math.max(0, Math.min(100, embedPct)) / 100;
+  const cap = meshDepth * (p <= 0 ? 0 : Math.max(0.012, Math.min(0.48, p)));
   const floor = strutW * 0.42;
   return Math.max(floor, Math.min(raw, cap));
 }
