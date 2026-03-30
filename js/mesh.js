@@ -300,12 +300,14 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
     return null;
   }
 
-  let yMin = Infinity;
-  for (let i = 1; i < allPos.length; i += 3) {
-    if (allPos[i] < yMin) yMin = allPos[i];
-  }
-  if (yMin !== Infinity && Number.isFinite(yMin)) {
-    for (let i = 1; i < allPos.length; i += 3) allPos[i] -= yMin;
+  if (S.meshBottomAlign) {
+    let yMin = Infinity;
+    for (let i = 1; i < allPos.length; i += 3) {
+      if (allPos[i] < yMin) yMin = allPos[i];
+    }
+    if (yMin !== Infinity && Number.isFinite(yMin)) {
+      for (let i = 1; i < allPos.length; i += 3) allPos[i] -= yMin;
+    }
   }
 
   const geo = new THREE.BufferGeometry();

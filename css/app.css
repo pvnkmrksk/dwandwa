@@ -564,8 +564,8 @@ html[data-theme="dark"] .word-card.rc{
   font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
   margin-bottom:9px;font-family:var(--sys);
 }
-.word-card.lc .wview{color:var(--lacc)}
-.word-card.rc .wview{color:var(--racc);text-align:right}
+.word-card.rc .wview{color:var(--racc)}
+.word-card.lc .wview{color:var(--lacc);text-align:right}
 
 .winput,.word-input.winput{
   display:block;width:100%;
@@ -583,8 +583,9 @@ html[data-theme="dark"] .winput,html[data-theme="dark"] .word-input.winput{
   background:rgba(255,255,255,.055);
 }
 .winput:focus{border-color:var(--lacc);box-shadow:none}
-.word-card.rc .winput{text-align:right}
+.word-card.lc .winput{text-align:right}
 .word-card.rc .winput:focus{border-color:var(--racc)}
+.word-card.lc .winput:focus{border-color:var(--lacc)}
 .winput::placeholder{color:var(--text3);font-weight:400;font-size:14px}
 
 .fwrap{position:relative}
@@ -593,8 +594,8 @@ html[data-theme="dark"] .winput,html[data-theme="dark"] .word-input.winput{
   border-left:4px solid transparent;border-right:4px solid transparent;
   border-top:5px solid var(--text3);pointer-events:none;
 }
-.word-card.lc .fwrap::after{right:14px}
-.word-card.rc .fwrap::after{left:14px;right:auto}
+.word-card.rc .fwrap::after{right:14px}
+.word-card.lc .fwrap::after{left:14px;right:auto}
 
 .wfont,.word-card select.wfont{
   width:100%;border-radius:11px;
@@ -611,7 +612,8 @@ html[data-theme="dark"] .wfont,html[data-theme="dark"] .word-card select.wfont{
   background:rgba(255,255,255,.055);
 }
 .wfont:focus{border-color:var(--lacc)}
-.word-card.rc .wfont{padding:8px 12px 8px 30px;text-align:right;direction:rtl}
+.word-card.lc .wfont{padding:8px 12px 8px 30px;text-align:right;direction:rtl}
+.word-card.lc .wfont:focus{border-color:var(--lacc)}
 .word-card.rc .wfont:focus{border-color:var(--racc)}
 .wfont option,.wfont optgroup{background:var(--surface);color:var(--text);direction:ltr}
 

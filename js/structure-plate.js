@@ -224,9 +224,11 @@ export function updateStructureUI() {
   const ab = document.getElementById('alignBack');
   const eg = document.getElementById('equalGap');
   const bs = document.getElementById('backStrut');
+  const mba = document.getElementById('meshBottomAlign');
   if (ab) S.alignBackEdges = ab.checked;
   if (eg) S.equalGapPack = eg.checked;
   if (bs) S.backStrut = bs.checked;
+  if (mba) S.meshBottomAlign = mba.checked;
   const ptEl = document.getElementById('plateThickVal');
   if (ptEl) ptEl.textContent = plateThickPct + '%';
   const boEl = document.getElementById('baseOverlapVal');
@@ -243,7 +245,7 @@ export function updateStructureUI() {
 }
 
 (function wireStructureControls() {
-  ['baseOn', 'basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap', 'strutThick', 'strutEmbed'].forEach(id => {
+  ['baseOn', 'basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap', 'strutThick', 'strutEmbed', 'meshBottomAlign'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', updateStructureUI);

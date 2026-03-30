@@ -180,7 +180,7 @@ export function wireUi({ redraw1, redraw2 }) {
     });
   }
 
-  ['alignBack', 'equalGap', 'backStrut'].forEach(id => {
+  ['alignBack', 'equalGap', 'backStrut', 'meshBottomAlign'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('change', () => {

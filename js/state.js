@@ -32,6 +32,8 @@ const S = {
   uniformColumns: false,
   /** Align each module's rearmost (min Z) plane after layout. */
   alignBackEdges: false,
+  /** Shift combined mesh so the lowest Y sits on the base (uncheck to keep raw Y). */
+  meshBottomAlign: true,
   /** Pack modules with equal gaps between bounding boxes. */
   equalGapPack: false,
   /** Thin Z-struts from each module's back to the inner wall face. */
