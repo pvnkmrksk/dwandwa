@@ -10,67 +10,93 @@ const S = {
   letterGapPct: 30,
   sil1: null,
   sil2: null,
-  /** Per-column width in silhouette cells (variable). */
-  colCellW: null,
+  /** Per-column width in cells — front word. */
+  colCellW1: null,
+  /** Per-column width in cells — side word. */
+  colCellW2: null,
   /** Uniform row height in silhouette cells. */
   rowCellH: 64,
-  /** Prefix sum: global x start of column c. Length nCols+1. */
-  colX0: null,
-  /** Byte offset into flat sil for column c. Length nCols+1. */
-  colOffset: null,
-  /** Sum of colCellW — total raster width in cells. */
-  rasterWidth: 64,
-  /** When true, every column uses the full resolution cell width (Latin-friendly). Off = per-glyph widths (Indic). */
+  /** Prefix sum: global x start of column c for front. */
+  colX01: null,
+  /** Prefix sum: global x start of column c for side. */
+  colX02: null,
+  /** Byte offset into sil1 for column c. */
+  colOffset1: null,
+  /** Byte offset into sil2 for column c. */
+  colOffset2: null,
+  /** Total raster width in cells — front. */
+  rasterWidth1: 64,
+  /** Total raster width in cells — side. */
+  rasterWidth2: 64,
+  /** When true, every column uses the full resolution cell width (Latin-friendly). */
   uniformColumns: false,
-  /** Align each module’s rearmost (min Z) plane after layout. */
+  /** Align each module's rearmost (min Z) plane after layout. */
   alignBackEdges: false,
-  /** Pack modules with equal gaps between bounding boxes (uses Gap % as gap scale). */
+  /** Pack modules with equal gaps between bounding boxes. */
   equalGapPack: false,
-  /** Thin Z-struts from each module’s back to the inner wall face (preview). */
+  /** Thin Z-struts from each module's back to the inner wall face. */
   backStrut: false,
-  /** World X of each module’s bbox center after layout (for struts). */
+  /** World X of each module's bbox center after layout. */
   moduleCenterX: null,
-  /** World Z of each module’s back (min Z) after layout. */
+  /** World Z of each module's back (min Z) after layout. */
   moduleZBack: null,
-  /** World X offset of each module’s column origin (strut anchors; matches mesh layout). */
+  /** World X offset of each module's column origin. */
   moduleTx: null,
-  /** Auto strut anchor points in world space (after layout + Y normalize). */
+  /** Auto strut anchor points in world space. */
   autoStrutTips: null,
+  /** User-placed strut pins from 3D surface painting [{x,y,z}]. */
+  strutPins: [],
 };
 
 export default S;
 
-export function NX() {
-  return S.rasterWidth;
+export function NX1() { return S.rasterWidth1; }
+export function NX2() { return S.rasterWidth2; }
+
+export function silIndex1(c, lx, z) {
+  return S.colOffset1[c] + lx * S.rowCellH + z;
+}
+export function silIndex2(c, lx, z) {
+  return S.colOffset2[c] + lx * S.rowCellH + z;
 }
 
-/** Linear index in flat sil for column c, local x lx, vertical z. */
-export function silColumnIndex(c, lx, z) {
-  return S.colOffset[c] + lx * S.rowCellH + z;
+function buildOffsets(colCellW, nCols) {
+  const colX0 = new Int32Array(nCols + 1);
+  const colOffset = new Int32Array(nCols + 1);
+  let x = 0;
+  for (let i = 0; i <= nCols; i++) {
+    colX0[i] = x;
+    if (i < nCols) x += colCellW[i];
+  }
+  let off = 0;
+  for (let i = 0; i <= nCols; i++) {
+    colOffset[i] = off;
+    if (i < nCols) off += colCellW[i] * S.rowCellH;
+  }
+  return { colX0, colOffset, rasterWidth: x, totalCells: off };
 }
 
 export function allocArrays() {
   const nCols = S.nCols;
-  if (!S.colCellW || S.colCellW.length !== nCols) {
-    S.colCellW = new Int32Array(nCols);
-    for (let i = 0; i < nCols; i++) S.colCellW[i] = S.CELL;
+  if (!S.colCellW1 || S.colCellW1.length !== nCols) {
+    S.colCellW1 = new Int32Array(nCols);
+    for (let i = 0; i < nCols; i++) S.colCellW1[i] = S.CELL;
   }
-  S.colX0 = new Int32Array(nCols + 1);
-  S.colOffset = new Int32Array(nCols + 1);
-  let x = 0;
-  for (let i = 0; i <= nCols; i++) {
-    S.colX0[i] = x;
-    if (i < nCols) x += S.colCellW[i];
+  if (!S.colCellW2 || S.colCellW2.length !== nCols) {
+    S.colCellW2 = new Int32Array(nCols);
+    for (let i = 0; i < nCols; i++) S.colCellW2[i] = S.CELL;
   }
-  S.rasterWidth = x;
-  let off = 0;
-  for (let i = 0; i <= nCols; i++) {
-    S.colOffset[i] = off;
-    if (i < nCols) off += S.colCellW[i] * S.rowCellH;
-  }
-  const n = off;
-  S.sil1 = new Uint8Array(n);
-  S.sil2 = new Uint8Array(n);
+  const r1 = buildOffsets(S.colCellW1, nCols);
+  S.colX01 = r1.colX0;
+  S.colOffset1 = r1.colOffset;
+  S.rasterWidth1 = r1.rasterWidth;
+  S.sil1 = new Uint8Array(r1.totalCells);
+
+  const r2 = buildOffsets(S.colCellW2, nCols);
+  S.colX02 = r2.colX0;
+  S.colOffset2 = r2.colOffset;
+  S.rasterWidth2 = r2.rasterWidth;
+  S.sil2 = new Uint8Array(r2.totalCells);
 }
 
 allocArrays();

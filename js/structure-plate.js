@@ -4,7 +4,6 @@ import { scene, matBase, matBackdrop } from './renderer-setup.js';
 import { computePlateLayout } from './structure-layout.js';
 
 let structureObjects = [];
-/** Last axis-aligned bounds of the letter mesh (world space, after Y normalization). */
 let lastMeshBox = null;
 
 let baseEnabled = true;
@@ -13,12 +12,25 @@ let backEnabled = true, backPadPct = 10, backOverlapPct = 4;
 let strutSizePct = 14;
 const showBackdrops = false;
 
-export function setLastMeshBox(box) {
-  lastMeshBox = box;
+const matLProfile = matBase.clone();
+let ghostActive = false;
+
+export function setBackPanelGhost(on) {
+  ghostActive = on;
+  matLProfile.transparent = on;
+  matLProfile.opacity = on ? 0.06 : 1.0;
+  matLProfile.depthWrite = !on;
+  matLProfile.needsUpdate = true;
 }
 
-export function getLastMeshBox() {
-  return lastMeshBox;
+export function setLastMeshBox(box) { lastMeshBox = box; }
+export function getLastMeshBox() { return lastMeshBox; }
+
+export function getBackWallZ() {
+  if (!lastMeshBox) return 0;
+  const ss = getStructureSettings();
+  const L = computePlateLayout(lastMeshBox, ss);
+  return L.zWallFront;
 }
 
 export function getStructureSettings() {
@@ -38,10 +50,6 @@ function clearStructureObjects() {
   structureObjects = [];
 }
 
-/**
- * Same L-profile as main branch: ExtrudeGeometry + rotateY(π/2), anchored at min-Z back face.
- * Separate X/Z padding (basePadX / basePadZ); plate thickness scales main’s 8%/6% proportions.
- */
 function buildLProfile(box) {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
@@ -108,10 +116,10 @@ function buildLProfile(box) {
   });
   geo.rotateY(Math.PI / 2);
 
-  const mesh = new THREE.Mesh(geo, matBase);
+  const mesh = new THREE.Mesh(geo, matLProfile);
   mesh.position.set(center.x - profileW / 2, baseTopY, backFrontZ);
   mesh.receiveShadow = true;
-  mesh.castShadow = true;
+  mesh.castShadow = !ghostActive;
   scene.add(mesh);
   structureObjects.push(mesh);
 }
@@ -120,24 +128,30 @@ function buildBackStruts(box) {
   if (!S.backStrut || !S.moduleTx) return;
   const ss = getStructureSettings();
   const L = computePlateLayout(box, ss);
-  const { baseTopY, zWallFront, plate, backH } = L;
+  const { zWallFront, plate } = L;
   const sizeScale = Math.max(0.35, ss.strutSizePct / 14);
   const strutW = Math.max(0.55, plate * 0.38 * sizeScale);
+  const meshDepth = box.max.z - box.min.z;
 
-  const y0 = baseTopY + backH * 0.12;
-  const y1 = baseTopY + backH * 0.88;
-  const yMid = (y0 + y1) / 2;
-  const hY = y1 - y0;
+  const tips = S.strutPins.length > 0
+    ? S.strutPins
+    : S.autoStrutTips && S.autoStrutTips.length > 0
+      ? S.autoStrutTips
+      : null;
 
-  if (S.autoStrutTips && S.autoStrutTips.length > 0) {
-    for (const tip of S.autoStrutTips) {
-      const zLo = Math.min(zWallFront, tip.z);
-      const zHi = Math.max(zWallFront, tip.z);
+  if (tips) {
+    for (const tip of tips) {
+      const penetration = Math.max(strutW * 1.5, meshDepth * 0.3);
+      const dir = tip.z > zWallFront ? 1 : -1;
+      let extendedZ = tip.z + dir * penetration;
+      extendedZ = Math.max(box.min.z, Math.min(extendedZ, box.max.z));
+      const zLo = Math.min(zWallFront, extendedZ);
+      const zHi = Math.max(zWallFront, extendedZ);
       const dzz = zHi - zLo;
       if (dzz < 0.35) continue;
-      const g = new THREE.BoxGeometry(strutW, hY, dzz);
+      const g = new THREE.BoxGeometry(strutW, strutW, dzz);
       const mesh = new THREE.Mesh(g, matBase);
-      mesh.position.set(tip.x, yMid, (zLo + zHi) / 2);
+      mesh.position.set(tip.x, tip.y, (zLo + zHi) / 2);
       mesh.receiveShadow = true;
       mesh.castShadow = true;
       scene.add(mesh);
@@ -153,9 +167,9 @@ function buildBackStruts(box) {
     const zHi = Math.max(zWallFront, zStart);
     const dz = zHi - zLo;
     if (dz < 0.5) continue;
-    const g = new THREE.BoxGeometry(strutW, hY, dz);
+    const g = new THREE.BoxGeometry(strutW, strutW, dz);
     const mesh = new THREE.Mesh(g, matBase);
-    mesh.position.set(cx, yMid, (zLo + zHi) / 2);
+    mesh.position.set(cx, box.min.y + (box.max.y - box.min.y) / 2, (zLo + zHi) / 2);
     mesh.receiveShadow = true;
     mesh.castShadow = true;
     scene.add(mesh);

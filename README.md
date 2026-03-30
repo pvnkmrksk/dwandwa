@@ -1,37 +1,57 @@
-# Dwanda (Shadow Sculptor)
+# ದ್ವಂದ್ವ Dwandwa — 3D Shadow Illusion Sculptor
 
-**Dwanda** (Sanskrit द्वन्द्व, *dvandva*) is a grammatical compound for paired opposites; in everyday speech it often means “duality” or the confusion of two things in one. This app plays that idea: two words read from two faces, one solid 3D form.
+> **[Live App → pvnkmrksk.github.io/dwandwa](https://pvnkmrksk.github.io/dwandwa/)**
 
-Dual-text 3D “shadow” illusion: type front and side strings, generate a mesh, optionally edit pixels, export STL for printing.
+**Dwandwa** (Sanskrit द्वन्द्व, *dvandva*) is a grammatical compound for paired opposites; in everyday speech it often means "duality" or the confusion of two things in one. This app plays that idea: two words read from two faces, one solid 3D form.
+
+Type front and side strings, generate a dual-silhouette mesh, optionally edit pixels, paint strut supports, and export a print-ready STL.
+
+## Features
+
+- Independent glyph aspect ratios — no stretching between mismatched column widths
+- Gaussian-blur smoothing for cleaner 3D shapes
+- Interactive pixel editor for silhouette touch-ups
+- Paint strut pins directly on the 3D model (hover preview, drag, undo)
+- Auto-detection of floating islands for automatic strut generation
+- L-profile base + back panel with adjustable padding, thickness, overlap, fillet
+- STL export oriented Z-up (base flat on the print bed)
+- Supports Latin, Kannada, Devanagari, Tamil, Telugu, Malayalam, Bengali, Gujarati, Urdu scripts
+- Custom font upload (TTF/OTF/WOFF)
 
 ## Development
 
-The app is static HTML/CSS/JS. **ES modules** must be served over HTTP (browsers block module imports from `file://`).
-
 ```bash
-# From the repo root, any of:
-python3 -m http.server 8080
-npx --yes serve .
+npm install
 npm run dev
 ```
 
-Then open the URL shown (for example `http://localhost:8080` or `http://localhost:3000`).
-
-`npm run dev` uses [Vite](https://vitejs.dev/) as a static dev server (no bundling of the app; Three.js is still loaded from the CDN).
+Then open `http://localhost:5173`.
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| `index.html` | Page shell, markup, Three.js CDN + `js/main.js` |
+| `index.html` | Page shell, markup |
 | `css/app.css` | Styles |
+| `js/main.js` | Entry: init editors, wire UI, first load |
 | `js/state.js` | Shared mutable state (glyphs, sil arrays, `CELL`, …) |
-| `js/layout.js` | Canvas wrapper sizing |
 | `js/text.js` | Grapheme splitting, `applyNames` |
 | `js/raster.js` | Text → silhouette bitmap (`stampName`) |
 | `js/mesh.js` | Blur, surface nets, `buildModuleMeshes` |
-| `js/scene.js` | Three.js scene, camera, debounced mesh update |
-| `js/export-stl.js` | STL export |
+| `js/mesh-update.js` | Debounced mesh rebuild orchestrator |
+| `js/renderer-setup.js` | Three.js scene, camera, lights, orbit |
+| `js/structure-plate.js` | L-profile base/back, strut geometry |
+| `js/structure-layout.js` | Shared plate dimension math |
+| `js/strut-painter.js` | Interactive 3D strut pin painting (add/drag/remove/undo) |
+| `js/strut-auto.js` | Automatic floating-island strut detection |
+| `js/module-layout.js` | Horizontal packing of letter modules |
+| `js/voxel-surface.js` | Watertight voxel → mesh (surface nets) |
+| `js/export-stl.js` | Binary STL export with Y→Z-up rotation |
 | `js/editor.js` | Pixel editor canvases |
+| `js/layout.js` | Canvas wrapper sizing |
+| `js/scene.js` | Facade re-exports for UI/main |
 | `js/ui.js` | DOM wiring |
-| `js/main.js` | Entry: init editors, `wireUi`, first load |
+
+## License
+
+MIT

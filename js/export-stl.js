@@ -52,7 +52,8 @@ export async function exportSTL() {
   await new Promise(r => setTimeout(r, 40));
 
   const snapCell = S.CELL;
-  const snapColW = S.colCellW ? new Int32Array(S.colCellW) : null;
+  const snapColW1 = S.colCellW1 ? new Int32Array(S.colCellW1) : null;
+  const snapColW2 = S.colCellW2 ? new Int32Array(S.colCellW2) : null;
   const snapRowH = S.rowCellH;
   const snapSil1 = new Uint8Array(S.sil1);
   const snapSil2 = new Uint8Array(S.sil2);
@@ -65,11 +66,11 @@ export async function exportSTL() {
 
   setProgress(15, 'Rendering front glyphs\u2026');
   await new Promise(r => setTimeout(r, 20));
-  await stampName(S.chars1, S.font1, esil1, ECELL);
+  await stampName(S.chars1, S.font1, esil1, ECELL, 'front');
 
   setProgress(30, 'Rendering side glyphs\u2026');
   await new Promise(r => setTimeout(r, 20));
-  await stampName(S.chars2, S.font2, esil2, ECELL);
+  await stampName(S.chars2, S.font2, esil2, ECELL, 'side');
 
   setProgress(45, 'Generating voxel mesh\u2026');
   await new Promise(r => setTimeout(r, 20));
@@ -80,26 +81,19 @@ export async function exportSTL() {
     ? S.autoStrutTips.map(t => ({ x: t.x, y: t.y, z: t.z }))
     : [];
 
-  S.CELL = snapCell;
-  S.colCellW = snapColW;
-  S.rowCellH = snapRowH;
-  if (!S.colCellW || S.colCellW.length !== S.nCols) {
-    await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2);
-  }
-  allocArrays();
-  S.sil1.set(snapSil1);
-  S.sil2.set(snapSil2);
-
-  if (!geo || !geo.index) {
+  function restoreState() {
     S.CELL = snapCell;
-    S.colCellW = snapColW;
+    S.colCellW1 = snapColW1;
+    S.colCellW2 = snapColW2;
     S.rowCellH = snapRowH;
-    if (!S.colCellW || S.colCellW.length !== S.nCols) {
-      await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2);
-    }
     allocArrays();
     S.sil1.set(snapSil1);
     S.sil2.set(snapSil2);
+  }
+
+  restoreState();
+
+  if (!geo || !geo.index) {
     bmsg.textContent = 'No geometry to export';
     exportBtn.disabled = false;
     exportBtn.textContent = 'Export STL';
@@ -111,6 +105,8 @@ export async function exportSTL() {
   setProgress(70, 'Building STL binary\u2026');
   await new Promise(r => setTimeout(r, 20));
 
+  // All geometry is built in Y-up coordinates first, then rotated to Z-up
+  // so the base plate sits flat on the print bed.
   const allTriangles = [];
   const pos = geo.getAttribute('position');
   const idx = geo.index;
@@ -125,7 +121,6 @@ export async function exportSTL() {
     ]);
   }
 
-  // Compute bounding box
   const box = new THREE.Box3();
   for (let i = 0; i < pos.count; i++) {
     box.expandByPoint(new THREE.Vector3(
@@ -167,19 +162,54 @@ export async function exportSTL() {
   if (ss.backStrut && snapModuleTx && (ss.baseEnabled || ss.backEnabled)) {
     const sizeScale = Math.max(0.35, (ss.strutSizePct ?? 14) / 14);
     const strutW = Math.max(0.55, plate * 0.38 * sizeScale);
-    const y0 = baseTopY + backH * 0.12;
-    const y1 = baseTopY + backH * 0.88;
-    const yMid = (y0 + y1) / 2;
-    const hY = y1 - y0;
-    if (snapStrutTips.length > 0) {
-      for (const tip of snapStrutTips) {
-        const zLo = Math.min(zWallFront, tip.z * ESCALE);
-        const zHi = Math.max(zWallFront, tip.z * ESCALE);
+
+    // User pins are in preview world coords — scale to export space.
+    // Preview mesh uses units = cell indices; export mesh uses ESCALE.
+    // The ratio: preview positions come from buildModuleMeshes at preview CELL,
+    // export positions come from buildModuleMeshes at ECELL then * ESCALE.
+    // So preview_coord * ESCALE gives export coords? No.
+    // Preview mesh is built at cell size = S.CELL (64), export at ECELL.
+    // Both meshes center around 0 the same way, but differ by scale factor.
+    // Preview world units ≈ cell indices. Export units = preview * ESCALE * factor?
+    // Actually: preview mesh positions are raw from buildModuleMeshes (cell units at CELL=64).
+    // Export mesh positions are from buildModuleMeshes (cell units at ECELL) * ESCALE.
+    // ESCALE = 0.5 / factor. ECELL = CELL * factor.
+    // Export position = (export_cell_pos) * ESCALE
+    // export_cell_pos / preview_cell_pos = ECELL / CELL = factor
+    // So export_pos = preview_pos * factor * ESCALE = preview_pos * factor * 0.5/factor = preview_pos * 0.5
+    // Therefore: pin_export = pin_preview * 0.5
+    const PIN_TO_EXPORT = 0.5;
+
+    const userPins = S.strutPins && S.strutPins.length > 0
+      ? S.strutPins.map(p => ({
+          x: p.x * PIN_TO_EXPORT,
+          y: p.y * PIN_TO_EXPORT,
+          z: p.z * PIN_TO_EXPORT,
+        }))
+      : null;
+    const tips = userPins
+      || (snapStrutTips.length > 0
+        ? snapStrutTips.map(t => ({
+            x: t.x * ESCALE,
+            y: t.y * ESCALE,
+            z: t.z * ESCALE,
+          }))
+        : null);
+
+    if (tips) {
+      const meshDepth = size.z;
+      for (const tip of tips) {
+        const penetration = Math.max(strutW * 1.5, meshDepth * 0.3);
+        const dir = tip.z > zWallFront ? 1 : -1;
+        let extendedZ = tip.z + dir * penetration;
+        extendedZ = Math.max(box.min.z, Math.min(extendedZ, box.max.z));
+        const zLo = Math.min(zWallFront, extendedZ);
+        const zHi = Math.max(zWallFront, extendedZ);
         const dzz = zHi - zLo;
-        if (dzz < 0.35) continue;
+        if (dzz < 0.1) continue;
         addBoxTriangles(allTriangles,
-          tip.x * ESCALE, yMid, (zLo + zHi) / 2,
-          strutW / 2, hY / 2, dzz / 2);
+          tip.x, tip.y, (zLo + zHi) / 2,
+          strutW / 2, strutW / 2, dzz / 2);
       }
     } else {
       for (let i = 0; i < S.nCols; i++) {
@@ -190,14 +220,27 @@ export async function exportSTL() {
         const dz = zHi - zLo;
         if (dz < 0.5) continue;
         addBoxTriangles(allTriangles,
-          cx, yMid, (zLo + zHi) / 2,
-          strutW / 2, hY / 2, dz / 2);
+          cx, center.y, (zLo + zHi) / 2,
+          strutW / 2, strutW / 2, dz / 2);
       }
     }
   }
 
   setProgress(85, 'Writing file\u2026');
   await new Promise(r => setTimeout(r, 20));
+
+  // Rotate Y-up → Z-up so base sits flat on the print bed.
+  // Transform: (x, y, z) → (x, -z, y)
+  // This puts the base (min-Y plane) onto the Z=0 print surface.
+  // Then shift everything up so the lowest point is at Z=0.
+  let minZ_out = Infinity;
+  for (const tri of allTriangles) {
+    for (let i = 0; i < 3; i++) {
+      const oy = tri[i * 3 + 1];
+      if (oy < minZ_out) minZ_out = oy;
+    }
+  }
+  const zShift = -minZ_out;
 
   const totalTris = allTriangles.length;
   const buf = new ArrayBuffer(84 + totalTris * 50);
@@ -209,12 +252,17 @@ export async function exportSTL() {
   let off = 84;
   for (const tri of allTriangles) {
     const [ax,ay,az, bx,by,bz, cx,cy,cz] = tri;
-    const e1x = bx-ax, e1y = by-ay, e1z = bz-az;
-    const e2x = cx-ax, e2y = cy-ay, e2z = cz-az;
+    // Rotate: (x,y,z) → (x, -z, y+shift)
+    const rax = ax, ray = -az, raz = ay + zShift;
+    const rbx = bx, rby = -bz, rbz = by + zShift;
+    const rcx = cx, rcy = -cz, rcz = cy + zShift;
+
+    const e1x = rbx-rax, e1y = rby-ray, e1z = rbz-raz;
+    const e2x = rcx-rax, e2y = rcy-ray, e2z = rcz-raz;
     let nx = e1y*e2z-e1z*e2y, ny = e1z*e2x-e1x*e2z, nz = e1x*e2y-e1y*e2x;
     const nl = Math.sqrt(nx*nx+ny*ny+nz*nz) || 1;
     nx/=nl; ny/=nl; nz/=nl;
-    [nx,ny,nz, ax,ay,az, bx,by,bz, cx,cy,cz].forEach((v,i) => dv.setFloat32(off+i*4, v, true));
+    [nx,ny,nz, rax,ray,raz, rbx,rby,rbz, rcx,rcy,rcz].forEach((v,i) => dv.setFloat32(off+i*4, v, true));
     dv.setUint16(off+48, 0, true);
     off += 50;
   }

@@ -11,6 +11,7 @@ import {
   updateStructureUI,
 } from './scene.js';
 import { exportSTL } from './export-stl.js';
+import { rescalePins } from './strut-painter.js';
 
 // ── URL state ──
 function stateToUrl() {
@@ -120,7 +121,10 @@ export function wireUi({ redraw1, redraw2 }) {
       const r2 = document.getElementById('name2').value || 'FREE';
       bmsg.textContent = 'Recomputing layout\u2026';
       await applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
-      await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
+      await Promise.all([
+        stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
+        stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
+      ]);
       redraw1(); redraw2(); scheduleUpdate();
       debouncedUrlUpdate();
       bmsg.textContent = '';
@@ -151,7 +155,10 @@ export function wireUi({ redraw1, redraw2 }) {
     const r2 = document.getElementById('name2').value || 'FREE';
     await applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
     bmsg.textContent = 'Rendering glyphs\u2026';
-    await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
+    await Promise.all([
+      stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
+      stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
+    ]);
     redraw1(); redraw2(); scheduleUpdate();
     debouncedUrlUpdate();
   });
@@ -195,12 +202,18 @@ export function wireUi({ redraw1, redraw2 }) {
   });
 
   document.getElementById('resSlider').addEventListener('input', async function() {
-    S.CELL = parseInt(this.value);
+    const oldCell = S.CELL;
+    const newCell = parseInt(this.value);
+    S.CELL = newCell;
     document.getElementById('resVal').textContent = S.CELL;
+    rescalePins(oldCell, newCell);
     const r1 = document.getElementById('name1').value;
     const r2 = document.getElementById('name2').value;
     await applyNames(r1 || 'BUSY', r2 || 'FREE', document.getElementById('fnt1').value, document.getElementById('fnt2').value);
-    await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
+    await Promise.all([
+      stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
+      stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
+    ]);
     redraw1(); redraw2(); scheduleUpdate();
     debouncedUrlUpdate();
   });

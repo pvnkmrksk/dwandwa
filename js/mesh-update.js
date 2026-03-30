@@ -10,10 +10,12 @@ import {
 } from './renderer-setup.js';
 import { rebuildStructure, setLastMeshBox } from './structure-plate.js';
 import { initDebugOverlay, syncDebugOverlay } from './debug-overlay.js';
+import { syncPinMeshes } from './strut-painter.js';
 
 initDebugOverlay();
 
 let mainMesh = null;
+export function getMainMesh() { return mainMesh; }
 
 function setBmsg(t) {
   const el = document.getElementById('bmsg');
@@ -80,6 +82,7 @@ function runMeshRebuild() {
 
     fitViewToLetterMesh(size);
     rebuildStructure();
+    syncPinMeshes();
     updateLighting(box);
     resizeRenderer();
     syncDebugOverlay();

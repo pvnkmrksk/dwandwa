@@ -8,6 +8,7 @@ import { applyNames } from './text.js';
 import { measureColumnCells, stampName } from './raster.js';
 import { makeDrawer } from './editor.js';
 import { wireUi } from './ui.js';
+import { initStrutPainter, togglePaintMode, clearPins, undoPins } from './strut-painter.js';
 
 updCam();
 
@@ -20,6 +21,7 @@ const redraw1 = makeDrawer({
   fiId: 'fi1',
   brId: 'br1',
   feathId: 'feath1',
+  which: 'front',
 });
 const redraw2 = makeDrawer({
   id: 'c2',
@@ -30,10 +32,14 @@ const redraw2 = makeDrawer({
   fiId: 'fi2',
   brId: 'br2',
   feathId: 'feath2',
+  which: 'side',
 });
 
-// wireUi loads URL params into form fields first
 wireUi({ redraw1, redraw2 });
+initStrutPainter();
+document.getElementById('paintStruts').addEventListener('click', togglePaintMode);
+document.getElementById('undoPins').addEventListener('click', undoPins);
+document.getElementById('clearPins').addEventListener('click', clearPins);
 
 // Auto-generate from whatever's in the form (URL params or defaults)
 (async () => {
@@ -46,7 +52,10 @@ wireUi({ redraw1, redraw2 });
     const f2 = document.getElementById('fnt2').value;
     await applyNames(r1, r2, f1, f2);
     bmsg.textContent = 'Rendering glyphs\u2026';
-    await Promise.all([stampName(S.chars1, S.font1, S.sil1), stampName(S.chars2, S.font2, S.sil2)]);
+    await Promise.all([
+      stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
+      stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
+    ]);
     bmsg.textContent = '';
     redraw1(); redraw2(); scheduleUpdate();
   } catch (e) {

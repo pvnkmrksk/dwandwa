@@ -205,17 +205,17 @@ details[open] .raster-summary::before{transform:rotate(90deg)}
 details[open] .raster-summary{border-bottom-color:var(--border)}
 .raster-content{padding:16px}
 
-/* 2-column grid — always side by side on desktop */
-.raster-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:599px){.raster-grid{grid-template-columns:1fr}}
+/* 2-column grid — side by side, columns sized by content */
+.raster-grid{display:flex;gap:20px;align-items:start;flex-wrap:wrap}
+@media(max-width:599px){.raster-grid{flex-direction:column}}
 
-.raster-panel{width:100%}
+.raster-panel{flex:1 1 0;min-width:180px}
 .raster-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:12px;font-weight:500;color:var(--text2)}
 .canvas-wrap{
   background:#080812;border:1px solid #1a1a2e;border-radius:var(--r8);
-  overflow:hidden;touch-action:none;position:relative;max-width:100%;
+  overflow:hidden;touch-action:none;position:relative;
+  width:100%;aspect-ratio:1;
 }
-.canvas-wrap-lg{height:300px}
 .canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
 .draw-tools{display:flex;align-items:center;gap:5px;margin-top:8px;flex-wrap:wrap}
 .draw-tools label{gap:4px;font-size:11px}
@@ -236,6 +236,12 @@ details[open] .raster-summary{border-bottom-color:var(--border)}
 .ft-hint{font-size:11px;color:var(--text2);line-height:1.45;margin-bottom:8px;max-width:52em}
 .strut-plan-wrap{overflow:auto;max-width:100%;border:1px solid var(--border2);border-radius:var(--r8);background:#0a0a12}
 .strut-canvas{display:block;max-width:100%;height:auto}
+
+/* ── Strut painter ──────────────────────────────── */
+.btn-sep{width:1px;height:18px;background:var(--border2);margin:0 2px}
+#paintStruts.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#clearPins{font-size:10px;padding:3px 8px}
+.pin-count{font-size:10px;color:var(--text3);white-space:nowrap}
 
 /* ── Help FAB ───────────────────────────────────── */
 .help-fab{

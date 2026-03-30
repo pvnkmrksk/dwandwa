@@ -1,4 +1,4 @@
-import S, { silColumnIndex } from './state.js';
+import S, { silIndex1, silIndex2 } from './state.js';
 
 export const BASELINE_FRAC = 0.76;
 
@@ -23,16 +23,29 @@ function inkBBoxRGBA(px, bufW, bufH) {
     }
   }
   if (!any) return { minX: 0, minY: 0, maxX: 0, maxY: 0, w: 1, h: 1 };
-  return {
-    minX, minY, maxX, maxY,
-    w: maxX - minX + 1,
-    h: maxY - minY + 1,
-  };
+  return { minX, minY, maxX, maxY, w: maxX - minX + 1, h: maxY - minY + 1 };
+}
+
+function measureGlyph(cv, BUF, baseline, ch, fam) {
+  const ctx = canvas2dReadback(cv);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, BUF, BUF);
+  let fs = Math.round(BUF * 0.7);
+  ctx.font = `bold ${fs}px ${fam}`;
+  const wm = ctx.measureText(ch).width;
+  if (wm > BUF * 0.84) fs = Math.round(fs * BUF * 0.84 / wm);
+  ctx.font = `bold ${fs}px ${fam}`;
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(ch, BUF / 2, baseline);
+  const px = ctx.getImageData(0, 0, BUF, BUF).data;
+  return inkBBoxRGBA(px, BUF, BUF);
 }
 
 /**
- * Measure per-column cell widths and row height from both words’ glyph bboxes,
- * then set S.colCellW and S.rowCellH (call before allocArrays).
+ * Measure per-column cell widths for EACH word independently,
+ * then set S.colCellW1, S.colCellW2, and S.rowCellH.
  */
 export async function measureColumnCells(chars1, chars2, font1, font2, cellMax) {
   cellMax = cellMax || S.CELL;
@@ -43,90 +56,58 @@ export async function measureColumnCells(chars1, chars2, font1, font2, cellMax) 
 
   const BUF = Math.max(cellMax * 8, 512);
   const baseline = Math.round(BUF * BASELINE_FRAC);
-  const colW = new Int32Array(S.nCols);
-  const colH = new Int32Array(S.nCols);
+  const minC = 8;
 
   const cv = document.createElement('canvas');
   cv.width = cv.height = BUF;
 
+  const colW1 = new Int32Array(S.nCols);
+  const colW2 = new Int32Array(S.nCols);
+  let rowH = minC;
+
   if (S.uniformColumns) {
-    const minC = 8;
-    let rowH = minC;
     for (let col = 0; col < S.nCols; col++) {
-      const ch1 = chars1[col] || S.padChar;
-      const ch2 = chars2[col] || S.padChar;
-      let maxTh = 1;
-      for (const { ch, fam } of [{ ch: ch1, fam: fam1 }, { ch: ch2, fam: fam2 }]) {
-        const ctx = canvas2dReadback(cv);
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, BUF, BUF);
-        let fs = Math.round(BUF * 0.7);
-        ctx.font = `bold ${fs}px ${fam}`;
-        const wm = ctx.measureText(ch).width;
-        if (wm > BUF * 0.84) fs = Math.round(fs * BUF * 0.84 / wm);
-        ctx.font = `bold ${fs}px ${fam}`;
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillText(ch, BUF / 2, baseline);
-        const px = ctx.getImageData(0, 0, BUF, BUF).data;
-        const b = inkBBoxRGBA(px, BUF, BUF);
+      for (const { ch, fam } of [
+        { ch: chars1[col] || S.padChar, fam: fam1 },
+        { ch: chars2[col] || S.padChar, fam: fam2 },
+      ]) {
+        const b = measureGlyph(cv, BUF, baseline, ch, fam);
         if (b.w * b.h > 1) {
-          if (b.h > maxTh) maxTh = b.h;
+          const ch2 = Math.min(cellMax, Math.max(minC, Math.ceil(b.h * cellMax / BUF)));
+          if (ch2 > rowH) rowH = ch2;
         }
       }
-      const ch = Math.min(cellMax, Math.max(minC, Math.ceil(maxTh * cellMax / BUF)));
-      if (ch > rowH) rowH = ch;
-      colW[col] = cellMax;
+      colW1[col] = cellMax;
+      colW2[col] = cellMax;
     }
-    S.colCellW = colW;
+    S.colCellW1 = colW1;
+    S.colCellW2 = colW2;
     S.rowCellH = rowH;
     return;
   }
 
   for (let col = 0; col < S.nCols; col++) {
-    const ch1 = chars1[col] || S.padChar;
-    const ch2 = chars2[col] || S.padChar;
-    let maxTw = 1, maxTh = 1;
+    const b1 = measureGlyph(cv, BUF, baseline, chars1[col] || S.padChar, fam1);
+    const b2 = measureGlyph(cv, BUF, baseline, chars2[col] || S.padChar, fam2);
 
-    for (const { ch, fam } of [{ ch: ch1, fam: fam1 }, { ch: ch2, fam: fam2 }]) {
-      const ctx = canvas2dReadback(cv);
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, BUF, BUF);
-      let fs = Math.round(BUF * 0.7);
-      ctx.font = `bold ${fs}px ${fam}`;
-      const wm = ctx.measureText(ch).width;
-      if (wm > BUF * 0.84) fs = Math.round(fs * BUF * 0.84 / wm);
-      ctx.font = `bold ${fs}px ${fam}`;
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(ch, BUF / 2, baseline);
-      const px = ctx.getImageData(0, 0, BUF, BUF).data;
-      const b = inkBBoxRGBA(px, BUF, BUF);
-      if (b.w * b.h > 1) {
-        if (b.w > maxTw) maxTw = b.w;
-        if (b.h > maxTh) maxTh = b.h;
-      }
-    }
+    const maxH = Math.max(b1.h, b2.h);
+    const ch = Math.min(cellMax, Math.max(minC, Math.ceil(maxH * cellMax / BUF)));
+    if (ch > rowH) rowH = ch;
 
-    // Cell counts so bbox fits when downsampled (same rule as stampName)
-    const minC = 8;
-    const cw = Math.min(cellMax, Math.max(minC, Math.ceil(maxTw * cellMax / BUF)));
-    const ch = Math.min(cellMax, Math.max(minC, Math.ceil(maxTh * cellMax / BUF)));
-    colW[col] = cw;
-    colH[col] = ch;
+    colW1[col] = Math.min(cellMax, Math.max(minC, Math.ceil(b1.w * cellMax / BUF)));
+    colW2[col] = Math.min(cellMax, Math.max(minC, Math.ceil(b2.w * cellMax / BUF)));
   }
 
-  let rowH = 8;
-  for (let i = 0; i < S.nCols; i++) {
-    if (colH[i] > rowH) rowH = colH[i];
-  }
-  S.colCellW = colW;
+  S.colCellW1 = colW1;
+  S.colCellW2 = colW2;
   S.rowCellH = rowH;
 }
 
-export async function stampName(chars, fontStr, targetSil, cellSize) {
+/**
+ * Stamp one word's glyphs into its silhouette array.
+ * @param {'front'|'side'} which — selects colCellW1/colOffset1 vs colCellW2/colOffset2
+ */
+export async function stampName(chars, fontStr, targetSil, cellSize, which) {
   cellSize = cellSize || S.CELL;
   const fam = (fontStr === '__up__' && S.uploadedFontFamily) ? S.uploadedFontFamily : fontStr;
   try { await document.fonts.load(`bold 80px ${fam}`, chars.join('')); } catch (e) {}
@@ -134,13 +115,16 @@ export async function stampName(chars, fontStr, targetSil, cellSize) {
   const baseline = Math.round(BUF * BASELINE_FRAC);
   targetSil.fill(0);
 
+  const colCellW = which === 'side' ? S.colCellW2 : S.colCellW1;
+  const silIdx = which === 'side' ? silIndex2 : silIndex1;
+
   const cv = document.createElement('canvas');
   cv.width = cv.height = BUF;
   const ctx = canvas2dReadback(cv);
 
   for (let col = 0; col < S.nCols; col++) {
     const ch = chars[col] || S.padChar;
-    const cw = S.colCellW[col];
+    const cw = colCellW[col];
     const chRow = S.rowCellH;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, BUF, BUF);
@@ -159,21 +143,9 @@ export async function stampName(chars, fontStr, targetSil, cellSize) {
     const inkW = Math.max(1, ink.maxX - ink.minX + 1);
     const inkH = Math.max(1, ink.maxY - ink.minY + 1);
 
-    // Preserve the glyph's natural aspect ratio: height fills chRow,
-    // width uses only as many cells as the aspect ratio demands, centered in cw.
-    const naturalCw = Math.min(cw, Math.max(1, Math.round((inkW / inkH) * chRow)));
-    const xOff = Math.floor((cw - naturalCw) / 2);
-
     for (let lx = 0; lx < cw; lx++) {
-      const glx = lx - xOff;
-      if (glx < 0 || glx >= naturalCw) {
-        for (let z = 0; z < chRow; z++) {
-          targetSil[silColumnIndex(col, lx, z)] = 0;
-        }
-        continue;
-      }
-      const bx0 = Math.max(0, Math.min(BUF - 1, Math.floor(ink.minX + (glx / naturalCw) * inkW)));
-      const bx1 = Math.max(0, Math.min(BUF - 1, Math.ceil(ink.minX + ((glx + 1) / naturalCw) * inkW)));
+      const bx0 = Math.max(0, Math.min(BUF - 1, Math.floor(ink.minX + (lx / cw) * inkW)));
+      const bx1 = Math.max(0, Math.min(BUF - 1, Math.ceil(ink.minX + ((lx + 1) / cw) * inkW)));
       for (let z = 0; z < chRow; z++) {
         const yBot = ink.maxY - ((z + 1) / chRow) * inkH;
         const yTop = ink.maxY - (z / chRow) * inkH;
@@ -186,7 +158,7 @@ export async function stampName(chars, fontStr, targetSil, cellSize) {
             cnt++;
           }
         }
-        targetSil[silColumnIndex(col, lx, z)] = (cnt > 0 && sum / cnt > 60) ? 1 : 0;
+        targetSil[silIdx(col, lx, z)] = (cnt > 0 && sum / cnt > 60) ? 1 : 0;
       }
     }
   }

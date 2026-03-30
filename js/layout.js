@@ -1,13 +1,14 @@
-import S, { NX } from './state.js';
+import S, { NX1, NX2 } from './state.js';
 
 export function updateCanvasSize() {
-  ['w1', 'w2'].forEach(id => {
+  const pairs = [
+    ['w1', NX1()],
+    ['w2', NX2()],
+  ];
+  for (const [id, rw] of pairs) {
     const el = document.getElementById(id);
-    if (!el || !el.parentElement) return;
-    const rw = NX();
-    const maxH = Math.min(300, Math.floor((el.parentElement.clientWidth - 16) / Math.max(1, rw / Math.max(1, S.CELL))));
-    const h = Math.max(60, maxH);
-    el.style.height = h + 'px';
-    el.style.width = Math.min(640, Math.floor(h * rw / Math.max(8, S.CELL))) + 'px';
-  });
+    if (!el) continue;
+    const ar = Math.max(0.3, rw / Math.max(1, S.rowCellH));
+    el.style.aspectRatio = ar.toFixed(4);
+  }
 }

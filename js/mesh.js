@@ -101,26 +101,32 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
   const packSpans = new Array(S.nCols).fill(0);
 
   for (let mod = 0; mod < S.nCols; mod++) {
-    const cw = S.colCellW[mod];
+    const cwF = S.colCellW1[mod];
+    const cwS = S.colCellW2[mod];
     const ch = S.rowCellH;
-    const fSlice = new Float32Array(cw * ch);
-    const sSlice = new Float32Array(cw * ch);
-    for (let lx = 0; lx < cw; lx++) {
+
+    const fSlice = new Float32Array(cwF * ch);
+    for (let lx = 0; lx < cwF; lx++) {
       for (let z = 0; z < ch; z++) {
-        const ix = lx * ch + z;
-        fSlice[ix] = silA[S.colOffset[mod] + ix];
-        sSlice[ix] = silB[S.colOffset[mod] + ix];
+        fSlice[lx * ch + z] = silA[S.colOffset1[mod] + lx * ch + z];
+      }
+    }
+    const sSlice = new Float32Array(cwS * ch);
+    for (let lx = 0; lx < cwS; lx++) {
+      for (let z = 0; z < ch; z++) {
+        sSlice[lx * ch + z] = silB[S.colOffset2[mod] + lx * ch + z];
       }
     }
 
-    const bfU = blurSlice(fSlice, cw, ch, blurSigma);
-    const bsU = blurSlice(sSlice, cw, ch, blurSigma);
+    const bfU = blurSlice(fSlice, cwF, ch, blurSigma);
+    const bsU = blurSlice(sSlice, cwS, ch, blurSigma);
 
-    const bf = inkBBox(bfU, cw, ch);
-    const bs = inkBBox(bsU, cw, ch);
-    const full = { minX: 0, maxX: cw - 1, minZ: 0, maxZ: ch - 1 };
-    const F = bf || full;
-    const sideInk = bs || full;
+    const bf = inkBBox(bfU, cwF, ch);
+    const bs = inkBBox(bsU, cwS, ch);
+    const fullF = { minX: 0, maxX: cwF - 1, minZ: 0, maxZ: ch - 1 };
+    const fullS = { minX: 0, maxX: cwS - 1, minZ: 0, maxZ: ch - 1 };
+    const F = bf || fullF;
+    const sideInk = bs || fullS;
 
     const xf0 = F.minX;
     const xf1 = F.maxX;
@@ -129,8 +135,8 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
     let z0 = Math.max(F.minZ, sideInk.minZ);
     let z1 = Math.min(F.maxZ, sideInk.maxZ);
     if (z0 > z1) {
-      z0 = full.minZ;
-      z1 = full.maxZ;
+      z0 = Math.min(fullF.minZ, fullS.minZ);
+      z1 = Math.max(fullF.maxZ, fullS.maxZ);
     }
 
     const dx = Math.max(1, xf1 - xf0 + 1);
@@ -161,8 +167,8 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
           const sxf = xf0 + (i + 0.5) / Mx * spanX;
           const syf = yd0 + (j + 0.5) / My * spanY;
           const szf = z0 + (k + 0.5) / Mz * spanZ;
-          const fv = sampleSlice(bfU, cw, ch, sxf, szf);
-          const sv = sampleSlice(bsU, cw, ch, syf, szf);
+          const fv = sampleSlice(bfU, cwF, ch, sxf, szf);
+          const sv = sampleSlice(bsU, cwS, ch, syf, szf);
           const ix = i + j * strideY + k * strideZ;
           const solid = Math.min(fv, sv) >= 0.5 ? 1 : 0;
           cellSolid[ix] = solid;
@@ -214,8 +220,8 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
 
       positions.push(xw, yw, zw);
 
-      const fv = sampleSlice(bfU, cw, ch, sxf, szf);
-      const sv = sampleSlice(bsU, cw, ch, syf, szf);
+      const fv = sampleSlice(bfU, cwF, ch, sxf, szf);
+      const sv = sampleSlice(bsU, cwS, ch, syf, szf);
       if (fv <= sv) {
         colors.push(0.94, 0.63, 0.19);
       } else {
@@ -227,7 +233,8 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
       positions,
       colors,
       indices: mesh.indices,
-      cw,
+      cwF,
+      cwS,
       ch,
       Mx,
       My,
