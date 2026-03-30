@@ -156,17 +156,27 @@ export async function stampName(chars, fontStr, targetSil, cellSize) {
     const px = ctx.getImageData(0, 0, BUF, BUF).data;
     const ink = inkBBoxRGBA(px, BUF, BUF);
 
-    const spanX = Math.max(1, ink.maxX - ink.minX + 1);
-    const spanY = Math.max(1, ink.maxY - ink.minY + 1);
-    const x0 = ink.minX;
+    const inkW = Math.max(1, ink.maxX - ink.minX + 1);
+    const inkH = Math.max(1, ink.maxY - ink.minY + 1);
+
+    // Preserve the glyph's natural aspect ratio: height fills chRow,
+    // width uses only as many cells as the aspect ratio demands, centered in cw.
+    const naturalCw = Math.min(cw, Math.max(1, Math.round((inkW / inkH) * chRow)));
+    const xOff = Math.floor((cw - naturalCw) / 2);
 
     for (let lx = 0; lx < cw; lx++) {
-      const bx0 = Math.max(0, Math.min(BUF - 1, Math.floor(x0 + (lx / cw) * spanX)));
-      const bx1 = Math.max(0, Math.min(BUF - 1, Math.ceil(x0 + ((lx + 1) / cw) * spanX)));
+      const glx = lx - xOff;
+      if (glx < 0 || glx >= naturalCw) {
+        for (let z = 0; z < chRow; z++) {
+          targetSil[silColumnIndex(col, lx, z)] = 0;
+        }
+        continue;
+      }
+      const bx0 = Math.max(0, Math.min(BUF - 1, Math.floor(ink.minX + (glx / naturalCw) * inkW)));
+      const bx1 = Math.max(0, Math.min(BUF - 1, Math.ceil(ink.minX + ((glx + 1) / naturalCw) * inkW)));
       for (let z = 0; z < chRow; z++) {
-        // z=0 = bottom of cell = glyph descender / lowest ink (large BUF y)
-        const yBot = ink.maxY - ((z + 1) / chRow) * spanY;
-        const yTop = ink.maxY - (z / chRow) * spanY;
+        const yBot = ink.maxY - ((z + 1) / chRow) * inkH;
+        const yTop = ink.maxY - (z / chRow) * inkH;
         const by0 = Math.max(0, Math.min(BUF - 1, Math.floor(Math.min(yBot, yTop))));
         const by1 = Math.max(0, Math.min(BUF - 1, Math.ceil(Math.max(yBot, yTop))));
         let sum = 0, cnt = 0;
@@ -176,8 +186,7 @@ export async function stampName(chars, fontStr, targetSil, cellSize) {
             cnt++;
           }
         }
-        const idx = silColumnIndex(col, lx, z);
-        targetSil[idx] = (cnt > 0 && sum / cnt > 60) ? 1 : 0;
+        targetSil[silColumnIndex(col, lx, z)] = (cnt > 0 && sum / cnt > 60) ? 1 : 0;
       }
     }
   }

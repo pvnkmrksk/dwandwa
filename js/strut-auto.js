@@ -1,163 +1,119 @@
 /**
- * Find 3D points (module space, before global tx/dz/y-shift) where dual-silhouette
- * intersection is not connected to the rearmost (min world Z) part — “hanging” tips
- * for struts to the back panel.
+ * Detect floating islands in the dual-silhouette intersection and return
+ * strut anchor points (world space, module-local) for each.
+ *
+ * Approach: 6-connected component analysis on the solid grid. Any component
+ * whose minimum world-Z is within 15% of the global Z range from the absolute
+ * min-Z is considered "connected to back." Everything else is floating and
+ * gets a strut from its centroid / front-Z to the back panel.
  */
 
-function idx3(i, j, k, mx, strideY, strideZ) {
+function idx3(i, j, k, strideY, strideZ) {
   return i + j * strideY + k * strideZ;
 }
 
-function solidAt(buf, i, j, k, mx, my, mz, strideY, strideZ) {
-  if (i < 0 || j < 0 || k < 0 || i >= mx || j >= my || k >= mz) return false;
-  return buf[idx3(i, j, k, mx, strideY, strideZ)] !== 0;
-}
-
 /**
- * @param {Uint8Array} interSolid
- * @param {number} Mx My Mz cell counts
- * @param {(i:number,j:number,k:number) => { x: number, y: number, z: number }} toWorld center of cell in module space
+ * @param {Uint8Array} solid
+ * @param {number} Mx cells along X
+ * @param {number} My cells along Y
+ * @param {number} Mz cells along Z
+ * @param {(i:number,j:number,k:number) => { x: number, y: number, z: number }} toWorld
  * @returns {{ x: number, y: number, z: number }[]}
  */
-export function hangTipsFromIntersection(interSolid, Mx, My, Mz, toWorld) {
+export function hangTipsFromIntersection(solid, Mx, My, Mz, toWorld) {
   const strideY = Mx;
   const strideZ = Mx * My;
-  let any = false;
-  for (let i = 0; i < interSolid.length; i++) {
-    if (interSolid[i]) { any = true; break; }
-  }
-  if (!any) return [];
+  const total = Mx * My * Mz;
 
-  let zwMin = Infinity;
-  const cellZw = new Float32Array(Mx * My * Mz);
-  for (let k = 0; k < Mz; k++) {
-    for (let j = 0; j < My; j++) {
-      for (let i = 0; i < Mx; i++) {
-        const ix = idx3(i, j, k, Mx, strideY, strideZ);
-        if (!interSolid[ix]) {
-          cellZw[ix] = Infinity;
-          continue;
-        }
-        const { z } = toWorld(i, j, k);
-        cellZw[ix] = z;
-        if (z < zwMin) zwMin = z;
-      }
-    }
+  let anySet = false;
+  for (let i = 0; i < total; i++) {
+    if (solid[i]) { anySet = true; break; }
   }
+  if (!anySet) return [];
 
-  const eps = 1e-3 + 1e-4 * Math.max(Mx, My, Mz);
-  const visited = new Uint8Array(Mx * My * Mz);
-  const q = [];
-  for (let k = 0; k < Mz; k++) {
-    for (let j = 0; j < My; j++) {
-      for (let i = 0; i < Mx; i++) {
-        const ix = idx3(i, j, k, Mx, strideY, strideZ);
-        if (!interSolid[ix]) continue;
-        if (cellZw[ix] <= zwMin + eps) {
-          visited[ix] = 1;
-          q.push(i, j, k);
-        }
-      }
-    }
-  }
-
-  let qh = 0;
-  while (qh < q.length) {
-    const i = q[qh++];
-    const j = q[qh++];
-    const k = q[qh++];
-    const neigh = [
-      i + 1, j, k, i - 1, j, k,
-      i, j + 1, k, i, j - 1, k,
-      i, j, k + 1, i, j, k - 1,
-    ];
-    for (let n = 0; n < neigh.length; n += 3) {
-      const a = neigh[n];
-      const b = neigh[n + 1];
-      const c = neigh[n + 2];
-      if (!solidAt(interSolid, a, b, c, Mx, My, Mz, strideY, strideZ)) continue;
-      const ii = idx3(a, b, c, Mx, strideY, strideZ);
-      if (visited[ii]) continue;
-      visited[ii] = 1;
-      q.push(a, b, c);
-    }
-  }
-
-  const minVol = Math.max(4, Math.floor((Mx * My * Mz) / 48));
-  const hangMark = new Uint8Array(Mx * My * Mz);
-  for (let k = 0; k < Mz; k++) {
-    for (let j = 0; j < My; j++) {
-      for (let i = 0; i < Mx; i++) {
-        const ix = idx3(i, j, k, Mx, strideY, strideZ);
-        if (interSolid[ix] && !visited[ix]) hangMark[ix] = 1;
-      }
-    }
-  }
-
-  const comp = new Int32Array(Mx * My * Mz).fill(-1);
-  const compCells = [];
-  let compCount = 0;
+  // Step 1: find connected components via 6-connected BFS
+  const compId = new Int32Array(total).fill(-1);
+  const components = []; // array of { cells: number[], minZ: number, centroid, frontZ }
+  let numComp = 0;
 
   for (let k = 0; k < Mz; k++) {
     for (let j = 0; j < My; j++) {
       for (let i = 0; i < Mx; i++) {
-        const start = idx3(i, j, k, Mx, strideY, strideZ);
-        if (!hangMark[start] || comp[start] >= 0) continue;
+        const start = idx3(i, j, k, strideY, strideZ);
+        if (!solid[start] || compId[start] >= 0) continue;
+
+        const cid = numComp++;
         const cells = [];
-        const qq = [i, j, k];
-        comp[start] = compCount;
+        const q = [i, j, k];
+        compId[start] = cid;
         cells.push(start);
         let qi = 0;
-        while (qi < qq.length) {
-          const ci = qq[qi++];
-          const cj = qq[qi++];
-          const ck = qq[qi++];
-          const neigh2 = [
+
+        while (qi < q.length) {
+          const ci = q[qi++];
+          const cj = q[qi++];
+          const ck = q[qi++];
+          const nb = [
             ci + 1, cj, ck, ci - 1, cj, ck,
             ci, cj + 1, ck, ci, cj - 1, ck,
             ci, cj, ck + 1, ci, cj, ck - 1,
           ];
-          for (let n = 0; n < neigh2.length; n += 3) {
-            const a = neigh2[n];
-            const b = neigh2[n + 1];
-            const c = neigh2[n + 2];
-            if (!solidAt(hangMark, a, b, c, Mx, My, Mz, strideY, strideZ)) continue;
-            const ii = idx3(a, b, c, Mx, strideY, strideZ);
-            if (comp[ii] >= 0) continue;
-            comp[ii] = compCount;
+          for (let n = 0; n < nb.length; n += 3) {
+            const a = nb[n], b = nb[n + 1], c = nb[n + 2];
+            if (a < 0 || b < 0 || c < 0 || a >= Mx || b >= My || c >= Mz) continue;
+            const ii = idx3(a, b, c, strideY, strideZ);
+            if (!solid[ii] || compId[ii] >= 0) continue;
+            compId[ii] = cid;
             cells.push(ii);
-            qq.push(a, b, c);
+            q.push(a, b, c);
           }
         }
-        compCells.push(cells);
-        compCount++;
+        components.push({ cells, cid });
       }
     }
   }
 
-  const tips = [];
-  for (const cells of compCells) {
-    if (cells.length < minVol) continue;
-    let zMax = -Infinity;
-    let sx = 0;
-    let sy = 0;
-    let sz = 0;
-    let cnt = 0;
-    for (const ix of cells) {
-      const k = Math.floor(ix / strideZ);
-      const j = Math.floor((ix - k * strideZ) / strideY);
-      const i = ix - j * strideY - k * strideZ;
-      const w = toWorld(i, j, k);
-      if (w.z > zMax) zMax = w.z;
+  if (components.length === 0) return [];
+
+  // Step 2: for each component compute world-space stats
+  let globalMinZ = Infinity;
+  let globalMaxZ = -Infinity;
+
+  const compStats = components.map(comp => {
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    let sx = 0, sy = 0, sz = 0;
+    const cnt = comp.cells.length;
+    for (const ix of comp.cells) {
+      const ck = Math.floor(ix / strideZ);
+      const cj = Math.floor((ix - ck * strideZ) / strideY);
+      const ci = ix - cj * strideY - ck * strideZ;
+      const w = toWorld(ci, cj, ck);
+      if (w.z < minZ) minZ = w.z;
+      if (w.z > maxZ) maxZ = w.z;
       sx += w.x;
       sy += w.y;
       sz += w.z;
-      cnt++;
     }
+    if (minZ < globalMinZ) globalMinZ = minZ;
+    if (maxZ > globalMaxZ) globalMaxZ = maxZ;
+    return { minZ, maxZ, cx: sx / cnt, cy: sy / cnt, cz: sz / cnt, cnt };
+  });
+
+  // Step 3: components whose min-Z is within 15% of the Z range from the
+  // global minimum are "attached to back." Everything else is floating.
+  const zRange = Math.max(1e-6, globalMaxZ - globalMinZ);
+  const backThreshold = globalMinZ + zRange * 0.15;
+
+  const tips = [];
+  for (let c = 0; c < compStats.length; c++) {
+    const s = compStats[c];
+    if (s.minZ <= backThreshold) continue; // connected to back
+    if (s.cnt < 2) continue; // noise
     tips.push({
-      x: sx / cnt,
-      y: sy / cnt,
-      z: zMax,
+      x: s.cx,
+      y: s.cy,
+      z: s.maxZ, // front-most point → strut bridges to back panel
     });
   }
 
