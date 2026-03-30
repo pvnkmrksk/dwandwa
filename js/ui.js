@@ -18,6 +18,23 @@ function defaultRasterCell() {
   return window.innerWidth >= 1024 ? 128 : 48;
 }
 
+function formatResVal(v) {
+  const el = document.getElementById('resVal');
+  if (el) el.textContent = `${v} px`;
+}
+
+function syncPadCycleBtnLabel() {
+  const btn = document.getElementById('padCycleBtn');
+  const sel = document.getElementById('padSelect');
+  if (!btn || !sel) return;
+  if (sel.value === '__custom__') {
+    const c = document.getElementById('padCustom')?.value;
+    btn.textContent = c ? [...c][0] : '\u00b7';
+  } else {
+    btn.textContent = sel.value;
+  }
+}
+
 function syncPadSelectFromState() {
   const sel = document.getElementById('padSelect');
   const wrap = document.getElementById('padCustomWrap');
@@ -40,6 +57,7 @@ function syncPadSelectFromState() {
     wrap.hidden = true;
     custom.value = '';
   }
+  syncPadCycleBtnLabel();
 }
 
 // ── URL state ──
@@ -86,7 +104,7 @@ function loadFromUrl() {
     S.CELL = defaultRasterCell();
   }
   document.getElementById('resSlider').value = S.CELL;
-  document.getElementById('resVal').textContent = S.CELL;
+  formatResVal(S.CELL);
   if (p.has('var')) {
     const el = document.getElementById('variableColWidth');
     if (el) el.checked = p.get('var') === '1';
@@ -109,6 +127,7 @@ export function wireUi({ redraw1, redraw2 }) {
 
   loadFromUrl();
   syncPadSelectFromState();
+  syncPadCycleBtnLabel();
   syncWordInputFonts();
   syncUniformColumns();
 
@@ -240,11 +259,11 @@ export function wireUi({ redraw1, redraw2 }) {
     const newCell = targetCell;
     const oldCell = S.CELL;
     if (newCell === oldCell) {
-      document.getElementById('resVal').textContent = String(newCell);
+      formatResVal(newCell);
       return;
     }
     S.CELL = newCell;
-    document.getElementById('resVal').textContent = String(S.CELL);
+    formatResVal(S.CELL);
     rescalePins(oldCell, newCell);
     const r1 = document.getElementById('name1').value;
     const r2 = document.getElementById('name2').value;
@@ -260,7 +279,7 @@ export function wireUi({ redraw1, redraw2 }) {
   const resSlider = document.getElementById('resSlider');
   resSlider.addEventListener('input', function() {
     const v = parseInt(this.value, 10);
-    document.getElementById('resVal').textContent = String(v);
+    formatResVal(v);
     resPendingCell = v;
     clearTimeout(resRebuildTimer);
     resRebuildTimer = setTimeout(() => {
@@ -290,6 +309,7 @@ export function wireUi({ redraw1, redraw2 }) {
       padCustom.value = '';
       S.padChar = this.value;
     }
+    syncPadCycleBtnLabel();
     updatePreview();
     debouncedUrlUpdate();
   });
@@ -297,9 +317,54 @@ export function wireUi({ redraw1, redraw2 }) {
     if (padSelect.value !== '__custom__') return;
     const v = this.value;
     S.padChar = v ? [...v][0] : '\u00b7';
+    syncPadCycleBtnLabel();
     updatePreview();
     debouncedUrlUpdate();
   });
+
+  const padCycleBtn = document.getElementById('padCycleBtn');
+  if (padCycleBtn && padSelect) {
+    padCycleBtn.addEventListener('click', () => {
+      const n = padSelect.options.length;
+      let i = (padSelect.selectedIndex + 1) % n;
+      padSelect.selectedIndex = i;
+      padSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  const brushSlider = document.getElementById('brushSlider');
+  const br1 = document.getElementById('br1');
+  const br2 = document.getElementById('br2');
+  const brushValEl = document.getElementById('brushVal');
+  function syncBrushFromSlider() {
+    if (!brushSlider || !br1 || !br2) return;
+    const v = brushSlider.value;
+    br1.value = v;
+    br2.value = v;
+    if (brushValEl) brushValEl.textContent = v;
+    br1.dispatchEvent(new Event('input', { bubbles: true }));
+    br2.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  if (brushSlider) brushSlider.addEventListener('input', syncBrushFromSlider);
+
+  const featherSlider = document.getElementById('featherSlider');
+  const featherValEl = document.getElementById('featherVal');
+  function applyFeatherFromSlider() {
+    if (!featherSlider) return;
+    const v = parseInt(featherSlider.value, 10);
+    if (featherValEl) featherValEl.textContent = String(v);
+    const on = v > 0;
+    const f1 = document.getElementById('feath1');
+    const f2 = document.getElementById('feath2');
+    if (f1) f1.checked = on;
+    if (f2) f2.checked = on;
+    redraw1(true);
+    redraw2(true);
+  }
+  if (featherSlider) featherSlider.addEventListener('input', applyFeatherFromSlider);
+
+  syncBrushFromSlider();
+  applyFeatherFromSlider();
 
   document.getElementById('exportBtn').addEventListener('click', () => exportSTL());
 

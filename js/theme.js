@@ -1,7 +1,8 @@
 import { updateSceneTheme } from './renderer-setup.js';
+import { t } from './i18n.js';
 
-const LIGHT_BG = 0xf0f0f4;
-const DARK_BG = 0x1a1a20;
+const LIGHT_BG = 0xedf0f7;
+const DARK_BG = 0x0c0f1c;
 
 export function applyTheme(theme) {
   theme = theme || document.documentElement.dataset.theme || 'light';
@@ -10,12 +11,15 @@ export function applyTheme(theme) {
   updateSceneTheme(theme === 'dark' ? DARK_BG : LIGHT_BG);
 
   const meta = document.getElementById('metaThemeColor');
-  if (meta) meta.setAttribute('content', theme === 'dark' ? '#18181c' : '#5b6af5');
+  if (meta) meta.setAttribute('content', theme === 'dark' ? '#0c0f1c' : '#3b55e6');
 
   const btn = document.getElementById('themeToggle');
   if (btn) {
-    btn.setAttribute('aria-label', theme === 'dark' ? 'Light mode' : 'Dark mode');
-    btn.setAttribute('title', theme === 'dark' ? 'Light mode' : 'Dark mode');
+    const toDark = theme !== 'dark';
+    btn.setAttribute('aria-label', `${t('toolbar_theme')}: ${toDark ? t('theme_dark') : t('theme_light')}`);
+    btn.setAttribute('title', toDark ? t('theme_dark') : t('theme_light'));
+    const lbl = btn.querySelector('.theme-lbl');
+    if (lbl) lbl.textContent = toDark ? t('theme_dark') : t('theme_light');
   }
 }
 

@@ -49,7 +49,7 @@ applyTheme();
 const redraw1 = makeDrawer({
   id: 'c1',
   getSil: () => S.sil1,
-  ink: 'rgba(239,161,48,.9)',
+  ink: 'rgba(48,143,240,.9)',
   erId: 'er1',
   clId: 'cl1',
   fiId: 'fi1',
@@ -60,7 +60,7 @@ const redraw1 = makeDrawer({
 const redraw2 = makeDrawer({
   id: 'c2',
   getSil: () => S.sil2,
-  ink: 'rgba(48,143,240,.9)',
+  ink: 'rgba(239,161,48,.9)',
   erId: 'er2',
   clId: 'cl2',
   fiId: 'fi2',
@@ -75,7 +75,7 @@ initStrutPainter();
 document.getElementById('paintStruts').addEventListener('click', togglePaintMode);
 document.getElementById('undoPins').addEventListener('click', undoPins);
 document.getElementById('clearPins').addEventListener('click', clearPins);
-document.getElementById('langFlip').addEventListener('click', toggleLang);
+document.getElementById('langFlipBtn').addEventListener('click', toggleLang);
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
 const helpTourBtn = document.getElementById('helpTourBtn');

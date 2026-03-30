@@ -6,12 +6,16 @@ const dict = {
     ph_front: 'Front word',
     ph_side: 'Side word',
     pad: 'Pad',
-    generate: 'Generate',
+    generate: 'Generate sculpture',
     upload_font: '+ Font',
     pixel_editor: 'Pixel Editor',
-    pixel_editor_desc: 'join islands & manual edits',
-    front_sil: 'Front silhouette',
-    side_sil: 'Side silhouette',
+    pixel_editor_desc: 'join islands · manual edits',
+    view_left: 'Left view',
+    view_right: 'Right view',
+    upload_mid: 'Font',
+    upload_font_title: 'Upload custom TTF, OTF, or WOFF font',
+    front_sil: 'Left silhouette',
+    side_sil: 'Right silhouette',
     erase: 'Erase',
     clear: 'Clear',
     fill: 'Fill',
@@ -108,9 +112,13 @@ const dict = {
     generate: '\u0CB0\u0C9A\u0CBF\u0CB8\u0CBF',
     upload_font: '+ \u0CAB\u0CBE\u0C82\u0C9F\u0CCD',
     pixel_editor: '\u0C9A\u0CBF\u0CA4\u0CCD\u0CB0 \u0CB8\u0C82\u0CAA\u0CBE\u0CA6\u0C95',
-    pixel_editor_desc: '\u0CA6\u0CCD\u0CB5\u0CC0\u0CAA\u0C97\u0CB3\u0CA8\u0CCD\u0CA8\u0CC1 \u0CB8\u0CC7\u0CB0\u0CBF\u0CB8\u0CBF & \u0C95\u0CC8\u0CAF\u0CBF\u0C82\u0CA6 \u0CB8\u0C82\u0CAA\u0CBE\u0CA6\u0CA8\u0CC6',
-    front_sil: '\u0CAE\u0CC1\u0C82\u0CAD\u0CBE\u0C97\u0CA6 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1',
-    side_sil: '\u0CAA\u0C95\u0CCD\u0C95\u0CA6 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1',
+    pixel_editor_desc: '\u0CA6\u0CCD\u0CB5\u0CC0\u0CAA\u0C97\u0CB3\u0CA8\u0CCD\u0CA8\u0CC1 \u0CB8\u0CC7\u0CB0\u0CBF\u0CB8\u0CBF · \u0C95\u0CC8\u0CAF\u0CBF\u0C82\u0CA6 \u0CB8\u0C82\u0CAA\u0CBE\u0CA6\u0CA8\u0CC6',
+    view_left: '\u0C8E\u0CA1 \u0CA8\u0CCB\u0C9F',
+    view_right: '\u0CAC\u0CB2 \u0CA8\u0CCB\u0C9F',
+    upload_mid: '\u0CAB\u0CBE\u0C82\u0C9F\u0CCD',
+    upload_font_title: '\u0C95\u0CB8\u0CCD\u0C9F\u0CAE\u0CCD \u0CAB\u0CBE\u0C82\u0C9F\u0CCD \u0C85\u0CAA\u0CCD\u200C\u0CB2\u0CCB\u0CA1\u0CCD (TTF/OTF/WOFF)',
+    front_sil: '\u0C8E\u0CA1 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1',
+    side_sil: '\u0CAC\u0CB2 \u0CA8\u0CC6\u0CB0\u0CB3\u0CC1',
     erase: '\u0C85\u0CB3\u0CBF\u0CB8\u0CC1',
     clear: '\u0CA4\u0CC6\u0C97\u0CC6',
     fill: '\u0CA4\u0CC1\u0C82\u0CAC\u0CC1',
@@ -222,6 +230,12 @@ export function applyLang(lang) {
     if (val != null) el.placeholder = val;
   });
 
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.dataset.i18nTitle;
+    const val = d[key] ?? dict.en[key];
+    if (val != null) el.setAttribute('title', val);
+  });
+
   document.querySelectorAll('option[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     const val = d[key] ?? dict.en[key];
@@ -236,6 +250,17 @@ export function applyLang(lang) {
     const tip = currentLang === 'kn' ? d.tip_switch_en : d.tip_switch_kn;
     flip.setAttribute('aria-label', tip);
     flip.setAttribute('title', tip);
+    const flipBtn = document.getElementById('langFlipBtn');
+    if (flipBtn) {
+      flipBtn.setAttribute('aria-label', tip);
+      flipBtn.setAttribute('title', tip);
+    }
+  }
+
+  const themeLbl = document.querySelector('#themeToggle .theme-lbl');
+  if (themeLbl) {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    themeLbl.textContent = dark ? d.theme_light : d.theme_dark;
   }
 }
 

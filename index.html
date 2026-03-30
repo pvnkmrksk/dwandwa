@@ -12,159 +12,188 @@
 </head>
 <body>
 
-<header class="site-header">
-  <div class="site-header__brand">
-    <img src="logo.svg" alt="ದ್ವಂದ್ವ Dwandwa" class="logo-img" width="120" height="36" decoding="async">
-    <p class="tagline" data-i18n="tagline">3D ನೆರಳು ಭ್ರಮೆ ಶಿಲ್ಪಿ</p>
-  </div>
-  <div class="site-header__actions">
-    <button type="button" class="icon-btn icon-btn--lang" id="langFlip" aria-label="English">EN</button>
-    <button type="button" class="icon-btn icon-btn--theme" id="themeToggle" aria-label="Dark mode">
-      <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-    </button>
-  </div>
-</header>
+<main class="app-shell dv-app">
+  <h2 id="words-heading" class="sr-only" data-i18n="section_words">Words & fonts</h2>
 
-<main class="app-shell">
-
-  <section class="card" aria-labelledby="words-heading">
-    <h2 id="words-heading" class="sr-only" data-i18n="section_words">Words & fonts</h2>
-    <div class="input-section">
-      <div class="pair-grid pair-grid--words word-pair">
-        <div class="pcol pcol--w pcol--f">
-          <span class="color-bar bar-s"></span>
-          <input type="text" id="name1" class="word-input" value="ಬೆಳಕು" maxlength="16" data-i18n-ph="ph_front" placeholder="ಮುಂಭಾಗದ ಪದ">
-        </div>
-        <div class="pcol pcol--w pcol--s">
-          <span class="color-bar bar-f"></span>
-          <input type="text" id="name2" class="word-input" value="ನೆರಳು" maxlength="16" data-i18n-ph="ph_side" placeholder="ಪಕ್ಕದ ಪದ">
-        </div>
-      </div>
-
-      <div class="pair-grid pair-grid--fonts">
-        <div class="pcol pcol--s font-stack">
-          <label class="field-label" for="fnt1"><span data-i18n="font_col_front">ಮುಂಪದ ಫಾಂಟ್</span></label>
-          <select id="fnt1" title="Front font">
-            <option value="sans-serif">Sans</option>
-            <option value="serif">Serif</option>
-            <optgroup label="Kannada">
-              <option value="'Noto Sans Kannada',sans-serif" selected>Noto Sans Kannada</option>
-              <option value="'Noto Serif Kannada',serif">Noto Serif Kannada</option>
-              <option value="'Anek Kannada',sans-serif">Anek Kannada</option>
-              <option value="'Akshar',sans-serif">Akshar</option>
-              <option value="'Tiro Kannada',serif">Tiro Kannada</option>
-              <option value="'Baloo Tamma 2',sans-serif">Baloo Tamma 2</option>
-            </optgroup>
-            <optgroup label="Indic">
-              <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
-              <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
-              <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
-              <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
-              <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
-              <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
-              <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
-            </optgroup>
-            <option value="__up__" id="f1up" disabled>Custom</option>
-          </select>
-          <div class="font-upload-row">
-            <button type="button" class="btn btn-upload" id="uploadBtn" data-i18n="upload_font" title="Upload custom TTF/OTF/WOFF font">+ ಫಾಂಟ್</button>
-            <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" hidden>
-            <span id="uploadedFontName"></span>
-          </div>
-        </div>
-        <div class="pcol pcol--pad">
-          <label class="field-label" for="padSelect" data-tip="Fill character when one word is shorter" data-i18n="pad">ಭರ್ತಿ</label>
-          <select id="padSelect" aria-label="Pad character">
-            <option value="♥">♥</option>
-            <option value="★">★</option>
-            <option value="■">■</option>
-            <option value="▲">▲</option>
-            <option value="◆">◆</option>
-            <option value="⬟">⬟</option>
-            <option value="⬣">⬣</option>
-            <option value="☾">☾</option>
-            <option value="__custom__" data-i18n="pad_custom_option">Custom…</option>
-          </select>
-          <div id="padCustomWrap" class="pad-custom-wrap" hidden>
-            <input type="text" class="pad-custom" id="padCustom" placeholder="·" maxlength="2" title="Custom pad character">
-          </div>
-        </div>
-        <div class="pcol pcol--f font-stack">
-          <label class="field-label" for="fnt2"><span data-i18n="font_col_side">ಪಕ್ಕದ ಫಾಂಟ್</span></label>
-          <select id="fnt2" title="Side font">
-            <option value="sans-serif">Sans</option>
-            <option value="serif">Serif</option>
-            <optgroup label="Kannada">
-              <option value="'Noto Sans Kannada',sans-serif" selected>Noto Sans Kannada</option>
-              <option value="'Noto Serif Kannada',serif">Noto Serif Kannada</option>
-              <option value="'Anek Kannada',sans-serif">Anek Kannada</option>
-              <option value="'Akshar',sans-serif">Akshar</option>
-              <option value="'Tiro Kannada',serif">Tiro Kannada</option>
-              <option value="'Baloo Tamma 2',sans-serif">Baloo Tamma 2</option>
-            </optgroup>
-            <optgroup label="Indic">
-              <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
-              <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
-              <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
-              <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
-              <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
-              <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
-              <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
-            </optgroup>
-            <option value="__up__" id="f2up" disabled>Custom</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="gen-row gen-row--solo">
-        <button type="button" class="btn btn-primary btn-generate" id="generateBtn" data-i18n="generate">ರಚಿಸಿ</button>
+  <header class="dv-topbar">
+    <div class="dv-brand">
+      <div class="dv-bmark" aria-hidden="true"><span class="dv-bkan">ದ್ವ</span></div>
+      <div>
+        <div class="dv-bname">Dvandva</div>
+        <p class="dv-bsub tagline" data-i18n="tagline">3D ನೆರಳು ಭ್ರಮೆ ಶಿಲ್ಪಿ</p>
       </div>
     </div>
-  </section>
+    <div class="dv-hbtns">
+      <button type="button" class="dv-hbtn icon-btn icon-btn--lang" id="langFlipBtn" aria-label="English">
+        <svg class="dv-hbtn__ico" width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 3h12M1 7h7"/><path d="M10 7l3 5M10 12l3-5"/></svg>
+        <span id="langFlip">EN</span>
+      </button>
+      <button type="button" class="dv-hbtn icon-btn icon-btn--theme" id="themeToggle" aria-label="Dark mode">
+        <svg class="dv-ico-sun" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.8"/><line x1="8" y1="1" x2="8" y2="2.8"/><line x1="8" y1="13.2" x2="8" y2="15"/><line x1="1" y1="8" x2="2.8" y2="8"/><line x1="13.2" y1="8" x2="15" y2="8"/><line x1="3.1" y1="3.1" x2="4.4" y2="4.4"/><line x1="11.6" y1="11.6" x2="12.9" y2="12.9"/><line x1="12.9" y1="3.1" x2="11.6" y2="4.4"/><line x1="4.4" y1="11.6" x2="3.1" y2="12.9"/></svg>
+        <svg class="dv-ico-moon" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M13.5 10A6 6 0 1 1 6 2.5a4.5 4.5 0 0 0 7.5 7.5z"/></svg>
+        <span class="theme-lbl"></span>
+      </button>
+    </div>
+  </header>
 
-  <section class="card" aria-labelledby="editor-heading">
-    <h2 id="editor-heading" class="sr-only" data-i18n="section_editor">Pixel editor</h2>
-    <details id="rasterDetails">
-      <summary class="raster-summary"><span data-i18n="pixel_editor">ಚಿತ್ರ ಸಂಪಾದಕ</span> &mdash; <span data-i18n="pixel_editor_desc">ದ್ವೀಪಗಳನ್ನು ಸೇರಿಸಿ &amp; ಕೈಯಿಂದ ಸಂಪಾದನೆ</span></summary>
-      <div class="raster-content">
-        <div class="raster-grid">
-          <div class="raster-panel">
-            <div class="raster-head"><span class="color-bar bar-s"></span> <span data-i18n="front_sil">ಮುಂಭಾಗದ ನೆರಳು</span></div>
-            <div class="canvas-wrap canvas-wrap-lg" id="w1"><canvas id="c1"></canvas></div>
-            <div class="draw-tools">
-              <button class="btn" id="er1" data-i18n="erase">ಅಳಿಸು</button>
-              <button class="btn" id="cl1" data-i18n="clear">ತೆಗೆ</button>
-              <button class="btn" id="fi1" data-i18n="fill">ತುಂಬು</button>
-              <button class="btn" id="undo1" title="Undo last stroke" data-i18n="undo">ಹಿಂದಕ್ಕೆ</button>
-              <label class="btn" title="Feather edges for smoother mesh"><input type="checkbox" id="feath1" checked> <span data-i18n="feather">ಮೃದು</span></label>
-              <div class="brush-row"><span class="brush-label" data-i18n="brush">ಕುಂಚ</span><input type="range" id="br1" min="1" max="12" value="3"></div>
-            </div>
-          </div>
-          <div class="raster-panel">
-            <div class="raster-head"><span class="color-bar bar-f"></span> <span data-i18n="side_sil">ಪಕ್ಕದ ನೆರಳು</span></div>
-            <div class="canvas-wrap canvas-wrap-lg" id="w2"><canvas id="c2"></canvas></div>
-            <div class="draw-tools">
-              <button class="btn" id="er2" data-i18n="erase">ಅಳಿಸು</button>
-              <button class="btn" id="cl2" data-i18n="clear">ತೆಗೆ</button>
-              <button class="btn" id="fi2" data-i18n="fill">ತುಂಬು</button>
-              <button class="btn" id="undo2" title="Undo last stroke" data-i18n="undo">ಹಿಂದಕ್ಕೆ</button>
-              <label class="btn" title="Feather edges for smoother mesh"><input type="checkbox" id="feath2" checked> <span data-i18n="feather">ಮೃದು</span></label>
-              <div class="brush-row"><span class="brush-label" data-i18n="brush">ಕುಂಚ</span><input type="range" id="br2" min="1" max="12" value="3"></div>
-            </div>
-          </div>
+  <div class="composer">
+    <div class="word-card lc">
+      <div class="wview" data-i18n="view_left">Left view</div>
+      <input type="text" id="name1" class="winput word-input" value="ಬೆಳಕು" maxlength="16" data-i18n-ph="ph_front" placeholder="Front word">
+      <div class="fwrap">
+        <select id="fnt1" class="wfont" title="Left font">
+          <option value="sans-serif">Sans</option>
+          <option value="serif">Serif</option>
+          <optgroup label="Kannada">
+            <option value="'Noto Serif Kannada',serif" selected>Noto Serif Kannada</option>
+            <option value="'Noto Sans Kannada',sans-serif">Noto Sans Kannada</option>
+            <option value="'Anek Kannada',sans-serif">Anek Kannada</option>
+            <option value="'Akshar',sans-serif">Akshar</option>
+            <option value="'Tiro Kannada',serif">Tiro Kannada</option>
+            <option value="'Baloo Tamma 2',sans-serif">Baloo Tamma 2</option>
+          </optgroup>
+          <optgroup label="Indic">
+            <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
+            <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
+            <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
+            <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
+            <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
+            <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
+            <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
+          </optgroup>
+          <option value="__up__" id="f1up" disabled>Custom</option>
+        </select>
+      </div>
+      <p class="font-upload-note"><span id="uploadedFontName"></span></p>
+    </div>
+
+    <div class="middle">
+      <div class="mid-g">
+        <span class="mid-lbl" data-i18n="pad">Pad</span>
+        <button type="button" class="mid-btn" id="padCycleBtn" aria-label="Pad character">♥</button>
+        <select id="padSelect" class="sr-only" aria-hidden="true" tabindex="-1">
+          <option value="♥" selected>♥</option>
+          <option value="★">★</option>
+          <option value="■">■</option>
+          <option value="▲">▲</option>
+          <option value="◆">◆</option>
+          <option value="⬟">⬟</option>
+          <option value="⬣">⬣</option>
+          <option value="☾">☾</option>
+          <option value="__custom__" data-i18n="pad_custom_option">Custom…</option>
+        </select>
+      </div>
+      <div class="mid-g">
+        <span class="mid-lbl" data-i18n="upload_mid">Font</span>
+        <button type="button" class="mid-btn" id="uploadBtn" data-i18n-title="upload_font_title" title="Upload custom font">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="8" y1="11" x2="8" y2="3"/><polyline points="5,6 8,3 11,6"/>
+            <line x1="3" y1="13" x2="13" y2="13"/>
+          </svg>
+        </button>
+        <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" hidden>
+      </div>
+      <div id="padCustomWrap" class="pad-custom-wrap pad-custom-wrap--mid" hidden>
+        <input type="text" class="pad-custom" id="padCustom" placeholder="·" maxlength="2" title="Custom pad character">
+      </div>
+    </div>
+
+    <div class="word-card rc">
+      <div class="wview" data-i18n="view_right">Right view</div>
+      <input type="text" id="name2" class="winput word-input" value="ನೆರಳು" maxlength="16" data-i18n-ph="ph_side" placeholder="Side word">
+      <div class="fwrap">
+        <select id="fnt2" class="wfont" title="Right font">
+          <option value="sans-serif">Sans</option>
+          <option value="serif">Serif</option>
+          <optgroup label="Kannada">
+            <option value="'Noto Sans Kannada',sans-serif" selected>Noto Sans Kannada</option>
+            <option value="'Noto Serif Kannada',serif">Noto Serif Kannada</option>
+            <option value="'Anek Kannada',sans-serif">Anek Kannada</option>
+            <option value="'Akshar',sans-serif">Akshar</option>
+            <option value="'Tiro Kannada',serif">Tiro Kannada</option>
+            <option value="'Baloo Tamma 2',sans-serif">Baloo Tamma 2</option>
+          </optgroup>
+          <optgroup label="Indic">
+            <option value="'Noto Sans Devanagari',sans-serif">Devanagari</option>
+            <option value="'Noto Nastaliq Urdu',serif">Urdu</option>
+            <option value="'Noto Sans Tamil',sans-serif">Tamil</option>
+            <option value="'Noto Sans Telugu',sans-serif">Telugu</option>
+            <option value="'Noto Sans Malayalam',sans-serif">Malayalam</option>
+            <option value="'Noto Sans Bengali',sans-serif">Bengali</option>
+            <option value="'Noto Sans Gujarati',sans-serif">Gujarati</option>
+          </optgroup>
+          <option value="__up__" id="f2up" disabled>Custom</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="gen-wrap">
+    <button type="button" class="gen-btn" id="generateBtn">
+      <span class="gen-inner">
+        <span class="gen-dot" aria-hidden="true">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="rgba(255,255,255,.9)"><polygon points="2,1 11,6 2,11"/></svg>
+        </span>
+        <span data-i18n="generate">Generate sculpture</span>
+      </span>
+    </button>
+  </div>
+
+  <h2 id="editor-heading" class="sr-only" data-i18n="section_editor">Pixel editor</h2>
+  <details class="card editor" id="rasterDetails">
+    <summary class="raster-summary ed-head">
+      <div class="ed-head__main">
+        <span class="ed-title" data-i18n="pixel_editor">Pixel editor</span>
+        <span class="ed-sub" data-i18n="pixel_editor_desc">join islands · manual edits</span>
+      </div>
+      <span class="chev" aria-hidden="true">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,4 6,8 10,4"/></svg>
+      </span>
+    </summary>
+    <div class="raster-content ed-body">
+      <div class="ed-sliders">
+        <div class="ed-s">
+          <div class="ed-sl"><span data-i18n="resolution">Resolution</span><span class="ed-sv" id="resVal">128 px</span></div>
+          <input type="range" id="resSlider" min="32" max="256" step="8" value="128" title="Higher = more detail but slower">
         </div>
-        <div class="raster-controls">
-          <div class="ctrl-group ctrl-group--res">
-            <span class="ctrl-label" title="Higher = more detail but slower" data-i18n="resolution">ಸೂಕ್ಷ್ಮತೆ</span>
-            <input type="range" id="resSlider" min="32" max="256" step="16" value="128">
-            <span id="resVal">128</span><span class="ctrl-label">px</span>
-          </div>
-          <div class="raster-controls__spacer" aria-hidden="true"></div>
+        <div class="ed-s">
+          <div class="ed-sl"><span data-i18n="brush">Brush</span><span class="ed-sv" id="brushVal">6</span></div>
+          <input type="range" id="brushSlider" min="1" max="20" value="6" step="1" aria-label="Brush size">
+          <input type="range" id="br1" min="1" max="20" value="6" hidden tabindex="-1" aria-hidden="true">
+          <input type="range" id="br2" min="1" max="20" value="6" hidden tabindex="-1" aria-hidden="true">
+        </div>
+        <div class="ed-s">
+          <div class="ed-sl"><span data-i18n="feather">Feather</span><span class="ed-sv" id="featherVal">3</span></div>
+          <input type="range" id="featherSlider" min="0" max="10" value="3" step="1" aria-label="Feather preview">
+          <input type="checkbox" id="feath1" checked hidden tabindex="-1" aria-hidden="true">
+          <input type="checkbox" id="feath2" checked hidden tabindex="-1" aria-hidden="true">
         </div>
       </div>
-    </details>
-  </section>
+
+      <div class="sil-grid">
+        <div class="sil-wrap">
+          <div class="sil-view" data-i18n="front_sil">Left silhouette</div>
+          <div class="sil-tools">
+            <button type="button" class="stool" id="er1" data-i18n="erase">Erase</button>
+            <button type="button" class="stool" id="fi1" data-i18n="fill">Fill</button>
+            <button type="button" class="stool" id="undo1" data-i18n="undo">Undo</button>
+            <button type="button" class="stool" id="cl1" data-i18n="clear">Clear</button>
+          </div>
+          <div class="canvas-wrap canvas-frame canvas-wrap-lg" id="w1"><canvas id="c1"></canvas></div>
+        </div>
+        <div class="sil-wrap">
+          <div class="sil-view" data-i18n="side_sil">Right silhouette</div>
+          <div class="sil-tools">
+            <button type="button" class="stool" id="er2" data-i18n="erase">Erase</button>
+            <button type="button" class="stool" id="fi2" data-i18n="fill">Fill</button>
+            <button type="button" class="stool" id="undo2" data-i18n="undo">Undo</button>
+            <button type="button" class="stool" id="cl2" data-i18n="clear">Clear</button>
+          </div>
+          <div class="canvas-wrap canvas-frame canvas-wrap-lg" id="w2"><canvas id="c2"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </details>
 
   <section class="card card--preview" aria-labelledby="preview-heading">
     <h2 id="preview-heading" class="sr-only" data-i18n="section_preview">3D preview</h2>
