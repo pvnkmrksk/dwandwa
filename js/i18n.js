@@ -42,6 +42,7 @@ const dict = {
     equal_gaps: 'Equal gaps',
     wall_struts: 'Wall struts',
     variable_width: 'Variable width',
+    local_fonts: 'Local fonts (bundled)',
     mesh_snap_base: 'Snap mesh to base',
     plate_section: 'Plate footprint & thickness',
     pad_x: 'Pad X',
@@ -148,6 +149,7 @@ const dict = {
     equal_gaps: '\u0CB8\u0CAE \u0C85\u0C82\u0CA4\u0CB0',
     wall_struts: '\u0C97\u0CCB\u0CA1\u0CC6 \u0C86\u0CA7\u0CBE\u0CB0',
     variable_width: '\u0CAC\u0CA6\u0CB2\u0CBE\u0C97\u0CC1\u0CB5 \u0C85\u0C97\u0CB2',
+    local_fonts: '\u0CB8\u0CCD\u0CA5\u0CB3\u0CC0\u0caf \u0CAB\u0CBE\u0C82\u0C9F\u0CCD\u0C97\u0CB3\u0CC1 (\u0CAA\u0CCD\u0CD5\u0C95\u0CC7\u0C9C\u0CCD)',
     mesh_snap_base: '\u0CAC\u0CC1\u0CA8\u0CBE\u0CA6\u0CBF\u0C97\u0CC6 \u0CB9\u0CCB\u0C82\u0CA6\u0CBF\u0CB8\u0CBF (Y)',
     plate_section: '\u0CA4\u0C9F\u0CCD\u0C9F\u0CC6 \u0C85\u0CB3\u0CA4\u0CC6 & \u0CA6\u0CAA\u0CCD\u0CAA',
     pad_x: 'X \u0CB9\u0CC6\u0C9A\u0CCD\u0C9A\u0CC1\u0CB5\u0CB0\u0CBF',
@@ -227,7 +229,9 @@ export function applyLang(lang) {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     const val = d[key] ?? dict.en[key];
-    if (val != null) el.textContent = val;
+    if (val == null) return;
+    if (el.tagName === 'OPTGROUP') el.label = val;
+    else el.textContent = val;
   });
 
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {

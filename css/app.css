@@ -1,3 +1,4 @@
+@import './hosted-fonts.css';
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#edf0f7;--surface:#f6f8fc;--panel:#f1f4f9;

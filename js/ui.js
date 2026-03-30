@@ -13,6 +13,8 @@ import {
 } from './scene.js';
 import { exportSTL } from './export-stl.js';
 import { rescalePins } from './strut-painter.js';
+import { HOSTED_FONT_OPTIONS } from './hosted-font-registry.generated.js';
+import { applyLang } from './i18n.js';
 
 function defaultRasterCell() {
   return window.innerWidth >= 1024 ? 128 : 48;
@@ -116,6 +118,29 @@ function syncUniformColumns() {
   S.uniformColumns = !(el && el.checked);
 }
 
+/** Bundled files from fonts/ — see scripts/generate-hosted-fonts.mjs */
+function injectHostedFontOptions() {
+  if (!HOSTED_FONT_OPTIONS.length) return;
+  for (const id of ['fnt1', 'fnt2']) {
+    const sel = document.getElementById(id);
+    if (!sel) continue;
+    if (sel.querySelector('optgroup[data-hosted-fonts]')) continue;
+    const up = sel.querySelector('option[value="__up__"]');
+    if (!up) continue;
+    const og = document.createElement('optgroup');
+    og.setAttribute('data-hosted-fonts', '1');
+    og.setAttribute('data-i18n', 'local_fonts');
+    og.label = 'Local fonts (bundled)';
+    for (const o of HOSTED_FONT_OPTIONS) {
+      const opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      og.appendChild(opt);
+    }
+    up.parentNode.insertBefore(og, up);
+  }
+}
+
 let urlTimer = null;
 function debouncedUrlUpdate() {
   clearTimeout(urlTimer);
@@ -125,7 +150,9 @@ function debouncedUrlUpdate() {
 export function wireUi({ redraw1, redraw2 }) {
   const bmsg = document.getElementById('bmsg');
 
+  injectHostedFontOptions();
   loadFromUrl();
+  applyLang();
   syncPadSelectFromState();
   syncPadCycleBtnLabel();
   syncWordInputFonts();

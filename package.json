@@ -2,7 +2,9 @@
   "name": "dwandwa",
   "private": true,
   "scripts": {
+    "predev": "node scripts/generate-hosted-fonts.mjs",
     "dev": "vite --host",
+    "prebuild": "node scripts/generate-hosted-fonts.mjs",
     "build": "vite build",
     "preview": "vite preview --host",
     "smoke": "node scripts/smoke-check.mjs"
