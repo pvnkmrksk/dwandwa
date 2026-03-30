@@ -45,7 +45,7 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'gfonts-files',
-              expiration: { maxEntries: 24, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 * 365 },
             },
           },
         ],

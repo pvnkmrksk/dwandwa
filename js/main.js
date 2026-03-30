@@ -16,6 +16,7 @@ import { applyLang, toggleLang } from './i18n.js';
 import { applyTheme, toggleTheme } from './theme.js';
 import { registerSW } from 'virtual:pwa-register';
 import { startTutorial } from './tutorial.js';
+import { prepareComposerFonts } from './fonts.js';
 
 registerSW({ immediate: true });
 
@@ -92,6 +93,7 @@ if (helpTourBtn) {
   const bmsg = document.getElementById('bmsg');
   bmsg.textContent = 'Loading\u2026';
   try {
+    await prepareComposerFonts();
     const r1 = document.getElementById('name1').value || '\u0CAC\u0CC6\u0CB3\u0C95\u0CC1';
     const r2 = document.getElementById('name2').value || '\u0CA8\u0CC6\u0CB0\u0CB3\u0CC1';
     const f1 = document.getElementById('fnt1').value;
