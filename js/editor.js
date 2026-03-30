@@ -45,15 +45,15 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
     const snapshot = undoStack.pop();
     const sil = getSil();
     sil.set(snapshot);
-    redraw();
+    redraw(true);
     debouncedMeshUpdate();
   }
 
   if (undoBtn) undoBtn.addEventListener('click', undo);
 
   document.getElementById(erId).addEventListener('click', function() { erasing = !erasing; this.classList.toggle('active', erasing); });
-  document.getElementById(clId).addEventListener('click', () => { saveSnapshot(); getSil().fill(0); redraw(); scheduleUpdate(); });
-  document.getElementById(fiId).addEventListener('click', () => { saveSnapshot(); getSil().fill(1); redraw(); scheduleUpdate(); });
+  document.getElementById(clId).addEventListener('click', () => { saveSnapshot(); getSil().fill(0); redraw(true); scheduleUpdate(); });
+  document.getElementById(fiId).addEventListener('click', () => { saveSnapshot(); getSil().fill(1); redraw(true); scheduleUpdate(); });
   document.getElementById(brId).addEventListener('input', function() { brushSize = parseInt(this.value); });
 
   function ptrToGrid(e) {
@@ -62,6 +62,12 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
       gx: Math.max(0, Math.min(nx - 1, Math.floor((e.clientX - r.left) / r.width * nx))),
       gz: Math.max(0, Math.min(S.rowCellH - 1, S.rowCellH - 1 - Math.floor((e.clientY - r.top) / r.height * S.rowCellH)))
     };
+  }
+
+  let featherTimer = null;
+  function scheduleFeather() {
+    clearTimeout(featherTimer);
+    featherTimer = setTimeout(() => redraw(true), 200);
   }
 
   function paintAt(gx, gz) {
@@ -86,7 +92,7 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
         }
       }
     }
-    if (ch) { redraw(); debouncedMeshUpdate(); }
+    if (ch) { redraw(false); debouncedMeshUpdate(); }
   }
 
   canvas.addEventListener('pointerdown', e => {
@@ -96,17 +102,16 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
     paintAt(...Object.values(ptrToGrid(e)));
   });
   canvas.addEventListener('pointermove', e => { if (isDown) paintAt(...Object.values(ptrToGrid(e))); });
-  canvas.addEventListener('pointerup', () => isDown = false);
-  canvas.addEventListener('pointercancel', () => isDown = false);
+  canvas.addEventListener('pointerup', () => { isDown = false; scheduleFeather(); });
+  canvas.addEventListener('pointercancel', () => { isDown = false; scheduleFeather(); });
 
-  function redraw() {
+  function redraw(withFeather) {
     const nx = getNX(), colCellW = getColCellW(), colX0 = getColX0();
     const BX = nx * RS, BZ = S.rowCellH * RS;
     canvas.width = BX; canvas.height = BZ;
     const ctx = canvas.getContext('2d'), sil = getSil();
     ctx.fillStyle = '#07070f'; ctx.fillRect(0, 0, BX, BZ);
 
-    const feather = feathEl && feathEl.checked;
     ctx.fillStyle = ink;
     for (let x = 0; x < nx; x++) {
       for (let z = 0; z < S.rowCellH; z++) {
@@ -118,7 +123,7 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
       }
     }
 
-    if (feather) {
+    if (withFeather !== false && feathEl && feathEl.checked) {
       ctx.filter = 'blur(3px)';
       ctx.globalAlpha = 0.3;
       ctx.fillStyle = ink;
@@ -143,6 +148,6 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
     }
     ctx.strokeStyle = '#1e1e38'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, BX - 1, BZ - 1);
   }
-  redraw();
+  redraw(true);
   return redraw;
 }
