@@ -10,6 +10,8 @@ let baseEnabled = true;
 let basePadXPct = 10, basePadZPct = 10, plateThickPct = 14, baseFilletPct = 4, baseOverlapPct = 4;
 let backEnabled = true, backPadPct = 10, backOverlapPct = 4;
 let strutSizePct = 14;
+/** Max strut embed along Z as % of mesh depth. Lower = shallower, less “exit wound”. */
+let strutEmbedPct = 10;
 const showBackdrops = false;
 
 const matLProfile = matBase.clone();
@@ -39,7 +41,15 @@ export function getStructureSettings() {
     backEnabled, backPadPct, backOverlapPct,
     alignBackEdges: S.alignBackEdges, equalGapPack: S.equalGapPack, backStrut: S.backStrut,
     strutSizePct,
+    strutEmbedPct,
   };
+}
+
+export function computeStrutPenetration(strutW, meshDepth, embedPct) {
+  const raw = Math.max(strutW * 1.5, meshDepth * 0.3);
+  const cap = meshDepth * Math.max(0.06, Math.min(0.38, embedPct / 100));
+  const floor = strutW * 0.42;
+  return Math.max(floor, Math.min(raw, cap));
 }
 
 function clearStructureObjects() {
@@ -130,11 +140,12 @@ function buildBackStruts(box) {
   const L = computePlateLayout(box, ss);
   const { zWallFront, plate } = L;
   const sizeScale = Math.max(0.35, ss.strutSizePct / 14);
-  const strutW = Math.max(0.55, plate * 0.38 * sizeScale);
+  const strutW = Math.max(0.62, plate * 0.46 * sizeScale);
   const meshDepth = box.max.z - box.min.z;
+  const embedPct = ss.strutEmbedPct ?? 30;
 
   for (const tip of S.strutPins) {
-    const penetration = Math.max(strutW * 1.5, meshDepth * 0.3);
+    const penetration = computeStrutPenetration(strutW, meshDepth, embedPct);
     const dir = tip.z > zWallFront ? 1 : -1;
     let extendedZ = tip.z + dir * penetration;
     extendedZ = Math.max(box.min.z, Math.min(extendedZ, box.max.z));
@@ -207,6 +218,8 @@ export function updateStructureUI() {
   backOverlapPct = parseInt(document.getElementById('backOverlap').value);
   const strutSzEl = document.getElementById('strutThick');
   strutSizePct = strutSzEl ? parseInt(strutSzEl.value, 10) : 14;
+  const embEl = document.getElementById('strutEmbed');
+  strutEmbedPct = embEl ? parseInt(embEl.value, 10) : 30;
   const ab = document.getElementById('alignBack');
   const eg = document.getElementById('equalGap');
   const bs = document.getElementById('backStrut');
@@ -221,13 +234,15 @@ export function updateStructureUI() {
   if (bovEl) bovEl.textContent = (backOverlapPct >= 0 ? '+' : '') + backOverlapPct + '%';
   const szEl = document.getElementById('strutThickVal');
   if (szEl) szEl.textContent = strutSizePct + '%';
+  const embVal = document.getElementById('strutEmbedVal');
+  if (embVal) embVal.textContent = strutEmbedPct + '%';
   document.getElementById('baseControls').classList.toggle('disabled', !baseEnabled);
   document.getElementById('backControls').classList.toggle('disabled', !backEnabled);
   rebuildStructure();
 }
 
 (function wireStructureControls() {
-  ['baseOn', 'basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap', 'strutThick'].forEach(id => {
+  ['baseOn', 'basePadX', 'basePadZ', 'plateThick', 'baseFillet', 'baseOverlap', 'backOn', 'backPad', 'backOverlap', 'strutThick', 'strutEmbed'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', updateStructureUI);

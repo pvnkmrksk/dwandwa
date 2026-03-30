@@ -3,6 +3,7 @@ import S, { allocArrays } from './state.js';
 import { buildModuleMeshes } from './mesh.js';
 import { getStructureSettings } from './scene.js';
 import { computePlateLayout } from './structure-layout.js';
+import { computeStrutPenetration } from './structure-plate.js';
 
 function addBoxTriangles(allTriangles, cx, cy, cz, hx, hy, hz) {
   const v = [
@@ -188,8 +189,9 @@ export async function exportSTL() {
     const L = computePlateLayout(box, ss);
     const { plate, zWallFront } = L;
     const sizeScale = Math.max(0.35, (ss.strutSizePct ?? 14) / 14);
-    const strutW = Math.max(0.55, plate * 0.38 * sizeScale);
+    const strutW = Math.max(0.62, plate * 0.46 * sizeScale);
     const meshDepth = size.z;
+    const embedPct = ss.strutEmbedPct ?? 10;
 
     // preview_pos * 0.5 = export_pos (see derivation in comments below)
     // Preview mesh: cell units at CELL. Export: cell units at ECELL, scaled by ESCALE.
@@ -198,7 +200,7 @@ export async function exportSTL() {
 
     for (const pin of S.strutPins) {
       const tip = { x: pin.x * PIN_TO_EXPORT, y: pin.y * PIN_TO_EXPORT, z: pin.z * PIN_TO_EXPORT };
-      const penetration = Math.max(strutW * 1.5, meshDepth * 0.3);
+      const penetration = computeStrutPenetration(strutW, meshDepth, embedPct);
       const dir = tip.z > zWallFront ? 1 : -1;
       let extendedZ = tip.z + dir * penetration;
       extendedZ = Math.max(box.min.z, Math.min(extendedZ, box.max.z));

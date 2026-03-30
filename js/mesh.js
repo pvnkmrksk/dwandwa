@@ -1,5 +1,13 @@
 /* global THREE */
 import S from './state.js';
+
+/** RGB 0–1 from space-separated `R G B` tokens on :root (e.g. --mesh-side). */
+function meshTriplet(cssVarName, fallback) {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(cssVarName).trim();
+  const parts = raw.split(/\s+/).map(x => parseInt(x, 10)).filter(n => !Number.isNaN(n));
+  if (parts.length >= 3) return [parts[0] / 255, parts[1] / 255, parts[2] / 255];
+  return fallback;
+}
 import {
   computeDzAlignBack,
   computeTxEqualGap,
@@ -89,6 +97,9 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
   const allIdx = [];
   const allCol = [];
   let baseVert = 0;
+
+  const colWordA = meshTriplet('--mesh-side', [0.23, 0.56, 0.94]);
+  const colWordB = meshTriplet('--mesh-front', [0.94, 0.57, 0.25]);
 
   const cos45 = Math.SQRT1_2;
   const sin45 = Math.SQRT1_2;
@@ -203,9 +214,9 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
       const fv = sampleSlice(bfU, cwF, ch, sxf, szf);
       const sv = sampleSlice(bsU, cwS, ch, syf, szf);
       if (fv <= sv) {
-        colors.push(0.94, 0.63, 0.19);
+        colors.push(colWordA[0], colWordA[1], colWordA[2]);
       } else {
-        colors.push(0.19, 0.56, 0.94);
+        colors.push(colWordB[0], colWordB[1], colWordB[2]);
       }
     }
 
