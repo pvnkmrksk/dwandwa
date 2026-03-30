@@ -4,7 +4,7 @@ import { scheduleUpdate } from './scene.js';
 let meshTimer = null;
 function debouncedMeshUpdate() {
   clearTimeout(meshTimer);
-  meshTimer = setTimeout(() => scheduleUpdate(), 500);
+  meshTimer = setTimeout(() => scheduleUpdate(), 800);
 }
 
 export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, which }) {

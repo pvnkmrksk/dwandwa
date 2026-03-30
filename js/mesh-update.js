@@ -89,7 +89,6 @@ function runMeshRebuild() {
   } else {
     document.getElementById('vc').textContent = 'No geometry';
     setLastMeshBox(null);
-    S.autoStrutTips = null;
     S.moduleCenterX = null;
     S.moduleZBack = null;
     S.moduleTx = null;

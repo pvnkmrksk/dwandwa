@@ -125,7 +125,7 @@ function buildLProfile(box) {
 }
 
 function buildBackStruts(box) {
-  if (!S.backStrut || !S.moduleTx) return;
+  if (!S.backStrut || S.strutPins.length === 0) return;
   const ss = getStructureSettings();
   const L = computePlateLayout(box, ss);
   const { zWallFront, plate } = L;
@@ -133,43 +133,18 @@ function buildBackStruts(box) {
   const strutW = Math.max(0.55, plate * 0.38 * sizeScale);
   const meshDepth = box.max.z - box.min.z;
 
-  const tips = S.strutPins.length > 0
-    ? S.strutPins
-    : S.autoStrutTips && S.autoStrutTips.length > 0
-      ? S.autoStrutTips
-      : null;
-
-  if (tips) {
-    for (const tip of tips) {
-      const penetration = Math.max(strutW * 1.5, meshDepth * 0.3);
-      const dir = tip.z > zWallFront ? 1 : -1;
-      let extendedZ = tip.z + dir * penetration;
-      extendedZ = Math.max(box.min.z, Math.min(extendedZ, box.max.z));
-      const zLo = Math.min(zWallFront, extendedZ);
-      const zHi = Math.max(zWallFront, extendedZ);
-      const dzz = zHi - zLo;
-      if (dzz < 0.35) continue;
-      const g = new THREE.BoxGeometry(strutW, strutW, dzz);
-      const mesh = new THREE.Mesh(g, matBase);
-      mesh.position.set(tip.x, tip.y, (zLo + zHi) / 2);
-      mesh.receiveShadow = true;
-      mesh.castShadow = true;
-      scene.add(mesh);
-      structureObjects.push(mesh);
-    }
-    return;
-  }
-
-  for (let i = 0; i < S.nCols; i++) {
-    const cx = S.moduleTx[i];
-    const zStart = box.min.z;
-    const zLo = Math.min(zWallFront, zStart);
-    const zHi = Math.max(zWallFront, zStart);
-    const dz = zHi - zLo;
-    if (dz < 0.5) continue;
-    const g = new THREE.BoxGeometry(strutW, strutW, dz);
+  for (const tip of S.strutPins) {
+    const penetration = Math.max(strutW * 1.5, meshDepth * 0.3);
+    const dir = tip.z > zWallFront ? 1 : -1;
+    let extendedZ = tip.z + dir * penetration;
+    extendedZ = Math.max(box.min.z, Math.min(extendedZ, box.max.z));
+    const zLo = Math.min(zWallFront, extendedZ);
+    const zHi = Math.max(zWallFront, extendedZ);
+    const dzz = zHi - zLo;
+    if (dzz < 0.35) continue;
+    const g = new THREE.BoxGeometry(strutW, strutW, dzz);
     const mesh = new THREE.Mesh(g, matBase);
-    mesh.position.set(cx, box.min.y + (box.max.y - box.min.y) / 2, (zLo + zHi) / 2);
+    mesh.position.set(tip.x, tip.y, (zLo + zHi) / 2);
     mesh.receiveShadow = true;
     mesh.castShadow = true;
     scene.add(mesh);

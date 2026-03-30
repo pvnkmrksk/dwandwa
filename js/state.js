@@ -42,8 +42,6 @@ const S = {
   moduleZBack: null,
   /** World X offset of each module's column origin. */
   moduleTx: null,
-  /** Auto strut anchor points in world space. */
-  autoStrutTips: null,
   /** User-placed strut pins from 3D surface painting [{x,y,z}]. */
   strutPins: [],
 };

@@ -6,7 +6,6 @@ import {
   computeTxSpanPack,
 } from './module-layout.js';
 import { meshFromBinaryCells } from './mesher/voxel-surface.js';
-import { hangTipsFromIntersection } from './strut-auto.js';
 
 function gaussKernel(sigma) {
   const r = Math.ceil(sigma * 3);
@@ -155,7 +154,6 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
     const strideY = Mx;
     const strideZ = Mx * My;
     const cellSolid = new Uint8Array(Mx * My * Mz);
-    const interSolid = new Uint8Array(Mx * My * Mz);
 
     const spanX = Math.max(1e-6, xf1 - xf0);
     const spanY = Math.max(1e-6, yd1 - yd0);
@@ -170,9 +168,7 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
           const fv = sampleSlice(bfU, cwF, ch, sxf, szf);
           const sv = sampleSlice(bsU, cwS, ch, syf, szf);
           const ix = i + j * strideY + k * strideZ;
-          const solid = Math.min(fv, sv) >= 0.5 ? 1 : 0;
-          cellSolid[ix] = solid;
-          interSolid[ix] = solid;
+          cellSolid[ix] = Math.min(fv, sv) >= 0.5 ? 1 : 0;
         }
       }
     }
@@ -183,22 +179,6 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
     const midX = (xf0 + xf1) / 2;
     const midY = (yd0 + yd1) / 2;
     const midZ = (z0 + z1) / 2;
-
-    function toWorld(i, j, k) {
-      const sxf = xf0 + (i + 0.5) / Mx * spanX;
-      const syf = yd0 + (j + 0.5) / My * spanY;
-      const szf = z0 + (k + 0.5) / Mz * spanZ;
-      const lx = sxf - midX;
-      const lz = syf - midY;
-      const ly = szf - midZ;
-      return {
-        x: lx * cos45 + lz * sin45,
-        y: ly,
-        z: -lx * sin45 + lz * cos45,
-      };
-    }
-
-    const modTips = hangTipsFromIntersection(interSolid, Mx, My, Mz, toWorld);
 
     const positions = [];
     const colors = [];
@@ -239,7 +219,6 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
       Mx,
       My,
       Mz,
-      modTips,
     };
   }
 
@@ -264,7 +243,6 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
   S.moduleCenterX = new Float32Array(S.nCols);
   S.moduleZBack = new Float32Array(S.nCols);
   S.moduleTx = new Float32Array(S.nCols);
-  S.autoStrutTips = [];
 
   for (let mod = 0; mod < S.nCols; mod++) {
     S.moduleCenterX[mod] = 0;
@@ -289,14 +267,6 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
     S.moduleCenterX[mod] = (xMin + xMax) / 2;
     S.moduleZBack[mod] = zMin;
 
-    for (const tip of M.modTips) {
-      S.autoStrutTips.push({
-        x: tip.x + tx[mod],
-        y: tip.y,
-        z: tip.z + dz[mod],
-      });
-    }
-
     for (let i = 0; i < M.positions.length; i += 3) {
       allPos.push(
         M.positions[i] + tx[mod],
@@ -316,7 +286,6 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
     S.moduleCenterX = null;
     S.moduleZBack = null;
     S.moduleTx = null;
-    S.autoStrutTips = [];
     return null;
   }
 
@@ -326,9 +295,6 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
   }
   if (yMin !== Infinity && Number.isFinite(yMin)) {
     for (let i = 1; i < allPos.length; i += 3) allPos[i] -= yMin;
-    for (let k = 0; k < S.autoStrutTips.length; k++) {
-      S.autoStrutTips[k].y -= yMin;
-    }
   }
 
   const geo = new THREE.BufferGeometry();

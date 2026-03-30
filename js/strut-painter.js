@@ -7,7 +7,7 @@ import {
   setBackPanelGhost, getBackWallZ, getLastMeshBox,
 } from './structure-plate.js';
 
-const REMOVE_DIST = 6;
+const GRAB_DIST = 14;
 
 let paintMode = false;
 let hoverMesh = null;
@@ -142,7 +142,7 @@ function getNDC(e) {
 }
 
 function findNearestPinIdx(pt) {
-  let bestIdx = -1, bestDist = REMOVE_DIST * REMOVE_DIST;
+  let bestIdx = -1, bestDist = GRAB_DIST * GRAB_DIST;
   for (let i = 0; i < S.strutPins.length; i++) {
     const p = S.strutPins[i];
     const d = (p.x - pt.x) ** 2 + (p.y - pt.y) ** 2 + (p.z - pt.z) ** 2;
