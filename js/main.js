@@ -2,21 +2,22 @@ import './three-globals.js';
 import S from './state.js';
 import {
   updCam,
-  scheduleUpdate,
   getCameraPose,
   setCameraPose,
   animateCameraPose,
 } from './scene.js';
-import { applyNames } from './text.js';
-import { measureColumnCells, stampName } from './raster.js';
 import { makeDrawer } from './editor.js';
 import { wireUi } from './ui.js';
 import { initStrutPainter, togglePaintMode, clearPins, undoPins } from './strut-painter.js';
-import { applyLang, toggleLang } from './i18n.js';
+import { applyLang, t } from './i18n.js';
 import { applyTheme, toggleTheme } from './theme.js';
 import { registerSW } from 'virtual:pwa-register';
 import { startTutorial } from './tutorial.js';
 import { prepareComposerFonts } from './fonts.js';
+import {
+  initGenerationRedrawers,
+  armDeferredInitialGenerate,
+} from './generate-pipeline.js';
 
 registerSW({ immediate: true });
 
@@ -70,6 +71,7 @@ const redraw2 = makeDrawer({
   which: 'side',
 });
 
+initGenerationRedrawers(redraw1, redraw2);
 wireUi({ redraw1, redraw2 });
 
 initStrutPainter();
@@ -88,26 +90,16 @@ if (helpTourBtn) {
   });
 }
 
-// Auto-generate from whatever's in the form (URL params or defaults)
 (async () => {
   const bmsg = document.getElementById('bmsg');
-  bmsg.textContent = 'Loading\u2026';
   try {
     await prepareComposerFonts();
-    const r1 = document.getElementById('name1').value || '\u0CAC\u0CC6\u0CB3\u0C95\u0CC1';
-    const r2 = document.getElementById('name2').value || '\u0CA8\u0CC6\u0CB0\u0CB3\u0CC1';
-    const f1 = document.getElementById('fnt1').value;
-    const f2 = document.getElementById('fnt2').value;
-    await applyNames(r1, r2, f1, f2);
-    bmsg.textContent = 'Rendering glyphs\u2026';
-    await Promise.all([
-      stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
-      stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
-    ]);
-    bmsg.textContent = '';
-    redraw1(); redraw2(); scheduleUpdate();
+    bmsg.setAttribute('data-compose-hint', '1');
+    bmsg.textContent = t('bmsg_compose');
+    armDeferredInitialGenerate();
   } catch (e) {
     console.error(e);
+    bmsg.removeAttribute('data-compose-hint');
     bmsg.textContent = 'Error: ' + (e && e.message ? e.message : String(e));
   }
 })();

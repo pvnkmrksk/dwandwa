@@ -1,6 +1,10 @@
 import S, { allocArrays } from './state.js';
-import { applyNames, updatePreview, syncWordInputFonts } from './text.js';
-import { stampName } from './raster.js';
+import { updatePreview, syncWordInputFonts } from './text.js';
+import {
+  generateNow,
+  scheduleAfterComposerEdit,
+  runGeneratePipelineWithStatus,
+} from './generate-pipeline.js';
 import {
   scheduleUpdate,
   setCameraFront,
@@ -193,17 +197,8 @@ export function wireUi({ redraw1, redraw2 }) {
   if (variableColEl) {
     variableColEl.addEventListener('change', async () => {
       syncUniformColumns();
-      const r1 = document.getElementById('name1').value || 'ಬೆಳಕು';
-      const r2 = document.getElementById('name2').value || 'ನೆರಳು';
-      bmsg.textContent = 'Recomputing layout\u2026';
-      await applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
-      await Promise.all([
-        stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
-        stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
-      ]);
-      redraw1(); redraw2(); scheduleUpdate();
+      await runGeneratePipelineWithStatus('Recomputing layout\u2026');
       debouncedUrlUpdate();
-      bmsg.textContent = '';
     });
   }
 
@@ -227,21 +222,19 @@ export function wireUi({ redraw1, redraw2 }) {
   });
 
   document.getElementById('generateBtn').addEventListener('click', async function() {
-    const r1 = document.getElementById('name1').value || 'ಬೆಳಕು';
-    const r2 = document.getElementById('name2').value || 'ನೆರಳು';
-    await applyNames(r1, r2, document.getElementById('fnt1').value, document.getElementById('fnt2').value);
-    bmsg.textContent = 'Rendering glyphs\u2026';
-    await Promise.all([
-      stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
-      stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
-    ]);
-    redraw1(); redraw2(); scheduleUpdate();
+    try {
+      await generateNow();
+    } catch (e) { /* bmsg set in pipeline */ }
     debouncedUrlUpdate();
   });
 
   ['name1', 'name2'].forEach(id => {
     const el = document.getElementById(id);
-    el.addEventListener('input', () => { updatePreview(); debouncedUrlUpdate(); });
+    el.addEventListener('input', () => {
+      updatePreview();
+      debouncedUrlUpdate();
+      scheduleAfterComposerEdit();
+    });
     el.addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('generateBtn').click();
     });
@@ -267,6 +260,10 @@ export function wireUi({ redraw1, redraw2 }) {
       document.getElementById('fnt1').value = '__up__';
       document.getElementById('fnt2').value = '__up__';
       syncWordInputFonts();
+      try {
+        await generateNow();
+      } catch (e) { /* bmsg */ }
+      debouncedUrlUpdate();
     } catch(e) {
       document.getElementById('uploadedFontName').textContent = 'Error: ' + e.message;
     }
@@ -276,6 +273,7 @@ export function wireUi({ redraw1, redraw2 }) {
     document.getElementById(id).addEventListener('change', () => {
       syncWordInputFonts();
       debouncedUrlUpdate();
+      scheduleAfterComposerEdit();
     });
   });
 
@@ -292,14 +290,7 @@ export function wireUi({ redraw1, redraw2 }) {
     S.CELL = newCell;
     formatResVal(S.CELL);
     rescalePins(oldCell, newCell);
-    const r1 = document.getElementById('name1').value;
-    const r2 = document.getElementById('name2').value;
-    await applyNames(r1 || 'ಬೆಳಕು', r2 || 'ನೆರಳು', document.getElementById('fnt1').value, document.getElementById('fnt2').value);
-    await Promise.all([
-      stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
-      stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
-    ]);
-    redraw1(); redraw2(); scheduleUpdate();
+    await runGeneratePipelineWithStatus('Rebuilding resolution\u2026');
     debouncedUrlUpdate();
   }
 

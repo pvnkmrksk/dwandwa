@@ -571,11 +571,14 @@ html[data-theme="dark"] .word-card.rc{
 .winput,.word-input.winput{
   display:block;width:100%;
   border:1.5px solid var(--border2);
-  border-radius:13px;
+  border-radius:16px;
   background:rgba(255,255,255,.95);
-  padding:10px 14px;
+  padding:16px 18px;
   font-family:var(--indic),var(--sys);
-  font-size:clamp(18px,2.8vw,22px);font-weight:600;
+  font-size:clamp(28px,5.2vw,44px);
+  font-weight:600;
+  line-height:1.2;
+  min-height:3.2em;
   color:var(--text);
   margin-bottom:10px;outline:none;
   transition:border-color .15s,background .2s;
@@ -587,7 +590,7 @@ html[data-theme="dark"] .winput,html[data-theme="dark"] .word-input.winput{
 .word-card.lc .winput{text-align:right}
 .word-card.rc .winput:focus{border-color:var(--racc)}
 .word-card.lc .winput:focus{border-color:var(--lacc)}
-.winput::placeholder{color:var(--text3);font-weight:400;font-size:14px}
+.winput::placeholder{color:var(--text3);font-weight:400;font-size:clamp(14px,2.5vw,18px)}
 
 .fwrap{position:relative}
 .fwrap::after{
