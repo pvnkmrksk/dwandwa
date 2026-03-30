@@ -164,8 +164,9 @@ export function buildModuleMeshes(silA, silB, _cellSizeLegacy, gridRes, sigma) {
           const fv = sampleSlice(bfU, cw, ch, sxf, szf);
           const sv = sampleSlice(bsU, cw, ch, syf, szf);
           const ix = i + j * strideY + k * strideZ;
-          cellSolid[ix] = 1;
-          interSolid[ix] = Math.min(fv, sv) >= 0.5 ? 1 : 0;
+          const solid = Math.min(fv, sv) >= 0.5 ? 1 : 0;
+          cellSolid[ix] = solid;
+          interSolid[ix] = solid;
         }
       }
     }
