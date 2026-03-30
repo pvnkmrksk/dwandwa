@@ -54,6 +54,28 @@ function measureGlyph(ctx, BUF, baseline, ch, fam, fs) {
   return inkBBoxRGBA(px, BUF, BUF);
 }
 
+/** Union of ink tops/bottoms for every grapheme at the same baseline (shared line height). */
+function measureWordVerticalSpan(ctx, BUF, baseline, fam, fs, chars) {
+  let gTop = BUF;
+  let gBot = 0;
+  let any = false;
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i] || S.padChar;
+    const b = measureGlyph(ctx, BUF, baseline, ch, fam, fs);
+    if (b.w * b.h <= 1) continue;
+    any = true;
+    if (b.minY < gTop) gTop = b.minY;
+    if (b.maxY > gBot) gBot = b.maxY;
+  }
+  if (!any) return null;
+  return { gTop, gBot };
+}
+
+function rowCellsForWordSpan(gTop, gBot, BUF, cellMax, minC) {
+  const px = Math.max(1, gBot - gTop + 1);
+  return Math.min(cellMax, Math.max(minC, Math.ceil(px * cellMax / BUF)));
+}
+
 /**
  * Measure per-column cell widths for EACH word independently,
  * then set S.colCellW1, S.colCellW2, and S.rowCellH.
@@ -75,22 +97,18 @@ export async function measureColumnCells(chars1, chars2, font1, font2, cellMax) 
   const fs1 = resolveBoldFontSize(ctx, BUF, fam1, chars1);
   const fs2 = resolveBoldFontSize(ctx, BUF, fam2, chars2);
 
+  const vspan1 = measureWordVerticalSpan(ctx, BUF, baseline, fam1, fs1, chars1);
+  const vspan2 = measureWordVerticalSpan(ctx, BUF, baseline, fam2, fs2, chars2);
+  const rowH = Math.max(
+    vspan1 ? rowCellsForWordSpan(vspan1.gTop, vspan1.gBot, BUF, cellMax, minC) : minC,
+    vspan2 ? rowCellsForWordSpan(vspan2.gTop, vspan2.gBot, BUF, cellMax, minC) : minC,
+  );
+
   const colW1 = new Int32Array(S.nCols);
   const colW2 = new Int32Array(S.nCols);
-  let rowH = minC;
 
   if (S.uniformColumns) {
     for (let col = 0; col < S.nCols; col++) {
-      for (const { ch, fam, fs } of [
-        { ch: chars1[col] || S.padChar, fam: fam1, fs: fs1 },
-        { ch: chars2[col] || S.padChar, fam: fam2, fs: fs2 },
-      ]) {
-        const b = measureGlyph(ctx, BUF, baseline, ch, fam, fs);
-        if (b.w * b.h > 1) {
-          const ch2 = Math.min(cellMax, Math.max(minC, Math.ceil(b.h * cellMax / BUF)));
-          if (ch2 > rowH) rowH = ch2;
-        }
-      }
       colW1[col] = cellMax;
       colW2[col] = cellMax;
     }
@@ -103,10 +121,6 @@ export async function measureColumnCells(chars1, chars2, font1, font2, cellMax) 
   for (let col = 0; col < S.nCols; col++) {
     const b1 = measureGlyph(ctx, BUF, baseline, chars1[col] || S.padChar, fam1, fs1);
     const b2 = measureGlyph(ctx, BUF, baseline, chars2[col] || S.padChar, fam2, fs2);
-
-    const maxH = Math.max(b1.h, b2.h);
-    const ch = Math.min(cellMax, Math.max(minC, Math.ceil(maxH * cellMax / BUF)));
-    if (ch > rowH) rowH = ch;
 
     colW1[col] = Math.min(cellMax, Math.max(minC, Math.ceil(b1.w * cellMax / BUF)));
     colW2[col] = Math.min(cellMax, Math.max(minC, Math.ceil(b2.w * cellMax / BUF)));
@@ -136,6 +150,7 @@ export async function stampName(chars, fontStr, targetSil, cellSize, which) {
   cv.width = cv.height = BUF;
   const ctx = canvas2dReadback(cv);
   const fs = resolveBoldFontSize(ctx, BUF, fam, chars);
+  const vSpan = measureWordVerticalSpan(ctx, BUF, baseline, fam, fs, chars);
 
   for (let col = 0; col < S.nCols; col++) {
     const ch = chars[col] || S.padChar;
@@ -152,16 +167,18 @@ export async function stampName(chars, fontStr, targetSil, cellSize, which) {
     const ink = inkBBoxRGBA(px, BUF, BUF);
 
     const inkW = Math.max(1, ink.maxX - ink.minX + 1);
-    const inkH = Math.max(1, ink.maxY - ink.minY + 1);
+    const yTop = vSpan ? vSpan.gTop : ink.minY;
+    const yBot = vSpan ? vSpan.gBot : ink.maxY;
+    const spanY = Math.max(1, yBot - yTop + 1);
 
     for (let lx = 0; lx < cw; lx++) {
       const bx0 = Math.max(0, Math.min(BUF - 1, Math.floor(ink.minX + (lx / cw) * inkW)));
       const bx1 = Math.max(0, Math.min(BUF - 1, Math.ceil(ink.minX + ((lx + 1) / cw) * inkW)));
       for (let z = 0; z < chRow; z++) {
-        const yBot = ink.maxY - ((z + 1) / chRow) * inkH;
-        const yTop = ink.maxY - (z / chRow) * inkH;
-        const by0 = Math.max(0, Math.min(BUF - 1, Math.floor(Math.min(yBot, yTop))));
-        const by1 = Math.max(0, Math.min(BUF - 1, Math.ceil(Math.max(yBot, yTop))));
+        const yBotZ = yBot - ((z + 1) / chRow) * spanY;
+        const yTopZ = yBot - (z / chRow) * spanY;
+        const by0 = Math.max(0, Math.min(BUF - 1, Math.floor(Math.min(yBotZ, yTopZ))));
+        const by1 = Math.max(0, Math.min(BUF - 1, Math.ceil(Math.max(yBotZ, yTopZ))));
         let sum = 0, cnt = 0;
         for (let by = by0; by < by1; by++) {
           for (let bx = bx0; bx < bx1; bx++) {
