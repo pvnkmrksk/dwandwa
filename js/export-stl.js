@@ -1,6 +1,5 @@
 /* global THREE */
 import S, { allocArrays } from './state.js';
-import { measureColumnCells } from './raster.js';
 import { buildModuleMeshes } from './mesh.js';
 import { getStructureSettings } from './scene.js';
 import { computePlateLayout } from './structure-layout.js';
@@ -84,8 +83,16 @@ export async function exportSTL() {
   const snapSil1 = new Uint8Array(S.sil1);
   const snapSil2 = new Uint8Array(S.sil2);
 
+  // Scale column widths by factor (not re-measuring from fonts, which
+  // creates a huge canvas and can produce different proportions at high res).
   S.CELL = ECELL;
-  await measureColumnCells(S.chars1, S.chars2, S.font1, S.font2, ECELL);
+  S.colCellW1 = new Int32Array(S.nCols);
+  S.colCellW2 = new Int32Array(S.nCols);
+  for (let i = 0; i < S.nCols; i++) {
+    S.colCellW1[i] = snapColW1[i] * factor;
+    S.colCellW2[i] = snapColW2[i] * factor;
+  }
+  S.rowCellH = snapRowH * factor;
   allocArrays();
 
   setProgress(15, 'Upscaling silhouettes with edits\u2026');

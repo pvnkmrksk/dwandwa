@@ -172,7 +172,7 @@
         <div class="ft-row" style="flex-wrap:wrap;gap:8px;margin-bottom:12px">
           <label class="ctrl-toggle" title="Align each letter’s rearmost (min Z) plane"><input type="checkbox" id="alignBack"> Align backs</label>
           <label class="ctrl-toggle" title="Equal horizontal gaps between module bounding boxes (uses Gap % as gap size)"><input type="checkbox" id="equalGap"> Equal gaps</label>
-          <label class="ctrl-toggle" title="Auto struts from hanging silhouette regions to the back panel"><input type="checkbox" id="backStrut"> Wall struts</label>
+          <label class="ctrl-toggle" title="Enable painted strut supports from mesh to the back panel"><input type="checkbox" id="backStrut"> Wall struts</label>
           <label class="ctrl-toggle" title="Off: fixed cell width per column (Latin). On: per-glyph width (Indic scripts)."><input type="checkbox" id="variableColWidth" checked> Variable width</label>
         </div>
         <div class="ft-section">
@@ -234,7 +234,7 @@
       <div id="exportProgress" class="export-progress" hidden>
         <div class="export-progress-bar" id="exportBar"></div>
       </div>
-      <span class="export-note">Smoothed dual-view cuboids; auto struts from silhouette hang analysis</span>
+      <span class="export-note">Smoothed dual-view mesh · includes painted struts &amp; pixel edits</span>
     </div>
     <div id="bmsg"></div>
   </div>
