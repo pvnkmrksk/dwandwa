@@ -9,7 +9,7 @@ import {
 import { makeDrawer } from './editor.js';
 import { wireUi } from './ui.js';
 import { initStrutPainter, togglePaintMode, clearPins, undoPins } from './strut-painter.js';
-import { applyLang, t } from './i18n.js';
+import { applyLang, toggleLang, t } from './i18n.js';
 import { applyTheme, toggleTheme } from './theme.js';
 import { registerSW } from 'virtual:pwa-register';
 import { startTutorial } from './tutorial.js';

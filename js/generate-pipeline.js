@@ -6,7 +6,7 @@ import { scheduleUpdate } from './scene.js';
 const DEF1 = '\u0CAC\u0CC6\u0CB3\u0C95\u0CC1';
 const DEF2 = '\u0CA8\u0CC6\u0CB0\u0CB3\u0CC1';
 const DEBOUNCE_MS = 2600;
-const FIRST_VISIT_DELAY_MS = 2800;
+const FIRST_VISIT_DELAY_MS = 2000;
 const SCROLL_THRESHOLD_PX = 14;
 
 let redraw1Ref = null;
