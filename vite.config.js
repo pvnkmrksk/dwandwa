@@ -1,7 +1,11 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-const base = '/dwandwa/';
+/**
+ * Root: https://dwandwa.kutuhula.in/ (default `npm run build`)
+ * Subpath: `DWANDWA_BASE=github npm run build` → /dwandwa/ for pvnkmrksk.github.io/dwandwa/
+ */
+const base = process.env.DWANDWA_BASE === 'github' ? '/dwandwa/' : '/';
 
 export default defineConfig({
   base,

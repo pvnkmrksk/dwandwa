@@ -6,6 +6,7 @@
     "dev": "vite --host",
     "prebuild": "node scripts/generate-hosted-fonts.mjs",
     "build": "vite build",
+    "build:github-pages": "DWANDWA_BASE=github vite build",
     "preview": "vite preview --host",
     "smoke": "node scripts/smoke-check.mjs"
   },

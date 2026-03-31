@@ -1,7 +1,7 @@
 # ದ್ವಂದ್ವ Dwandwa — 3D Shadow Illusion Sculptor
 
 
-> **[Live → pvnkmrksk.github.io/dwandwa](https://pvnkmrksk.github.io/dwandwa/)**
+> **[Live → dwandwa.kutuhula.in](https://dwandwa.kutuhula.in/)** · mirror: [GitHub Pages](https://pvnkmrksk.github.io/dwandwa/) (`npm run build:github-pages`)
 
 **Dwandwa** (Sanskrit द्वन्द्व, *dvandva* — "duality") turns two words into one 3D form: the front silhouette reads one word, the side silhouette reads another.
 
@@ -12,7 +12,8 @@ Type front and side strings, tweak the pixel editor, paint strut supports direct
 ```bash
 npm install
 npm run dev        # → http://localhost:5173
-npm run build      # production build in dist/
+npm run build                 # production build (root URL, default)
+npm run build:github-pages    # optional: asset paths for /dwandwa/ on GitHub Pages
 ```
 
 ## How it works
