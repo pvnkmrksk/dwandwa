@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ದ್ವಂದ್ವ Dwandwa · 3D Shadow Illusion Sculptor</title>
-<meta name="theme-color" content="#5b6af5" id="metaThemeColor">
+<meta name="theme-color" content="#3b55e6" id="metaThemeColor">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Critical UI + default word fonts; extended stack injected in js/fonts.js -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
-<script>!function(){var d=document.documentElement,t=localStorage.getItem('theme'),l=localStorage.getItem('lang');d.dataset.theme=t||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');d.lang=l||'kn'}()</script>
+<script>!function(){var d=document.documentElement,t=localStorage.getItem('theme'),l=localStorage.getItem('lang');d.dataset.theme=t||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');d.lang=l||'kn';var m=document.getElementById('metaThemeColor');if(m)m.content=d.dataset.theme==='dark'?'#0c0f1c':'#3b55e6'}()</script>
 </head>
 <body>
 
@@ -28,7 +28,7 @@
     </div>
     <div class="dv-hbtns">
       <button type="button" class="dv-hbtn dv-hbtn--lang icon-btn icon-btn--lang" id="langFlipBtn" aria-label="English">
-        <span id="langFlip">EN</span>
+        <span id="langFlip" aria-hidden="true">EN</span>
       </button>
       <button type="button" class="dv-hbtn icon-btn icon-btn--theme dv-hbtn--icononly" id="themeToggle" aria-label="Dark mode">
         <svg class="dv-ico-sun" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="2.8"/><line x1="8" y1="1" x2="8" y2="2.8"/><line x1="8" y1="13.2" x2="8" y2="15"/><line x1="1" y1="8" x2="2.8" y2="8"/><line x1="13.2" y1="8" x2="15" y2="8"/><line x1="3.1" y1="3.1" x2="4.4" y2="4.4"/><line x1="11.6" y1="11.6" x2="12.9" y2="12.9"/><line x1="12.9" y1="3.1" x2="11.6" y2="4.4"/><line x1="4.4" y1="11.6" x2="3.1" y2="12.9"/></svg>
@@ -37,10 +37,11 @@
     </div>
   </header>
 
+    <p id="composer_dual_hint" class="composer-hint" data-i18n="composer_dual_hint"></p>
     <div class="composer" id="composer">
     <div class="word-card lc">
       <div class="wview" data-i18n="view_left">Left view</div>
-      <input type="text" id="name1" class="winput word-input" value="ಬೆಳಕು" maxlength="16" data-i18n-ph="ph_front" placeholder="Front word">
+      <input type="text" id="name1" class="winput word-input" value="ಬೆಳಕು" maxlength="16" data-i18n-ph="ph_front" placeholder="Front word" aria-describedby="composer_dual_hint">
       <div class="fwrap">
         <select id="fnt1" class="wfont" title="Left font">
           <option value="sans-serif">Sans</option>
@@ -101,7 +102,7 @@
 
     <div class="word-card rc">
       <div class="wview" data-i18n="view_right">Right view</div>
-      <input type="text" id="name2" class="winput word-input" value="ನೆರಳು" maxlength="16" data-i18n-ph="ph_side" placeholder="Side word">
+      <input type="text" id="name2" class="winput word-input" value="ನೆರಳು" maxlength="16" data-i18n-ph="ph_side" placeholder="Side word" aria-describedby="composer_dual_hint">
       <div class="fwrap">
         <select id="fnt2" class="wfont" title="Right font">
           <option value="sans-serif">Sans</option>
@@ -138,7 +139,10 @@
         <span data-i18n="generate">Generate sculpture</span>
       </span>
     </button>
+    <button type="button" class="btn share-link-btn" id="shareLinkBtn" data-i18n="share_link">Copy share link</button>
   </div>
+
+  <div id="bmsg" class="bmsg" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <h2 id="editor-heading" class="sr-only" data-i18n="section_editor">Pixel editor</h2>
   <details class="card editor" id="rasterDetails">
@@ -220,7 +224,7 @@
       </div>
     </div>
     <p class="view3d-hint" data-i18n="hint_zoom">ಎಳೆದು ತಿರುಗಿಸಿ · ಸ್ಕ್ರಾಲ್ ಅಥವಾ ಎರಡು ಬೆರಳುಗಳಿಂದ ಜೂಮ್</p>
-    <div id="v3wrap" role="application" aria-label="3D preview"></div>
+    <div id="v3wrap" role="region" aria-label="3D preview"></div>
     <pre id="camDebug" class="cam-debug" hidden></pre>
     <p id="camDebugHint" class="cam-debug-hint" hidden data-i18n="cam_debug_hint"></p>
     <div class="scene-controls">
@@ -276,7 +280,6 @@
       </div>
       <span class="export-note" data-i18n="export_note"></span>
     </div>
-    <div id="bmsg"></div>
   </section>
 
   <section class="card" aria-labelledby="help-heading">
@@ -306,6 +309,12 @@
   </section>
 
 </main>
+
+<div id="sw-update-bar" class="sw-update-bar" hidden role="status" aria-live="polite">
+  <span class="sw-update-bar__text" data-i18n="sw_update_ready">A new version is ready.</span>
+  <button type="button" class="btn btn-primary sw-update-bar__btn" id="swUpdateReload" data-i18n="sw_update_reload">Reload</button>
+  <button type="button" class="btn sw-update-bar__dismiss" id="swUpdateDismiss" data-i18n="sw_update_dismiss">Dismiss</button>
+</div>
 
 <script type="module" src="js/main.js"></script>
 </body>

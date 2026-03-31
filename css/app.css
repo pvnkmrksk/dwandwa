@@ -78,6 +78,10 @@ html[data-theme="dark"] .site-header{background:rgba(24,24,28,.94)}
 .icon-btn--theme .dv-ico-moon{display:none}
 html[data-theme="dark"] .icon-btn--theme .dv-ico-sun{display:none}
 html[data-theme="dark"] .icon-btn--theme .dv-ico-moon{display:block}
+.icon-btn:focus-visible,.dv-hbtn:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
 
 /* ── Single-column shell (Material / iOS-style rhythm) ── */
 .app-shell{
@@ -233,6 +237,18 @@ html[data-theme="dark"] [data-tip]::after{background:#3a3a42;color:var(--text)}
 }
 .btn-primary:hover{background:#4a5ae0;border-color:#4a5ae0;color:white}
 html[data-theme="dark"] .btn-primary:hover{background:#6a7aee;border-color:#6a7aee}
+.btn:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+.btn-primary:focus-visible{
+  outline:2px solid #fff;
+  outline-offset:3px;
+}
+html[data-theme="dark"] .btn-primary:focus-visible{
+  outline:2px solid #fff;
+  outline-offset:3px;
+}
 
 input[type=range]{-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;transition:background-color .25s}
 input[type=range]::-webkit-slider-thumb{
@@ -525,6 +541,18 @@ html[data-theme="dark"] .tutorial-backdrop{background:rgba(0,0,0,.62)}
 }
 .icon-btn--lang{font-family:var(--indic),var(--sys);font-size:13px;font-weight:600;letter-spacing:.01em}
 
+.composer-hint{
+  font-size:11px;line-height:1.45;color:var(--text2);
+  margin:0 0 10px;padding:10px 12px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r10);
+}
+.bmsg{
+  min-height:1.2em;
+  font-size:12px;line-height:1.45;color:var(--text2);
+  margin:0 0 12px;padding:4px 0 8px;
+}
+
 .composer{
   display:grid;
   grid-template-columns:1fr 54px 1fr;
@@ -645,10 +673,34 @@ html[data-theme="dark"] .wfont,html[data-theme="dark"] .word-card select.wfont{
 }
 .mid-btn:hover{box-shadow:0 4px 10px rgba(0,0,0,.1);transform:scale(1.04)}
 .mid-btn:active{transform:scale(.97)}
+.mid-btn:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
 .pad-custom-wrap--mid{width:100%;max-width:120px;margin-top:4px}
 .pad-custom-wrap--mid .pad-custom{width:100%;text-align:center}
 
-.gen-wrap{margin-bottom:12px}
+.gen-wrap{
+  margin-bottom:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+@media(min-width:520px){
+  .gen-wrap{
+    flex-direction:row;
+    align-items:stretch;
+    gap:12px;
+  }
+  .gen-wrap .gen-btn{flex:1;min-width:0}
+}
+.share-link-btn{
+  flex-shrink:0;
+  padding:12px 18px;
+  font-size:13px;
+  font-weight:600;
+  justify-content:center;
+}
 .gen-btn{
   width:100%;border-radius:16px;
   background:linear-gradient(175deg,#252e48 0%,#0d1020 100%);
@@ -681,6 +733,10 @@ html[data-theme="dark"] .wfont,html[data-theme="dark"] .word-card select.wfont{
     inset 0 1px 0 rgba(255,255,255,.14);
 }
 .gen-btn:active{transform:translateY(0)}
+.gen-btn:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+}
 .gen-inner{display:flex;align-items:center;justify-content:center;gap:9px;position:relative;z-index:1}
 .gen-dot{
   width:22px;height:22px;border-radius:6px;
@@ -796,3 +852,37 @@ html[data-theme="dark"] .stool.active,html[data-theme="dark"] .stool.on{
   border:1px solid rgba(255,255,255,.06);
   aspect-ratio:1;
 }
+
+.stool:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+
+.sw-update-bar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  z-index:400;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  gap:10px 14px;
+  padding:12px 16px;
+  padding-bottom:max(12px, env(safe-area-inset-bottom, 0px));
+  background:var(--surface);
+  border-top:1px solid var(--border2);
+  box-shadow:0 -4px 24px rgba(0,0,0,.12);
+}
+html[data-theme="dark"] .sw-update-bar{
+  box-shadow:0 -4px 24px rgba(0,0,0,.45);
+}
+.sw-update-bar__text{
+  font-size:13px;
+  color:var(--text);
+  flex:1 1 200px;
+  text-align:center;
+}
+.sw-update-bar__btn{padding:6px 14px;font-size:12px}
+.sw-update-bar__dismiss{padding:6px 12px;font-size:12px}

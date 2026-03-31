@@ -18,7 +18,15 @@ import {
 import { exportSTL } from './export-stl.js';
 import { rescalePins } from './strut-painter.js';
 import { HOSTED_FONT_OPTIONS } from './hosted-font-registry.generated.js';
-import { applyLang } from './i18n.js';
+import { applyLang, t } from './i18n.js';
+import {
+  syncSilCacheFromLocation,
+  setPendingSilFromSearchParams,
+  appendSilParamIfValid,
+  encodeSilForShare,
+  canEncodeSilUrl,
+  updateSilCacheAfterShare,
+} from './url-sil.js';
 
 function defaultRasterCell() {
   return window.innerWidth >= 1024 ? 128 : 48;
@@ -66,17 +74,24 @@ function syncPadSelectFromState() {
   syncPadCycleBtnLabel();
 }
 
+/** Matches default `<select>` choice in index.html for both word fonts. */
+const DEFAULT_COMPOSER_FONT = "'Noto Sans Kannada',sans-serif";
+
 // ── URL state ──
-function stateToUrl() {
+function collectUrlParams({ forShare = false } = {}) {
   const p = new URLSearchParams();
   const n1 = document.getElementById('name1').value;
   const n2 = document.getElementById('name2').value;
   if (n1 && n1 !== 'ಬೆಳಕು') p.set('f', n1);
   if (n2 && n2 !== 'ನೆರಳು') p.set('s', n2);
-  const f1 = document.getElementById('fnt1').value;
-  const f2 = document.getElementById('fnt2').value;
-  if (f1 !== 'sans-serif') p.set('ff', f1);
-  if (f2 !== 'sans-serif') p.set('sf', f2);
+  let f1 = document.getElementById('fnt1').value;
+  let f2 = document.getElementById('fnt2').value;
+  if (forShare && (f1 === '__up__' || f2 === '__up__')) {
+    f1 = DEFAULT_COMPOSER_FONT;
+    f2 = DEFAULT_COMPOSER_FONT;
+  }
+  if (f1 !== DEFAULT_COMPOSER_FONT) p.set('ff', f1);
+  if (f2 !== DEFAULT_COMPOSER_FONT) p.set('sf', f2);
   if (S.padChar !== '\u2665') p.set('pad', S.padChar);
   const baseOn = document.getElementById('baseOn').checked;
   const backOn = document.getElementById('backOn').checked;
@@ -87,13 +102,32 @@ function stateToUrl() {
   if (S.CELL !== defaultRasterCell()) p.set('res', S.CELL);
   const vcw = document.getElementById('variableColWidth');
   if (vcw && vcw.checked) p.set('var', '1');
+  return p;
+}
+
+function stateToUrl() {
+  const p = collectUrlParams({ forShare: false });
+  appendSilParamIfValid(p);
   const qs = p.toString();
   const url = window.location.pathname + (qs ? '?' + qs : '');
   history.replaceState(null, '', url);
 }
 
+async function buildAbsoluteShareUrl() {
+  const p = collectUrlParams({ forShare: true });
+  let silEnc = null;
+  if (canEncodeSilUrl()) {
+    silEnc = await encodeSilForShare();
+    if (silEnc) p.set('sil', silEnc);
+  }
+  const qs = p.toString();
+  const path = window.location.pathname || '/';
+  return { url: `${window.location.origin}${path}${qs ? '?' + qs : ''}`, silEnc };
+}
+
 function loadFromUrl() {
   const p = new URLSearchParams(window.location.search);
+  setPendingSilFromSearchParams(p);
   if (p.has('f')) document.getElementById('name1').value = p.get('f');
   if (p.has('s')) document.getElementById('name2').value = p.get('s');
   if (p.has('ff')) document.getElementById('fnt1').value = p.get('ff');
@@ -155,6 +189,7 @@ export function wireUi({ redraw1, redraw2 }) {
   const bmsg = document.getElementById('bmsg');
 
   injectHostedFontOptions();
+  syncSilCacheFromLocation();
   loadFromUrl();
   applyLang();
   syncPadSelectFromState();
@@ -224,9 +259,39 @@ export function wireUi({ redraw1, redraw2 }) {
   document.getElementById('generateBtn').addEventListener('click', async function() {
     try {
       await generateNow();
-    } catch (e) { /* bmsg set in pipeline */ }
+    } catch (e) {
+      console.error(e);
+      const bm = document.getElementById('bmsg');
+      if (bm) {
+        const msg = (e && e.message) ? e.message : String(e);
+        if (!bm.textContent || bm.textContent.trim() === '') {
+          bm.textContent = 'Error: ' + msg;
+        }
+      }
+    }
     debouncedUrlUpdate();
   });
+
+  const shareLinkBtn = document.getElementById('shareLinkBtn');
+  if (shareLinkBtn) {
+    shareLinkBtn.addEventListener('click', async () => {
+      const bm = document.getElementById('bmsg');
+      try {
+        const { url, silEnc } = await buildAbsoluteShareUrl();
+        if (url.length > 8000) {
+          if (bm) bm.textContent = t('share_url_too_long');
+          return;
+        }
+        await navigator.clipboard.writeText(url);
+        if (silEnc) updateSilCacheAfterShare(silEnc);
+        if (bm) bm.textContent = t('share_copied');
+        debouncedUrlUpdate();
+      } catch (e) {
+        console.error(e);
+        if (bm) bm.textContent = t('share_failed');
+      }
+    });
+  }
 
   ['name1', 'name2'].forEach(id => {
     const el = document.getElementById(id);
@@ -262,7 +327,13 @@ export function wireUi({ redraw1, redraw2 }) {
       syncWordInputFonts();
       try {
         await generateNow();
-      } catch (e) { /* bmsg */ }
+      } catch (e) {
+        console.error(e);
+        const bm = document.getElementById('bmsg');
+        if (bm && (!bm.textContent || bm.textContent.trim() === '')) {
+          bm.textContent = 'Error: ' + ((e && e.message) ? e.message : String(e));
+        }
+      }
       debouncedUrlUpdate();
     } catch(e) {
       document.getElementById('uploadedFontName').textContent = 'Error: ' + e.message;

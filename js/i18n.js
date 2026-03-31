@@ -93,6 +93,15 @@ const dict = {
     help_s11: 'Below the preview, open Advanced for plate padding, overlap, strut thickness, and strut embed depth (lower = shallower into the letters, fewer exit holes). Enable Wall struts for automatic back supports, or use Paint struts on the toolbar for custom pins.',
     strut_embed: 'Strut embed',
     section_words: 'Words & fonts',
+    composer_dual_hint:
+      'Each label names the viewing angle for that word in the 3D preview (not always left/right on screen). On narrow layouts the two columns can reorder visually; the first field is always word 1 and the second is word 2.',
+    sw_update_ready: 'A new version is ready.',
+    sw_update_reload: 'Reload',
+    sw_update_dismiss: 'Dismiss',
+    share_link: 'Copy share link',
+    share_copied: 'Share link copied to clipboard.',
+    share_failed: 'Could not copy link. Copy from the address bar.',
+    share_url_too_long: 'Link is too long to copy safely; try a shorter word or lower resolution.',
     section_editor: 'Pixel editor',
     section_preview: '3D preview',
     section_help: 'How to use',
@@ -201,6 +210,16 @@ const dict = {
     help_s11: '\u0CA8\u0CCB\u0C9F\u0CCD \u0C95\u0CC6\u0CB3\u0C97\u0CC6 \u201c\u0CB8\u0CC1\u0CA7\u0CBE\u0CB0\u0CBF\u0CA4\u201d \u0CA4\u0CC6\u0CB0\u0CC6\u0CAF\u0CBF\u0C82\u0CA6 \u0CA4\u0C9F\u0CCD\u0C9F\u0CC6, \u0C85\u0CA4\u0CBF\u0C95\u0CCD\u0CB0\u0CAE, \u0C86\u0CA7\u0CBE\u0CB0 \u0CA6\u0CAA\u0CCD\u0CAA, \u0C85\u0C95\u0CCD\u0CB7\u0CB0\u0C97\u0CB3\u0CC1\u0C95\u0CCD\u0C95\u0CC6 \u0C8E\u0CB3\u0CC6\u0CA4\u0CC6 \u0C86\u0CA7\u0CBE\u0CB0 \u0C87\u0CB0\u0CC1\u0CB5\u0CBF\u0C95\u0CC6 (\u0C95\u0CA1\u0CBF\u0CAE\u0CC6 = \u0C8E\u0C9A\u0CCD\u0C9A\u0CC1) \u0CB8\u0C9C\u0CCD\u0C9C\u0CBF\u0CB8\u0CBF. \u201c\u0C97\u0CCB\u0CA1\u0CC6 \u0C86\u0CA7\u0CBE\u0CB0\u201d \u0C86\u0CA8\u0CCD \u0CAE\u0CBE\u0CA1\u0CBF \u0CB8\u0CCD\u0CB5\u0CAF\u0C82 \u0C86\u0CA7\u0CBE\u0CB0; \u0C9F\u0CC2\u0CB2\u0CCD\u0CAC\u0CBE\u0CB0\u0CCD \u201c\u0C86\u0CA7\u0CBE\u0CB0 \u0CAC\u0CA3\u0CCD\u0CA3\u0CBF\u0CB8\u0CBF\u201d \u0C87\u0C82\u0CA6 \u0C95\u0CC8\u0CAF \u0CAA\u0CBF\u0CA8\u0CCD \u0C87\u0CB0\u0CBF\u0CB8\u0CBF.',
     strut_embed: '\u0C86\u0CA7\u0CBE\u0CB0 \u0C8E\u0CB3\u0CC6\u0CA4\u0CC6',
     section_words: '\u0CAA\u0CA6\u0C97\u0CB3\u0CC1 & \u0CAB\u0CBE\u0C82\u0C9F\u0CCD',
+    composer_dual_hint:
+      '\u0CAA\u0CCD\u0CB0\u0CA4\u0CBF \u0C8E\u0CB0\u0CA1\u0CC1 \u0C8E\u0CB3\u0CC6\u0CAF\u0CC1 3D \u0CA8\u0CCB\u0C9F\u0CA6\u0CB2\u0CCD\u0CB2\u0CBF \u0C86 \u0CAA\u0CA6\u0CA6 \u0C8E\u0CA8\u0CCD\u0CA8 \u0C95\u0CCB\u0CA3\u0CC6\u0CAF\u0CBF\u0C82\u0CA6 \u0C95\u0CA3\u0CCD\u0CA3\u0CC1\u0CA4\u0CCD\u0CA4\u0CA6\u0CC6 (\u0C8E\u0CB2\u0CCD\u0CB2\u0CBE\u0C97\u0CC2 \u0C8E\u0CA1/\u0CAC\u0CB2 \u0C85\u0CB2\u0CCD\u0CB2). \u0C9A\u0CBF\u0C95\u0CCD\u0C95\u0CA6 \u0C9A\u0CC1\u0C9A\u0CCD\u0C9A\u0CC1\u0C97\u0CB3\u0CB2\u0CCD\u0CB2\u0CBF \u0C8E\u0CB0\u0CA1\u0CC1 \u0C95\u0CBE\u0CB2\u0CAE\u0CCD\u0C97\u0CB3 \u0CAC\u0CA6\u0CB2\u0CBE\u0C97\u0CAC\u0CB9\u0CC1\u0CA6\u0CC1; \u0CAE\u0CC6\u0CC2\u0CB2\u0CBF\u0CA8 \u0C9C\u0CBE\u0C97\u0CA6\u0CB2\u0CCD\u0CB2\u0CBF \u0CAE\u0CC6\u0CC2\u0CB2\u0CC1 \u0C8E\u0CB0\u0CA1\u0CC1 1 \u0C8E\u0CB0\u0CA1\u0CC1 2.',
+    sw_update_ready: '\u0CB9\u0CCA\u0CB8 \u0C86\u0CB5\u0CC3\u0CA4\u0CCD\u0CA4\u0CBF \u0CB8\u0CBF\u0CA6\u0CCD\u0CA7\u0CB5\u0CBE\u0C97\u0CBF\u0CA6\u0CC6.',
+    sw_update_reload: '\u0CAE\u0CB0\u0CC1\u0CB2\u0CBF\u0CB2\u0CCD\u0CB2\u0CBF',
+    sw_update_dismiss: '\u0CB5\u0CBF\u0C9C\u0CC6',
+    share_link: '\u0CB9\u0CC1\u0C82\u0C9A\u0CBF\u0C95\u0CC6 \u0CB2\u0CBF\u0C82\u0C95\u0CCD \u0CA8\u0C95\u0CB2\u0CBF\u0CB8\u0CBF',
+    share_copied: '\u0CB2\u0CBF\u0C82\u0C95\u0CCD \u0C95\u0CCD\u0CB2\u0CBF\u0CAA\u0CCD\u0CAC\u0CCB\u0CB0\u0CCD\u0CA1\u0CCD\u200C\u0C97\u0CC6 \u0CA8\u0C95\u0CB2\u0CBF\u0CB8\u0CB2\u0CBE\u0CAF\u0CBF\u0CA4\u0CC1.',
+    share_failed: '\u0CA8\u0C95\u0CB2\u0CBF\u0CB8\u0CB2\u0CC1 \u0CB8\u0CBE\u0CA7\u0CCD\u0CAF\u0CB5\u0CBF\u0CB2\u0CCD\u0CB2. \u0CB5\u0CBF\u0CB3\u0CBE\u0CB8\u0CA6\u0CB2\u0CCD\u0CB2\u0CBF\u0C82\u0CA6 \u0CAA\u0CCD\u0CB0\u0CA4\u0CBF \u0CA8\u0CC6\u0CB0\u0CC6\u0CB5\u0CC1 \u0C85\u0CA8\u0CCD\u0CA8\u0CC1 \u0C95\u0CC6\u0CC2\u0CB0\u0CBF\u0CB8\u0CBF.',
+    share_url_too_long:
+      '\u0CB2\u0CBF\u0C82\u0C95\u0CCD \u0C85\u0CA4\u0CCD\u0CAF\u0C82\u0CA4 \u0CA6\u0CC2\u0CB0\u0CCD\u0CB5\u0CBE\u0C97\u0CBF\u0CA6\u0CC6; \u0C9A\u0CBF\u0C95\u0CCD\u0C95 \u0CAA\u0CA6 \u0C85\u0CA5\u0CB5\u0CBE \u0C95\u0CA1\u0CBF\u0CAE\u0CC6 \u0CB8\u0CC2\u0C95\u0CCD\u0CB7\u0CCD\u0CAE\u0CA4\u0CC6\u0CAF\u0CA8\u0CCD\u0CA8\u0CC1 \u0C95\u0CA1\u0CBF\u0CAE\u0CC6\u0CAF\u0CBF\u0CB8\u0CBF.',
     section_editor: '\u0C9A\u0CBF\u0CA4\u0CCD\u0CB0 \u0CB8\u0C82\u0CAA\u0CBE\u0CA6\u0C95',
     section_preview: '3D \u0CA8\u0CCB\u0C9F',
     section_help: '\u0CB8\u0CB9\u0CBE\u0CAF',
@@ -263,18 +282,14 @@ export function applyLang(lang) {
   }
 
   const flip = document.getElementById('langFlip');
-  if (flip) {
+  const flipBtn = document.getElementById('langFlipBtn');
+  if (flip && flipBtn) {
     const toEn = d.lang_btn_english ?? 'English';
     const toKn = d.lang_btn_kannada ?? '\u0C95\u0CA8\u0CCD\u0CA8\u0CA1';
     flip.textContent = currentLang === 'kn' ? toEn : toKn;
     const tip = currentLang === 'kn' ? d.tip_switch_en : d.tip_switch_kn;
-    flip.setAttribute('aria-label', tip);
-    flip.setAttribute('title', tip);
-    const flipBtn = document.getElementById('langFlipBtn');
-    if (flipBtn) {
-      flipBtn.setAttribute('aria-label', tip);
-      flipBtn.setAttribute('title', tip);
-    }
+    flipBtn.setAttribute('aria-label', tip);
+    flipBtn.setAttribute('title', tip);
   }
 }
 

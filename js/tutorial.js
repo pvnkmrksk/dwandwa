@@ -15,6 +15,7 @@ const STEPS = [
   },
   { sel: '#v3wrap', title: 'help_s5t', desc: 'help_s5' },
   { sel: '.cam-group--struts', title: 'help_s6t', desc: 'help_s6' },
+  { sel: '.scene-controls', title: 'help_s7t', desc: 'help_s7' },
   { sel: '.export-bar', title: 'help_s8t', desc: 'help_s8' },
 ];
 
@@ -53,8 +54,41 @@ function removeOverlay() {
   overlayEl = null;
 }
 
+let previousFocusEl = null;
+
+function getTutorialFocusables() {
+  if (!overlayEl) return [];
+  const card = overlayEl.querySelector('.tutorial-card');
+  if (!card) return [];
+  return [...card.querySelectorAll('button')].filter(b => !b.disabled);
+}
+
 function onKey(e) {
-  if (e.key === 'Escape') closeTutorial();
+  if (e.key === 'Escape') {
+    closeTutorial();
+    return;
+  }
+  if (e.key !== 'Tab' || !overlayEl) return;
+  const card = overlayEl.querySelector('.tutorial-card');
+  if (!card) return;
+  const list = getTutorialFocusables();
+  if (!list.length) return;
+  if (!card.contains(document.activeElement)) {
+    e.preventDefault();
+    list[0].focus();
+    return;
+  }
+  const i = list.indexOf(document.activeElement);
+  if (i < 0) return;
+  if (e.shiftKey) {
+    if (i === 0) {
+      e.preventDefault();
+      list[list.length - 1].focus();
+    }
+  } else if (i === list.length - 1) {
+    e.preventDefault();
+    list[0].focus();
+  }
 }
 
 function placeCardNear(target, card) {
@@ -72,8 +106,13 @@ function placeCardNear(target, card) {
   card.style.left = `${left}px`;
 }
 
-function showStep(i) {
+function showStep(i, skipDepth = 0) {
   if (!overlayEl || i < 0 || i >= STEPS.length) return;
+  if (skipDepth > STEPS.length) {
+    console.warn('[tutorial] too many missing targets, closing');
+    closeTutorial();
+    return;
+  }
   stepIndex = i;
   const cfg = STEPS[i];
   cfg.before?.();
@@ -84,7 +123,9 @@ function showStep(i) {
   const nextBtn = overlayEl.querySelector('.tutorial-card__next');
   const skipBtn = overlayEl.querySelector('.tutorial-card__skip');
   if (!target) {
-    closeTutorial();
+    console.warn('[tutorial] missing target for step', i, cfg.sel);
+    if (i + 1 < STEPS.length) showStep(i + 1, skipDepth + 1);
+    else closeTutorial();
     return;
   }
   target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -93,6 +134,7 @@ function showStep(i) {
     target.classList.add('tutorial-spotlight');
     const card = overlayEl.querySelector('.tutorial-card');
     placeCardNear(target, card);
+    nextBtn?.focus();
   });
   titleEl.textContent = t(cfg.title);
   descEl.textContent = t(cfg.desc);
@@ -137,12 +179,19 @@ export function closeTutorial() {
   }
   window.removeEventListener('keydown', onKey);
   removeOverlay();
+  if (previousFocusEl && typeof previousFocusEl.focus === 'function') {
+    try {
+      previousFocusEl.focus();
+    } catch (_) { /* ignore */ }
+  }
+  previousFocusEl = null;
 }
 
 export function startTutorial() {
   if (active) return;
   active = true;
   stepIndex = 0;
+  previousFocusEl = document.activeElement;
   overlayEl = buildOverlay();
   document.body.appendChild(overlayEl);
   window.addEventListener('keydown', onKey);

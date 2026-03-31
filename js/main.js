@@ -19,7 +19,19 @@ import {
   armDeferredInitialGenerate,
 } from './generate-pipeline.js';
 
-registerSW({ immediate: true });
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    document.getElementById('sw-update-bar')?.removeAttribute('hidden');
+  },
+});
+
+document.getElementById('swUpdateReload')?.addEventListener('click', () => {
+  void updateSW(true);
+});
+document.getElementById('swUpdateDismiss')?.addEventListener('click', () => {
+  document.getElementById('sw-update-bar')?.setAttribute('hidden', '');
+});
 
 if (new URLSearchParams(location.search).has('debug')) {
   document.getElementById('camDebug')?.removeAttribute('hidden');
@@ -94,12 +106,16 @@ if (helpTourBtn) {
   const bmsg = document.getElementById('bmsg');
   try {
     await prepareComposerFonts();
-    bmsg.setAttribute('data-compose-hint', '1');
-    bmsg.textContent = t('bmsg_compose');
+    if (bmsg) {
+      bmsg.setAttribute('data-compose-hint', '1');
+      bmsg.textContent = t('bmsg_compose');
+    }
     armDeferredInitialGenerate();
   } catch (e) {
     console.error(e);
-    bmsg.removeAttribute('data-compose-hint');
-    bmsg.textContent = 'Error: ' + (e && e.message ? e.message : String(e));
+    if (bmsg) {
+      bmsg.removeAttribute('data-compose-hint');
+      bmsg.textContent = 'Error: ' + (e && e.message ? e.message : String(e));
+    }
   }
 })();
