@@ -1,6 +1,6 @@
 # ದ್ವಂದ್ವ Dwandwa — 3D Shadow Illusion Sculptor
 
- 
+
 > **[Live → pvnkmrksk.github.io/dwandwa](https://pvnkmrksk.github.io/dwandwa/)**
 
 **Dwandwa** (Sanskrit द्वन्द्व, *dvandva* — "duality") turns two words into one 3D form: the front silhouette reads one word, the side silhouette reads another.
