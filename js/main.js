@@ -19,19 +19,8 @@ import {
   armDeferredInitialGenerate,
 } from './generate-pipeline.js';
 
-const updateSW = registerSW({
-  immediate: true,
-  onNeedRefresh() {
-    document.getElementById('sw-update-bar')?.removeAttribute('hidden');
-  },
-});
-
-document.getElementById('swUpdateReload')?.addEventListener('click', () => {
-  void updateSW(true);
-});
-document.getElementById('swUpdateDismiss')?.addEventListener('click', () => {
-  document.getElementById('sw-update-bar')?.setAttribute('hidden', '');
-});
+/** autoUpdate in vite.config applies new SW without a prompt; avoid onNeedRefresh UI (false positives near footer in private mode). */
+registerSW({ immediate: true });
 
 if (new URLSearchParams(location.search).has('debug')) {
   document.getElementById('camDebug')?.removeAttribute('hidden');
