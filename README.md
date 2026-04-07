@@ -65,7 +65,7 @@ npm run build:github-pages    # optional: asset paths for /dwandwa/ on GitHub Pa
 
 ## Credits
 
-Made with ❤️ by **[kutūhuḷa](https://dwandwa.kutuhula.in/)**. Canonical site: **[dwandwa.kutuhula.in](https://dwandwa.kutuhula.in/)**.
+Made with ❤️ by **[kutūhuḷa](https://kutuhula.in/)**. App: **[dwandwa.kutuhula.in](https://dwandwa.kutuhula.in/)**.
 
 ## License
 
