@@ -116,7 +116,7 @@ function stateToUrl() {
 async function buildAbsoluteShareUrl() {
   const p = collectUrlParams({ forShare: true });
   let silEnc = null;
-  if (canEncodeSilUrl()) {
+  if (S.silBitmapEdited && canEncodeSilUrl()) {
     silEnc = await encodeSilForShare();
     if (silEnc) p.set('sil', silEnc);
   }

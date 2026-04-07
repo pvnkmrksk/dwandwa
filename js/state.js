@@ -10,6 +10,8 @@ const S = {
   letterGapPct: 30,
   sil1: null,
   sil2: null,
+  /** True after pixel edits or applying shared sil; false after fresh stamp with no URL sil. */
+  silBitmapEdited: false,
   /** Per-column width in cells — front word. */
   colCellW1: null,
   /** Per-column width in cells — side word. */

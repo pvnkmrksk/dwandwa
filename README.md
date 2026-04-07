@@ -63,6 +63,10 @@ npm run build:github-pages    # optional: asset paths for /dwandwa/ on GitHub Pa
 | `js/ui.js` | DOM wiring |
 | `css/app.css` | Styles |
 
+## Credits
+
+Made with ❤️ by **[kutūhuḷa](https://dwandwa.kutuhula.in/)**. Canonical site: **[dwandwa.kutuhula.in](https://dwandwa.kutuhula.in/)**.
+
 ## License
 
 MIT

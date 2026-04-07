@@ -2,7 +2,7 @@ import S from './state.js';
 import { applyNames, syncWordInputFonts } from './text.js';
 import { stampName } from './raster.js';
 import { scheduleUpdate } from './scene.js';
-import { tryApplyPendingSilFromUrl } from './url-sil.js';
+import { tryApplyPendingSilFromUrl, invalidateSilCache } from './url-sil.js';
 
 const DEF1 = '\u0CAC\u0CC6\u0CB3\u0C95\u0CC1';
 const DEF2 = '\u0CA8\u0CC6\u0CB0\u0CB3\u0CC1';
@@ -58,7 +58,9 @@ export async function runGeneratePipeline({ statusMsg = 'Rendering glyphs\u2026'
       stampName(S.chars1, S.font1, S.sil1, undefined, 'front'),
       stampName(S.chars2, S.font2, S.sil2, undefined, 'side'),
     ]);
-    await tryApplyPendingSilFromUrl();
+    const silFromUrl = await tryApplyPendingSilFromUrl();
+    if (!silFromUrl) invalidateSilCache();
+    S.silBitmapEdited = silFromUrl;
     document.getElementById('bmsg')?.removeAttribute('data-compose-hint');
     redraw1Ref?.(true);
     redraw2Ref?.(true);

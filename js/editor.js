@@ -1,5 +1,6 @@
 import S, { NX1, NX2, silIndex1, silIndex2 } from './state.js';
 import { scheduleUpdate } from './scene.js';
+import { markSilBitmapEdited } from './url-sil.js';
 
 let meshTimer = null;
 function debouncedMeshUpdate() {
@@ -45,6 +46,7 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
     const snapshot = undoStack.pop();
     const sil = getSil();
     sil.set(snapshot);
+    markSilBitmapEdited();
     redraw(true);
     debouncedMeshUpdate();
   }
@@ -52,8 +54,20 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
   if (undoBtn) undoBtn.addEventListener('click', undo);
 
   document.getElementById(erId).addEventListener('click', function() { erasing = !erasing; this.classList.toggle('active', erasing); });
-  document.getElementById(clId).addEventListener('click', () => { saveSnapshot(); getSil().fill(0); redraw(true); debouncedMeshUpdate(); });
-  document.getElementById(fiId).addEventListener('click', () => { saveSnapshot(); getSil().fill(1); redraw(true); debouncedMeshUpdate(); });
+  document.getElementById(clId).addEventListener('click', () => {
+    saveSnapshot();
+    getSil().fill(0);
+    markSilBitmapEdited();
+    redraw(true);
+    debouncedMeshUpdate();
+  });
+  document.getElementById(fiId).addEventListener('click', () => {
+    saveSnapshot();
+    getSil().fill(1);
+    markSilBitmapEdited();
+    redraw(true);
+    debouncedMeshUpdate();
+  });
   document.getElementById(brId).addEventListener('input', function() { brushSize = parseInt(this.value); });
 
   function ptrToGrid(e) {
@@ -92,7 +106,11 @@ export function makeDrawer({ id, getSil, ink, erId, clId, fiId, brId, feathId, w
         }
       }
     }
-    if (ch) { redraw(false); debouncedMeshUpdate(); }
+    if (ch) {
+      markSilBitmapEdited();
+      redraw(false);
+      debouncedMeshUpdate();
+    }
   }
 
   canvas.addEventListener('pointerdown', e => {

@@ -94,6 +94,31 @@ html[data-theme="dark"] .icon-btn--theme .dv-ico-moon{display:block}
   .app-shell{padding-top:var(--space-5);gap:var(--space-5)}
 }
 
+.dv-footer{
+  margin-top:clamp(8px,2vw,16px);
+  padding-top:var(--space-4);
+  border-top:1px solid var(--border);
+  text-align:center;
+}
+.dv-footer__inner{
+  margin:0;
+  font-size:12px;
+  line-height:1.5;
+  color:var(--text3);
+  font-family:var(--sys);
+}
+.dv-footer__link{
+  color:var(--accent);
+  font-weight:600;
+  text-decoration:none;
+  letter-spacing:.02em;
+}
+.dv-footer__link:hover{
+  text-decoration:underline;
+  color:var(--text2);
+}
+html[data-theme="dark"] .dv-footer__link:hover{color:var(--text)}
+
 /* ── Cards ───────────────────────────────────── */
 .card{
   background:var(--surface);border:1px solid var(--border);

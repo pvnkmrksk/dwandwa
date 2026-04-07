@@ -43,7 +43,13 @@ export function invalidateSilCache() {
   cachedSilLayoutKey = null;
 }
 
-/** Append `sil` to params if it still matches current layout (or not yet bound after load). */
+/** Call after user paints / clears / fills / undoes in the pixel editor. */
+export function markSilBitmapEdited() {
+  S.silBitmapEdited = true;
+  invalidateSilCache();
+}
+
+/** Append `sil` only when bitmap is part of state (edited, shared, or not yet applied from URL). */
 export function appendSilParamIfValid(p) {
   if (!cachedSilParam) return;
   const key = layoutKeyFromDom();
@@ -51,6 +57,8 @@ export function appendSilParamIfValid(p) {
     invalidateSilCache();
     return;
   }
+  const pendingApply = cachedSilLayoutKey == null;
+  if (!S.silBitmapEdited && !pendingApply) return;
   p.set('sil', cachedSilParam);
 }
 
